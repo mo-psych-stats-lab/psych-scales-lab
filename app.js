@@ -434,7 +434,7 @@ function shell() {
   $('#bAcct').onclick = () => go('account');
 }
 function moreSheet() {
-  modal(`<h3>المزيد</h3><div class="stack">${[['exam', 'أسئلة موضوعية', 'check', 'صح وخطأ، واختيار من متعدد، وامتحان تجريبي ونموذج محلول'], ['formulas', 'المعادلات', 'sigma', 'كل معادلات الصدق والثبات بأمثلة'], ['practice', 'التدريب', 'cards', 'بطاقات ومطابقة ومسائل حسابية'], ['respond', 'أجب عن مقياس', 'form', 'استخدم كود المقياس الذي أرسله الباحث'], ['me', 'إنجازاتي', 'trophy', 'النقاط والأوسمة والإعدادات'], ['account', 'حسابي', 'user', 'تسجيل الدخول وحفظ التقدم']].map(n => `<button class="linkcard" data-m="${n[0]}"><span class="ic">${ic(n[2])}</span><span><b>${n[1]}</b><span>${n[3]}</span></span></button>`).join('')}</div><div class="row" style="margin-top:12px"><button class="btn ghost" data-close>إغلاق</button></div>`,
+  modal(`<h3>المزيد</h3><div class="stack">${[['qbuild', 'البناء السريع وGoogle Forms', 'bolt', 'طرق البناء، ولينك مباشر، ونموذج Google Forms، وردود Google Sheets'], ['exam', 'أسئلة موضوعية', 'check', 'صح وخطأ، واختيار من متعدد، وامتحان تجريبي ونموذج محلول'], ['formulas', 'المعادلات', 'sigma', 'كل معادلات الصدق والثبات بأمثلة'], ['practice', 'التدريب', 'cards', 'بطاقات ومطابقة ومسائل حسابية'], ['respond', 'أجب عن مقياس', 'form', 'استخدم كود المقياس الذي أرسله الباحث'], ['me', 'إنجازاتي', 'trophy', 'النقاط والأوسمة والإعدادات'], ['account', 'حسابي', 'user', 'تسجيل الدخول وحفظ التقدم']].map(n => `<button class="linkcard" data-m="${n[0]}"><span class="ic">${ic(n[2])}</span><span><b>${n[1]}</b><span>${n[3]}</span></span></button>`).join('')}</div><div class="row" style="margin-top:12px"><button class="btn ghost" data-close>إغلاق</button></div>`,
     (bg, close) => $$('[data-m]', bg).forEach(b => b.onclick = () => { close(); go(b.dataset.m); }));
 }
 function go(v) { if (v === 'labs' && typeof LABS !== 'undefined') LABS.clear(); if (v === 'learn' && typeof LEARN !== 'undefined') LEARN.clearOpen(); if (v === 'exam' && typeof EXAM !== 'undefined') EXAM.clear(); if (location.hash !== '#' + v) location.hash = v; else route(); }
@@ -442,10 +442,10 @@ function route() {
   tick();
   let h = (location.hash || '#home').slice(1);
   let arg = null;
-  const m = h.match(/^form-([A-Za-z0-9]+)$/); if (m) { h = 'respond'; arg = m[1]; }
+  const m = h.match(/^form-([A-Za-z0-9]+)$/); if (m) { h = 'respond'; arg = m[1]; } const tk = h.match(/^take\/([A-Za-z0-9_-]+)$/); if (tk) { h = 'take'; arg = tk[1]; }
   if (!VIEWS[h]) h = 'home';
   current = h;
-  $$('[data-go]').forEach(b => b.setAttribute('aria-current', b.dataset.go === h || (b.dataset.go === 'more' && ['exam', 'formulas', 'practice', 'respond', 'me', 'account'].includes(h)) ? 'page' : 'false'));
+  $$('[data-go]').forEach(b => b.setAttribute('aria-current', b.dataset.go === h || (b.dataset.go === 'more' && ['qbuild', 'take', 'exam', 'formulas', 'practice', 'respond', 'me', 'account'].includes(h)) ? 'page' : 'false'));
   const v = $('#view'); v.innerHTML = '<div class="container" id="vc"></div>';
   VIEWS[h]($('#vc'), arg);
   renderStats();
@@ -1312,7 +1312,9 @@ const BUILD = (() => {
     const L = SCALES.list();
     el.innerHTML = `<div class="section-title"><h2>ابنِ مقياسك</h2><div class="row"><button class="btn" id="bNew">${ic('plus')} مقياس جديد</button><button class="btn ghost" id="bEx">ابدأ من مثال</button><button class="btn ghost" id="bImp">${ic('upload')} استيراد ملف مقياس</button><input type="file" id="fImp" accept=".json,application/json" hidden></div></div>
       <div class="notice small"><b>كيف يعمل؟</b>يسير المعالج على القواعد الاثنتي عشرة لبناء المقياس: من تعريف السمة إلى التحكيم والتجريب، ثم جمع الاستجابات (على جهازك مباشرة، أو بكود ترسله للمستجيبين، أو من Google Forms)، ويحسب التحليل فور وصول البيانات.</div>
+      <button class="linkcard" id="bQuick" style="--c:var(--amber);--s:var(--amber-soft)"><span class="ic">${ic('bolt')}</span><span><b>البناء السريع + لينك مباشر وGoogle Forms وGoogle Sheets</b><span>زي «بناء المقياس» في مختبر الإحصاء: اختر طريقة من 9 طرق، وابنِ العبارات من قوالب جاهزة، وجرّب عينة افتراضية، وابعت المقياس بلينك أو نموذج Google Forms، واسحب الردود من Google Sheet للتحليل هنا.</span></span></button>
       ${L.length ? `<div class="grid2">${L.map(s => { const st = status(s), done = st.filter(Boolean).length, r = s.responses.filter(x => !x.pilot).length; return `<article class="card stack" style="gap:8px"><div class="row"><b class="grow" style="font-family:var(--f-display);font-size:17px">${esc(s.name)}</b><span class="chip ${done === 12 ? 'good' : 'blue'}">${done}/12 خطوة</span></div><div class="row small muted"><span>${kept(s).length} عبارة</span><span>${s.dims.length} أبعاد</span><span>${r} استجابة</span></div><div class="pbar good"><i style="width:${done / 12 * 100}%"></i></div><div class="row"><button class="btn sm" data-open="${s.id}">فتح</button><button class="btn sm ghost" data-dup="${s.id}">نسخة</button><button class="btn sm ghost" data-del="${s.id}" aria-label="حذف">${ic('trash')}</button></div></article>`; }).join('')}</div>` : `<div class="card empty"><p>لم تنشئ مقياسًا بعد.</p><p class="small">ابدأ بمقياس جديد، أو افتح مثال «التسويف الأكاديمي» لترى الخطوات مكتملة.</p></div>`}`;
+    $('#bQuick').onclick = () => go('qbuild');
     $('#bNew').onclick = () => { const s = blank(); SCALES.save(s); checkBadges(); openId = s.id; rerender(); };
     $('#bEx').onclick = () => { const s = example(); SCALES.save(s); checkBadges(); openId = s.id; rerender(); };
     $('#bImp').onclick = () => $('#fImp').click();
@@ -1648,7 +1650,298 @@ const BUILD = (() => {
     };
   };
 
-  return { analyze, kept, formDef, open: id => { openId = id; go('build'); }, clear: () => { openId = null; } };
+  /* import a scale (and optional responses) from the quick builder; rows use the builder raw convention */
+  function importScale(o) {
+    const s = blank(); s.name = o.name || 'مقياس مستورد'; s.construct = o.construct || ''; s.group = o.group || '';
+    s.method = METHODS[o.method] ? o.method : 'likert'; s.scale = { preset: 'custom', labels: o.labels.slice(0, 7) }; if (o.instr) s.instr = o.instr;
+    s.demo = { gender: false, age: false };
+    const names = [...new Set(o.items.map(x => x.dim || 'عام'))]; s.dims = names.map(n => ({ id: uid('d'), name: n, def: '', w: Math.round(100 / names.length) }));
+    s.items = o.items.map(x => ({ id: uid('i'), text: x.text, dim: s.dims[names.indexOf(x.dim || 'عام')].id, dir: x.dir || 1, key: x.key || 0, sv: x.sv ?? null, src: 'البناء السريع', ess: null, use: null, keep: true }));
+    s.target = s.items.length; s.mult = 1;
+    const v = version(s); let added = 0;
+    (o.rows || []).forEach(r => { if (addResponse(s, v, r.vals, Object.assign({ src: o.src || 'مستورد' }, r.extra || {})) === 'ok') added++; });
+    s.step = o.rows && o.rows.length ? 9 : 4; SCALES.save(s); checkBadges(); openId = s.id; go('build');
+    return added;
+  }
+  return { analyze, kept, formDef, importScale, open: id => { openId = id; go('build'); }, clear: () => { openId = null; } };
+})();
+
+/* ===== Quick scale builder — ported from the statistics lab (#lab/build): methods, templates, simulation,
+   direct link, Google Forms script, Google Sheets collection. Collected responses open in the 12-step builder. ===== */
+const QUICK = (() => {
+  let view = null;
+  const labHead = t => `<div class="section-title"><h2>${t}</h2><button class="btn sm ghost" id="qFull">${ic('build')} المعالج الكامل (12 خطوة)</button></div><div class="notice small"><b>مثل «بناء المقياس» في مختبر الإحصاء</b>اختر طريقة البناء، وولّد العبارات، وأرسل المقياس بلينك مباشر أو نموذج Google Forms، واجمع الردود في Google Sheet؛ ثم تفتح الردود في «ابنِ مقياسك» لتحليل الفقرات والثبات والصدق العاملي والمعايير.</div>`;
+  const f2 = (x, d = 2) => fmt(x, d);
+  const alphaOf = cols => { const rows = cols[0].map((_, i) => cols.map(c => c[i])); return PSY.itemStats(rows).alpha; };
+  const relLbl = a => a >= 0.9 ? ['ممتاز', 'ok'] : a >= 0.8 ? ['جيد', 'ok'] : a >= 0.7 ? ['مقبول', 'mid'] : ['ضعيف', 'no'];
+const AI={p:null};
+function aiGet(){if(!AI.p)AI.p=(async()=>{try{if(window.claude&&typeof window.claude.use==="function")return await window.claude.use("sample")}catch(e){}return null})();return AI.p}
+const AI_ERR={not_granted:"لم يتم السماح للموقع باستخدام Claude من حسابك.",sampling_disabled:"Claude غير متاح لهذا الحساب.",rate_limited:"وصلت للحد المسموح الآن، حاول بعد قليل.",session_expired:"سجّل الدخول في Claude مرة أخرى.",refused:"رفض Claude هذا الطلب؛ عدّل النص وحاول.",invalid_json:"الرد لم يكن بالشكل المتوقع؛ جرّب مرة أخرى."};
+function aiExternal(prompt,el){
+ el.innerHTML=`<p class="muted" style="margin:6px 0">استخدم حسابك في Claude أو ChatGPT: اضغط «انسخ الطلب» ثم افتح الموقع والصق (Ctrl+V).</p><div class="row"><button class="btn sm gold" data-cp>انسخ الطلب</button><a class="btn sm ghost" style="text-decoration:none" href="https://claude.ai/new" target="_blank" rel="noopener">افتح Claude</a><a class="btn sm ghost" style="text-decoration:none" href="https://chatgpt.com/" target="_blank" rel="noopener">افتح ChatGPT</a></div>`;
+ el.querySelector("[data-cp]").onclick=()=>{const done=()=>toast("تم نسخ الطلب — الصقه في Claude");(navigator.clipboard?navigator.clipboard.writeText(prompt).then(done,()=>fallbackCopy(prompt,done)):fallbackCopy(prompt,done))};
+}
+function fallbackCopy(t,cb){const ta=document.createElement("textarea");ta.value=t;document.body.appendChild(ta);ta.select();try{document.execCommand("copy");cb()}catch(e){toast("تعذر النسخ")}ta.remove()}
+const METHODS=[
+ {id:"thurstone",t:"طريقة ثرستون — الفترات المتساوية ظاهريًا",en:"Thurstone Equal-Appearing Intervals",yr:1928,era:"كلاسيكية",d:"يكتب الباحث عبارات كثيرة تتدرج من الرفض الشديد للقبول الشديد، ويحكم عليها محكمون على متصل من 1 إلى 11، وتُختار العبارات ذات الاتفاق العالي بقيم موزعة. المفحوص يختار «أوافق» على ما ينطبق، ودرجته = وسيط قيم العبارات التي وافق عليها.",resp:["أوافق","لا أوافق"],bin:true,n:k=>[100,"50–100 محكم لتقدير قيم العبارات + 100 مفحوص على الأقل"]},
+ {id:"likert",t:"طريقة ليكرت — التقديرات التجميعية",en:"Likert Summated Rating",yr:1932,era:"كلاسيكية (الأكثر استخدامًا)",d:"عبارات موجبة وسالبة يستجيب لها المفحوص على تدريج خماسي، وتجمع الدرجات (مع عكس العبارات السالبة) في درجة كلية. سهلة البناء والتصحيح، وتحلل بألفا كرونباخ والتحليل العاملي.",resp:["موافق بشدة","موافق","محايد","غير موافق","غير موافق بشدة"],n:k=>[Math.max(200,10*k),"5–10 أفراد لكل بند وبحد أدنى 200 للتحليل العاملي، و30–50 للتجربة الاستطلاعية"]},
+ {id:"guttman",t:"طريقة جتمان — التدرج التراكمي",en:"Guttman Cumulative Scaling",yr:1944,era:"كلاسيكية",d:"عبارات مرتبة تصاعديًا في الشدة؛ من يوافق على عبارة قوية يوافق بالضرورة على ما قبلها. يُتحقق منها بمعامل إعادة الإنتاج (≥ 0.90).",resp:["نعم","لا"],bin:true,n:k=>[100,"100 فرد على الأقل لحساب معامل إعادة الإنتاج"]},
+ {id:"osgood",t:"التمايز الدلالي — أوسجود",en:"Osgood Semantic Differential",yr:1957,era:"كلاسيكية",d:"يُقيَّم مفهوم واحد على أزواج من الصفات المتضادة (جيد–سيئ، قوي–ضعيف…) بتدريج سباعي، وتمثل ثلاثة أبعاد: التقييم، القوة، النشاط.",resp:["1","2","3","4","5","6","7"],n:k=>[100,"100 فرد على الأقل، ويزيد للتحليل العاملي"]},
+ {id:"rasch",t:"نموذج راش / نظرية الاستجابة للمفردة",en:"Rasch Model / Item Response Theory",yr:1960,era:"حديثة",d:"تُبنى البنود بحيث تغطي مستويات مختلفة من شدة السمة (سهلة وصعبة التأييد)، ويقدَّر موقع الفرد والبند على متصل واحد بالـ logit مستقلًا عن العينة. يتيح الأداء التفاضلي للمفردة DIF وفحص المطابقة.",resp:["لا تنطبق أبدًا","تنطبق نادرًا","تنطبق أحيانًا","تنطبق دائمًا"],n:k=>[250,"150–250 فردًا لتقديرات مستقرة (Linacre)، و500 لنماذج IRT متعددة المعالم"]},
+ {id:"sjt",t:"اختبارات الحكم الموقفي",en:"Situational Judgment Tests (SJT)",yr:1990,era:"حديثة",d:"يُعرض موقف واقعي وعدة تصرفات، ويختار المفحوص الأفضل (والأسوأ). تقيس المهارات والكفايات السلوكية وتقل فيها المرغوبية الاجتماعية، وتحتاج مفتاحًا من الخبراء.",resp:[],n:k=>[200,"200 فرد على الأقل + 5–10 خبراء لبناء مفتاح التصحيح"]},
+ {id:"forced",t:"الاختيار القسري",en:"Forced-Choice / Thurstonian IRT",yr:2011,era:"حديثة",d:"عبارتان (أو أكثر) متساويتان في المرغوبية من أبعاد مختلفة، ويختار المفحوص الأكثر انطباقًا. تقلل التزييف والمرغوبية الاجتماعية، وتُحلل حديثًا بنموذج Thurstonian IRT (Brown & Maydeu-Olivares, 2011).",resp:[],n:k=>[300,"300 فرد على الأقل لنموذج Thurstonian IRT"]},
+ {id:"cat",t:"الاختبار التكيفي المحوسب",en:"Computerized Adaptive Testing (CAT)",yr:1980,era:"حديثة",d:"بنك بنود معايَر بنظرية الاستجابة للمفردة؛ يختار الحاسوب البند التالي حسب إجابات الفرد، فيقيس بدقة بعدد بنود أقل. يتوقف عند وصول الخطأ المعياري لحد معين (مثلًا 0.30).",resp:["لا تنطبق أبدًا","تنطبق نادرًا","تنطبق أحيانًا","تنطبق دائمًا"],n:k=>[500,"500 فرد على الأقل لمعايرة بنك البنود"]},
+ {id:"aig",t:"توليد البنود بالذكاء الاصطناعي",en:"AI-assisted Automatic Item Generation",yr:2020,era:"الأحدث",d:"تُستخدم النماذج اللغوية لتوليد بنود كثيرة من تعريف السمة، ثم يراجعها الخبراء ويحكمونها، وتُفحص إحصائيًا (التحليل العاملي، راش). يوفر الوقت لكنه لا يغني عن التحكيم والتجريب.",resp:["موافق بشدة","موافق","محايد","غير موافق","غير موافق بشدة"],n:k=>[Math.max(200,10*k),"مثل ليكرت: 10 أفراد لكل بند وبحد أدنى 200، بعد التحكيم"]}
+];
+const B={m:null,res:null};
+const q=c=>`«${c}»`;
+function tplItems(m,c,dims,k){
+ const pos=[`أشعر بـ${q(c)} في كثير من المواقف اليومية.`,`يلاحظ المحيطون بي ${q(c)} في تصرفاتي.`,`أفكر في الأمور المرتبطة بـ${q(c)} أكثر من غيري.`,`يظهر ${q(c)} لدي بوضوح عند التعامل مع الآخرين.`,`يصعب عليّ التحكم في ${q(c)} عندما أكون تحت ضغط.`,`يؤثر ${q(c)} في أدائي الدراسي أو المهني.`,`أشعر بـ${q(c)} عند مواجهة مواقف جديدة.`,`أتصرف بطريقة تعكس ${q(c)} حتى في المواقف البسيطة.`,`تتكرر لدي مواقف يظهر فيها ${q(c)}.`,`أجد نفسي مدفوعًا بـ${q(c)} في قراراتي.`,`يستمر ${q(c)} معي لفترات طويلة.`,`أتذكر مواقف كثيرة شعرت فيها بـ${q(c)}.`];
+ const neg=[`نادرًا ما أشعر بـ${q(c)}.`,`لا يؤثر ${q(c)} في علاقاتي بالآخرين.`,`أستطيع أن أمضي يومي دون أن أفكر في ${q(c)}.`,`لا يلاحظ أحد ${q(c)} في سلوكي.`];
+ const D=dims.length?dims:["عام"];const out=[];
+ if(m==="osgood"){const P=[["جيد","سيئ","التقييم"],["مفيد","ضار","التقييم"],["ممتع","ممل","التقييم"],["مهم","تافه","التقييم"],["مريح","مزعج","التقييم"],["إيجابي","سلبي","التقييم"],["قوي","ضعيف","القوة"],["كبير","صغير","القوة"],["صعب","سهل","القوة"],["عميق","سطحي","القوة"],["نشط","خامل","النشاط"],["سريع","بطيء","النشاط"],["متغير","ثابت","النشاط"],["حاد","هادئ","النشاط"]];for(let i=0;i<k;i++){const p=P[i%P.length];out.push({text:`${p[0]} ـــ ـــ ـــ ـــ ـــ ـــ ـــ ${p[1]}`,dim:p[2],reverse:i%3===2})}return out}
+ if(m==="guttman"){const L=["أحيانًا","مرة في الأسبوع على الأقل","عدة مرات في الأسبوع","يوميًا تقريبًا","لدرجة أنه يؤثر على بعض مهامي","لدرجة أنه يمنعني من بعض الأنشطة","لدرجة أنه يمنعني من معظم الأنشطة","لدرجة أنني أحتاج مساعدة متخصصة"];for(let i=0;i<k;i++)out.push({text:`أشعر بـ${q(c)} ${L[Math.min(i,L.length-1)]}${i>=L.length?` (مستوى ${i+1})`:""}.`,dim:"تراكمي",value:i+1});return out}
+ if(m==="thurstone"){const V=[[11,`${q(c)} أمر ضروري ولا يمكن الاستغناء عنه.`],[10,`${q(c)} من أهم ما يميز الإنسان الناجح.`],[9,`أرى أن ${q(c)} له فوائد كثيرة.`],[8,`${q(c)} مفيد في أغلب المواقف.`],[7,`${q(c)} مقبول بشكل عام.`],[6,`لا أمانع وجود ${q(c)} في حياتي.`],[5,`ليس لدي رأي واضح حول ${q(c)}.`],[4,`أتحفظ أحيانًا على ${q(c)}.`],[3,`${q(c)} يسبب مشكلات أكثر مما يفيد.`],[2,`أرفض ${q(c)} في معظم المواقف.`],[1,`${q(c)} أمر ضار تمامًا ولا فائدة منه.`]];for(let i=0;i<k;i++){const j=Math.round(i*(V.length-1)/Math.max(1,k-1));out.push({text:V[j][1],dim:"الاتجاه",value:V[j][0]})}return out}
+ if(m==="sjt"){const C=["في قاعة المحاضرات","أثناء العمل في مجموعة","مع أحد أفراد الأسرة","في مقابلة مهمة","مع صديق مقرب","أثناء امتحان","في موقف عام أمام الناس","عند تلقي نقد من شخص آخر"];for(let i=0;i<k;i++)out.push({text:`${C[i%C.length]}، واجهت موقفًا يتطلب ${q(c)}. ماذا تفعل؟`,dim:D[i%D.length],options:["أتعامل مع الموقف مباشرة وبهدوء","أطلب المساعدة أو المشورة من شخص أثق به","أؤجل التعامل مع الموقف لوقت لاحق","أنسحب من الموقف تمامًا"],key:"الأفضل: أ — الأسوأ: د (يُراجع المفتاح مع الخبراء)"});return out}
+ if(m==="forced"){for(let i=0;i<k;i++){const a=pos[i%pos.length],b=pos[(i+5)%pos.length];out.push({text:"أي العبارتين تنطبق عليك أكثر؟",dim:`${D[i%D.length]} / ${D[(i+1)%D.length]}`,options:[a,b]})}return out}
+ const lv=["سهل التأييد","متوسط","صعب التأييد"];
+ for(let i=0;i<k;i++){const rev=(m==="likert"||m==="aig")&&(i%4===3);const t=rev?neg[Math.floor(i/4)%neg.length]:pos[(i-Math.floor(i/4))%pos.length];const it={text:t,dim:D[i%D.length],reverse:rev};if(m==="rasch"||m==="cat"){it.level=lv[i%3];it.value=+(-1.5+3*(i%3)/2+((i*37)%10-5)/20).toFixed(2)}out.push(it)}
+ return out;
+}
+function simulate(items,n,binary,steps){
+ const k=items.length,lam=items.map((_,i)=>.55+((i*13)%7)/20),thr=items.map(it=>it.value!=null&&Math.abs(it.value)<4?it.value/2:0);
+ const gauss=()=>{let u=0,v=0;while(!u)u=Math.random();while(!v)v=Math.random();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v)};
+ const rows=[];for(let p=0;p<n;p++){const th=gauss();rows.push(items.map((it,j)=>{const z=lam[j]*th+Math.sqrt(1-lam[j]**2)*gauss()-thr[j];if(binary)return z>0?1:0;const cut=[-1.3,-.45,.35,1.15,1.9].slice(0,steps-1);return 1+cut.filter(c=>z>c).length}))}
+ return rows;
+}
+function labBuild(){
+ const step=()=>{if(!B.m){view.innerHTML=labHead("البناء السريع للمقياس")+`<div class="panel"><h3>1) اختر طريقة البناء</h3><p class="muted" style="margin-top:0">مرتبة من الأقدم إلى الأحدث.</p><div class="meth">${METHODS.map(m=>`<button class="opt" data-m="${m.id}"><b>${m.t}</b><span class="yr">${m.yr}</span> <span class="chip ${m.era.startsWith("كلاس")?"":"gold"}">${m.era}</span><span class="en" style="display:block;text-align:start">${m.en}</span><small>${m.d}</small></button>`).join("")}</div></div><div class="panel" id="collect0"></div>`;renderCollect($("#collect0"));$$("[data-m]").forEach(b=>b.onclick=()=>{B.m=METHODS.find(x=>x.id===b.dataset.m);B.res=null;step();window.scrollTo(0,0)});return}
+  const m=B.m;
+  view.innerHTML=labHead("البناء السريع للمقياس")+`<div class="panel"><div class="row" style="justify-content:space-between"><span class="chip">${m.t} · ${m.yr}</span><button class="btn sm ghost" id="chg">تغيير الطريقة</button></div><p class="muted">${m.d}</p>
+  <h3>2) بيانات المقياس</h3><div class="g2"><div><label class="fl" for="bC">السمة أو المفهوم المراد قياسه</label><input type="text" id="bC" value="${esc(B.c||"القلق الاجتماعي")}"></div><div><label class="fl" for="bP">الفئة المستهدفة</label><input type="text" id="bP" value="${esc(B.p||"طلاب الجامعة")}"></div></div>
+  <div class="g2"><div><label class="fl" for="bK">عدد البنود (الأسئلة)</label><input type="number" id="bK" min="3" max="60" value="${B.k||12}"></div><div><label class="fl" for="bN">حجم العينة المخطط</label><input type="number" id="bN" min="10" max="2000" value="${B.n||200}"></div></div>
+  <label class="fl" for="bD">الأبعاد (افصل بينها بفاصلة — اختياري)</label><input type="text" id="bD" value="${esc(B.d!=null?B.d:"المعرفي، الوجداني، السلوكي")}"><div id="bRec"></div>
+  <div class="row" style="margin-top:12px"><button class="btn" id="bTpl">ابنِ الأسئلة (قوالب جاهزة)</button><button class="btn gold" id="bAI" hidden>ابنِ الأسئلة بالذكاء الاصطناعي</button></div><div id="bExt"></div></div><div id="bOut"></div>`;
+  $("#chg").onclick=()=>{B.m=null;step()};
+  const vals=()=>{B.c=$("#bC").value.trim()||"السمة";B.p=$("#bP").value.trim();B.k=Math.max(3,Math.min(60,+$("#bK").value||12));B.n=Math.max(10,Math.min(2000,+$("#bN").value||100));B.d=$("#bD").value;return{c:B.c,p:B.p,k:B.k,n:B.n,dims:B.d.split(/[،,]/).map(s=>s.trim()).filter(Boolean)}};
+  const aiPrompt=()=>{const v=vals();return `أنت خبير في بناء المقاييس النفسية باللغة العربية. ابنِ ${v.k} بندًا لقياس «${v.c}» لدى ${v.p||"الفئة المستهدفة"} باستخدام ${m.t} (${m.en}).${v.dims.length?` الأبعاد: ${v.dims.join("، ")} — وزّع البنود عليها بالتساوي.`:""}
+قواعد: صياغة عربية فصحى واضحة، عبارة واحدة لكل فكرة، بلا نفي مزدوج، ومناسبة للفئة المستهدفة.${m.id==="likert"||m.id==="aig"?" اجعل نحو 25% من البنود سالبة (معكوسة).":""}${m.id==="thurstone"?" أعطِ كل عبارة قيمة مقترحة من 1 إلى 11 في value، موزعة على المتصل.":""}${m.id==="guttman"?" رتّب العبارات تصاعديًا في الشدة وضع ترتيبها في value.":""}${m.id==="rasch"||m.id==="cat"?" نوّع صعوبة التأييد وضع صعوبة مقترحة بالـ logit من -2 إلى 2 في value.":""}${m.id==="osgood"?" كل بند زوج صفات متضادة بالشكل: صفة ـــ صفة، وdim أحد: التقييم، القوة، النشاط.":""}${m.id==="sjt"?" كل بند موقف واقعي قصير مع 4 تصرفات في options ومفتاح الأفضل والأسوأ في key.":""}${m.id==="forced"?" كل بند: text = «أي العبارتين تنطبق عليك أكثر؟» وoptions عبارتان متقاربتان في المرغوبية الاجتماعية من بعدين مختلفين.":""}
+أعد JSON فقط بهذا الشكل:
+{"instructions":"تعليمات للمفحوص","items":[{"text":"...","dim":"...","reverse":false,"value":null,"options":[],"key":""}],"notes":"ملاحظات للباحث عن التحكيم والتحليل"}`};
+  const rec=()=>{const v=vals();const r=m.n(v.k);$("#bRec").innerHTML=`<div class="verdict ${v.n>=r[0]?"ok":"mid"}">العينة المقترحة لهذه الطريقة: ${r[1]} ← الحد الأدنى المقترح ≈ ${r[0]}. عينتك (${v.n}) ${v.n>=r[0]?"كافية ✔":"أقل من المقترح"}.</div>`;aiExternal(aiPrompt(),$("#bExt"))};
+  ["bC","bP","bK","bN","bD"].forEach(i=>$("#"+i).oninput=rec);rec();
+  $("#bTpl").onclick=()=>{const v=vals();B.res={instructions:"",items:tplItems(m.id,v.c,v.dims,v.k),notes:"",src:"tpl"};show()};
+  aiGet().then(s=>{const btn=$("#bAI");if(!s||!btn)return;btn.hidden=false;btn.onclick=async()=>{btn.disabled=true;const old=btn.textContent;btn.textContent="جارٍ البناء… (قد يستغرق دقيقة)";
+   try{const r=await s.json(aiPrompt(),{cache:false});if(!r||!Array.isArray(r.items)||!r.items.length)throw{code:"invalid_json"};B.res={instructions:String(r.instructions||""),items:r.items.map(x=>({text:String(x.text||""),dim:String(x.dim||""),reverse:!!x.reverse,value:x.value==null||x.value===""?null:+x.value,options:Array.isArray(x.options)?x.options.map(String):[],key:String(x.key||"")})).filter(x=>x.text),notes:String(r.notes||""),src:"ai"};show()}
+   catch(e){toast(AI_ERR[e&&e.code]||"تعذر البناء الآن، استخدم القوالب الجاهزة أو انسخ الطلب لـ Claude.")}
+   btn.disabled=false;btn.textContent=old}});
+  if(B.res)show();
+ };
+ function show(){const m=B.m,r=B.res,o=$("#bOut");if(!o)return;const v={c:B.c,n:B.n};
+  const resp=m.resp;const its=r.items;
+  let h=`<div class="panel"><div class="row" style="justify-content:space-between"><h3 style="margin:0">3) مقياس ${esc(v.c)}</h3><span class="chip ${r.src==="ai"?"gold":""}">${r.src==="ai"?"مولّد بالذكاء الاصطناعي":"قوالب جاهزة — مسودة للتعديل"}</span></div>
+  <p><b>التعليمات:</b> ${esc(r.instructions||defInstr(m))}</p>`;
+  its.forEach((it,i)=>{h+=`<div class="qitem"><b>${i+1}.</b> ${esc(it.text)} ${it.reverse?'<span class="rev">(معكوس)</span>':""}<div class="muted" style="font-size:13.5px">${it.dim?"البعد: "+esc(it.dim):""}${it.value!=null&&isFinite(it.value)?` · ${m.id==="thurstone"?"القيمة المقترحة":m.id==="guttman"?"الترتيب":"الصعوبة (logit)"}: ${it.value}`:""}${it.level?" · "+it.level:""}</div>${it.options&&it.options.length?`<div class="sc">${it.options.map((op,j)=>`<span>${"أبجدهوز"[j]||j+1}) ${esc(op)}</span>`).join("")}</div>${it.key?`<div class="muted" style="font-size:13.5px">المفتاح: ${esc(it.key)}</div>`:""}`:resp.length?`<div class="sc">${resp.map(x=>`<span>${x}</span>`).join("")}</div>`:""}</div>`});
+  h+=`<p class="muted" style="font-size:14px">${esc(r.notes||"")}</p><div class="box warn"><b>قبل التطبيق</b>هذه مسودة: اعرضها على 5–10 محكمين (صدق المحتوى CVR/CVI)، وجرّبها على عينة استطلاعية 30–50 فردًا، وعدّل الصياغة.</div>
+  <div class="row"><button class="btn sm" id="bCopy">نسخ المقياس</button><button class="btn sm ghost" onclick="window.print()">طباعة / PDF</button></div></div>`;
+  const sim=["sjt","forced"].includes(m.id)?null:true;
+  if(sim)h+=`<div class="panel"><h3>4) جرّب التحليل على عينة افتراضية (${v.n} فردًا)</h3><p class="muted" style="margin-top:0">نولّد استجابات افتراضية لـ ${v.n} فردًا على بنودك (بعد عكس البنود السالبة) لتتدرب على حساب الثبات.</p><button class="btn sm gold" id="bSim">ولّد البيانات واحسب الثبات</button><div id="bSimOut"></div></div>`;
+  o.innerHTML=h;o.scrollIntoView({behavior:"smooth",block:"start"});
+  $("#bCopy").onclick=()=>{const t=`مقياس ${v.c}\n${r.instructions||defInstr(m)}\n\n`+its.map((it,i)=>`${i+1}. ${it.text}${it.reverse?" (معكوس)":""}${it.options&&it.options.length?"\n   "+it.options.map((x,j)=>("أبجدهوز"[j]||j+1)+") "+x).join("\n   "):""}`).join("\n")+(resp.length&&!(its[0].options&&its[0].options.length)?`\n\nالبدائل: ${resp.join(" / ")}`:"");const done=()=>toast("تم نسخ المقياس");navigator.clipboard?navigator.clipboard.writeText(t).then(done,()=>fallbackCopy(t,done)):fallbackCopy(t,done)};
+  sharePanel(o);
+  const sb=$("#bSim");if(sb)sb.onclick=()=>{const bin=!!m.bin,steps=Math.max(2,resp.length||5);const rows=simulate(its,Math.min(v.n,2000),bin,steps);const cols=its.map((_,j)=>rows.map(rw=>rw[j]));const a=alphaOf(cols);
+   
+   $("#bSimOut").innerHTML=`<div class="kpis" style="margin-top:10px"><div class="kpi hl"><small>${bin?"KR-20 / ألفا":"ألفا كرونباخ"}</small><b>${f2(a,3)}</b></div><div class="kpi"><small>عدد الأفراد</small><b>${rows.length}</b></div><div class="kpi"><small>عدد البنود</small><b>${its.length}</b></div></div><div class="verdict ${relLbl(a)[1]}">الثبات ${relLbl(a)[0]} (بيانات افتراضية للتدريب فقط — النتيجة الحقيقية تأتي من تطبيقك الفعلي)</div><div class="row"><button class="btn sm" id="bSimGo">حلّل البيانات الافتراضية بالتفصيل في «ابنِ مقياسك»</button></div>`;$("#bSimGo").onclick=()=>{const Q=buildQ();respToScale(Q,rows.map(rw=>({n:"",d:[],a:rw.map((x,j)=>simIdx(Q,Q.items[j].r?(bin?1-x:steps+1-x):x,bin,steps))})),0,"افتراضية")}};
+ }
+ step();
+}
+const PUBLIC_URL="https://mo-psych-stats-lab.github.io/psych-scales-lab/";
+const QKEY="scaleslab-lastQ";
+const b64e=u8=>{let bin="";for(let i=0;i<u8.length;i+=8192)bin+=String.fromCharCode.apply(null,u8.subarray(i,i+8192));return btoa(bin).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"")};
+const b64d=s=>{s=s.replace(/-/g,"+").replace(/_/g,"/");while(s.length%4)s+="=";const bin=atob(s);return Uint8Array.from(bin,c=>c.charCodeAt(0))};
+async function packQ(obj){const u=new TextEncoder().encode(JSON.stringify(obj));if(window.CompressionStream){try{const buf=new Uint8Array(await new Response(new Blob([u]).stream().pipeThrough(new CompressionStream("deflate-raw"))).arrayBuffer());return"z"+b64e(buf)}catch(e){}}return"j"+b64e(u)}
+async function unpackQ(s){const k=s[0],u=b64d(s.slice(1));if(k==="j")return JSON.parse(new TextDecoder().decode(u));if(k==="z"){if(!window.DecompressionStream)throw new Error("old browser");return JSON.parse(await new Response(new Blob([u]).stream().pipeThrough(new DecompressionStream("deflate-raw"))).text())}throw new Error("bad")}
+const hashStr=s=>{let h=5381;for(let i=0;i<s.length;i++)h=((h<<5)+h+s.charCodeAt(i))>>>0;return h.toString(36)};
+function buildQ(){const m=B.m,r=B.res,dirs={likert:"d",aig:"d",thurstone:"b",guttman:"b",osgood:"a",rasch:"a",cat:"a",sjt:"o",forced:"o"};
+ const nm=$("#shName")?$("#shName").checked:true,dm=$$("#shDemo input:checked").map(i=>i.value);
+ const Q={v:1,t:"مقياس "+(B.c||""),ins:r.instructions||defInstr(m),sc:m.resp,s:dirs[m.id]||"a",m:m.id,nm,dm,items:r.items.map(it=>{const o={x:it.text};if(it.dim)o.g=it.dim;if(m.id==="thurstone"&&it.value!=null)o.v=it.value;if(it.options&&it.options.length)o.o=it.options;if(it.reverse)o.r=1;return o})};
+ Q.id=hashStr(JSON.stringify([Q.t,Q.sc,Q.items]));const g=gsCfg();if(g&&$("#shGS")&&$("#shGS").checked)Q.ep=g.url;return Q}
+/* --- Google Sheets as the responses server (Apps Script web app) --- */
+const GSKEY="scaleslab-gs";
+function gsCfg(){try{const g=JSON.parse(localStorage.getItem(GSKEY)||"null");return g&&g.url&&g.key?g:null}catch(e){return null}}
+function gsScript(key){return String.raw`// خادم ردود «مختبر المقاييس النفسية» — Google Apps Script
+// 1) اضغط Run على الدالة setup ووافق على الصلاحيات
+// 2) Deploy ← New deployment ← Web app ← Execute as: Me ← Who has access: Anyone ← Deploy
+// 3) انسخ Web app URL والصقه في الموقع
+var SECRET = "__KEY__";
+
+function setup() {
+  var ss = getSS_();
+  Logger.log("تم إنشاء شيت الردود: " + ss.getUrl());
+  Logger.log("الخطوة التالية: Deploy ← New deployment ← Web app ← Who has access: Anyone");
+}
+function getSS_() {
+  var p = PropertiesService.getScriptProperties(), id = p.getProperty("SSID");
+  if (id) { try { return SpreadsheetApp.openById(id); } catch (e) {} }
+  var ss = SpreadsheetApp.create("ردود مقاييس مختبر المقاييس النفسية");
+  p.setProperty("SSID", ss.getId());
+  return ss;
+}
+function json_(o) {
+  return ContentService.createTextOutput(JSON.stringify(o)).setMimeType(ContentService.MimeType.JSON);
+}
+function sheetFor_(ss, qid, title, create) {
+  var tag = " - " + qid;
+  var sh = ss.getSheets().filter(function (s) { var n = s.getName(); return n.slice(-tag.length) === tag; })[0];
+  if (!sh && create) sh = ss.insertSheet(String(title || "مقياس").replace(/[:\\\/?*\[\]]/g, "").slice(0, 60) + tag);
+  return sh;
+}
+function doPost(e) {
+  var lock = LockService.getScriptLock();
+  lock.waitLock(20000);
+  try {
+    var d = JSON.parse(e.postData.contents);
+    var qid = String(d.qid || "").replace(/[^a-z0-9]/g, "").slice(0, 20);
+    if (!qid) return json_({ ok: false });
+    var sh = sheetFor_(getSS_(), qid, d.t, true);
+    if (sh.getLastRow() === 0) sh.appendRow(["التاريخ"].concat(d.h || []).concat(["raw"]));
+    var row = [new Date()];
+    if (d.nm) row.push(String(d.n || "").slice(0, 100));
+    (d.d || []).forEach(function (x) { row.push(String(x).slice(0, 100)); });
+    (d.s || []).forEach(function (x) { row.push(x); });
+    row.push(JSON.stringify({ n: d.n || "", d: d.d || [], a: d.a || [] }));
+    sh.appendRow(row);
+    return json_({ ok: true });
+  } finally {
+    lock.releaseLock();
+  }
+}
+function doGet(e) {
+  var p = (e && e.parameter) || {};
+  if (p.key !== SECRET) return json_({ ok: false, error: "key" });
+  if (p.ping) return json_({ ok: true, sheet: getSS_().getUrl() });
+  var sh = sheetFor_(getSS_(), String(p.qid || ""), "", false);
+  if (!sh || sh.getLastRow() < 2) return json_({ ok: true, rows: [] });
+  var v = sh.getRange(2, sh.getLastColumn(), sh.getLastRow() - 1, 1).getValues();
+  var rows = [];
+  v.forEach(function (r) { try { rows.push(JSON.parse(r[0])); } catch (x) {} });
+  return json_({ ok: true, rows: rows });
+}`.replace("__KEY__",key)}
+function renderGS(el,onChange){const g=gsCfg();
+ if(g){el.innerHTML=`<div class="verdict ok" style="margin:8px 0">✔ مربوط بـ Google Sheets — الردود هتتحفظ تلقائيًا في الشيت بتاعك.</div><div class="row"><button class="btn sm ghost" id="gsTest">اختبر الربط</button>${g.sheet?`<a class="btn sm ghost" style="text-decoration:none" target="_blank" rel="noopener" href="${esc(g.sheet)}">افتح شيت الردود</a>`:""}<button class="btn sm ghost" id="gsOff">فصل الربط</button></div>`;
+  $("#gsOff",el).onclick=()=>confirmBox("فصل الربط؟ الردود المحفوظة في الشيت لن تُمسح.","فصل الربط",()=>{try{localStorage.removeItem(GSKEY)}catch(e){}renderGS(el,onChange);onChange&&onChange()});
+  $("#gsTest",el).onclick=async()=>{const r=await gsPing(g.url,g.key);toast(r?"✔ الربط شغال":"تعذر الاتصال؛ تأكد من النشر بـ Anyone")};return}
+ let key="";try{const u=new Uint8Array(16);crypto.getRandomValues(u);key=b64e(u)}catch(e){key=Math.random().toString(36).slice(2)+Date.now().toString(36)}
+ const code=gsScript(key);
+ el.innerHTML=`<div class="box note" style="margin-top:8px"><b>الإعداد مرة واحدة فقط (دقيقتين) — بحسابك في جوجل</b><ol style="margin:4px 0"><li>اضغط «نسخ كود السيرفر».</li><li>افتح <a href="https://script.google.com/home/projects/create" target="_blank" rel="noopener">script.google.com</a> (مشروع جديد)، امسح الموجود والصق الكود، واحفظ (Ctrl+S).</li><li>اختر الدالة <b>setup</b> من الأعلى واضغط <b>Run ▶</b>، ووافق على الصلاحيات (لو ظهر «Google hasn't verified this app»: Advanced ← Go to project ← Allow).</li><li>اضغط <b>Deploy ← New deployment</b> ← اختر النوع <b>Web app</b> ← Execute as: <b>Me</b> ← Who has access: <b>Anyone</b> ← <b>Deploy</b>.</li><li>انسخ <b>Web app URL</b> (ينتهي بـ /exec) والصقه تحت واضغط «اربط».</li></ol>الكود فيه <b>مفتاح سري</b> خاص بك: بيه بس تقدر تسحب الردود، وهو محفوظ على جهازك ومش موجود في لينك المفحوصين.</div>
+ <div class="codebox">${esc(code)}</div><div class="row" style="margin-top:8px"><button class="btn sm gold" id="gsCp">نسخ كود السيرفر</button><a class="btn sm ghost" style="text-decoration:none" target="_blank" rel="noopener" href="https://script.google.com/home/projects/create">افتح Google Apps Script</a></div>
+ <label class="fl" for="gsUrl">Web app URL</label><input type="text" id="gsUrl" style="direction:ltr" placeholder="https://script.google.com/macros/s/.../exec"><div class="row" style="margin-top:8px"><button class="btn sm" id="gsSave">اربط</button></div>`;
+ $("#gsCp",el).onclick=()=>{const d=()=>toast("تم نسخ كود السيرفر");navigator.clipboard?navigator.clipboard.writeText(code).then(d,()=>fallbackCopy(code,d)):fallbackCopy(code,d)};
+ $("#gsSave",el).onclick=async()=>{const url=$("#gsUrl",el).value.trim();if(!/^https:\/\/script\.google\.com\/macros\/s\/[\w-]+\/exec$/.test(url)){toast("اللينك لازم يبدأ بـ https://script.google.com/macros/s/ وينتهي بـ /exec");return}
+  const b=$("#gsSave",el);b.disabled=true;b.textContent="جارٍ الاختبار…";const r=await gsPing(url,key);b.disabled=false;b.textContent="اربط";
+  if(!r){toast("الاتصال فشل: تأكد إنك نشرت بـ Who has access: Anyone وإنك لزقت نفس الكود");return}
+  try{localStorage.setItem(GSKEY,JSON.stringify({url,key,sheet:r.sheet||""}))}catch(e){}toast("✔ تم الربط بـ Google Sheets");renderGS(el,onChange);onChange&&onChange()};
+}
+async function gsPing(url,key){try{const r=await fetch(url+"?ping=1&key="+encodeURIComponent(key));const j=await r.json();return j&&j.ok?j:null}catch(e){return null}}
+async function gsPost(ep,payload){try{const r=await fetch(ep,{method:"POST",body:JSON.stringify(payload)});const j=await r.json();return j&&j.ok?"ok":"fail"}catch(e){try{await fetch(ep,{method:"POST",mode:"no-cors",body:JSON.stringify(payload)});return"maybe"}catch(e2){return"fail"}}}
+function sharePanel(o){const p=document.createElement("div");p.className="panel";
+ p.innerHTML=`<h3>5) أرسل المقياس للمفحوصين</h3>
+ <label class="row" style="gap:8px"><input type="checkbox" id="shName" checked> <b>إلزام المفحوص بكتابة اسمه</b></label>
+ <p class="muted" style="margin:6px 0 2px">بيانات إضافية تطلبها (اختياري):</p><div class="row" id="shDemo">${["النوع","العمر","الكلية / التخصص","الفرقة الدراسية"].map(d=>`<label class="row" style="gap:6px"><input type="checkbox" value="${d}"> ${d}</label>`).join("")}</div>
+ <div class="panel" style="background:var(--good-soft);border-color:var(--good);margin:12px 0 0"><h3 style="margin-bottom:4px">📊 حفظ الردود تلقائيًا في Google Sheets (موصى به)</h3><p class="muted" style="margin:0">لما المفحوص يدوس «إرسال» إجاباته تتسجل مباشرة في شيت على حسابك، من غير أكواد.</p><label class="row" style="gap:8px;margin-top:8px" id="shGSw"><input type="checkbox" id="shGS" checked> احفظ ردود هذا المقياس في Google Sheet</label><div id="gsBox"></div></div>
+ <div class="row" style="margin-top:12px"><button class="btn" id="shLink">🔗 أنشئ لينك مباشر للمقياس</button><button class="btn ghost" id="shGF">📝 أنشئ نموذج Google Forms</button></div><div id="shOut"></div>`;
+ o.appendChild(p);
+ const gsUpd=()=>{$("#shGSw").hidden=!gsCfg()};renderGS($("#gsBox"),gsUpd);gsUpd();
+ const c=document.createElement("div");c.className="panel";c.id="collect";o.appendChild(c);renderCollect(c);
+ $("#shLink").onclick=async()=>{const Q=buildQ();try{localStorage.setItem(QKEY,JSON.stringify(Q))}catch(e){}const code=await packQ(Q);const url=PUBLIC_URL+"#take/"+code;
+  $("#shOut").innerHTML=`<div class="box tip" style="margin-top:12px"><b>اللينك جاهز ✔</b>ابعته لأي حد؛ بيفتح من غير أي تسجيل، ويجاوب على الأسئلة${Q.nm?" بعد كتابة اسمه (إلزامي)":""}. ${Q.ep?"إجاباته هتتسجل تلقائيًا في Google Sheet بتاعك، وتسحبها تحت بزرار واحد.":"بعد ما يخلّص هيظهر له «كود ردّ» يبعته لك على واتساب، وأنت تجمع الأكواد تحت. (اربط Google Sheets فوق عشان الردود توصل تلقائيًا.)"}</div><input type="text" readonly value="${esc(url)}" style="direction:ltr" onclick="this.select()"><div class="row" style="margin-top:8px"><button class="btn sm gold" id="cpL">نسخ اللينك</button><a class="btn sm ghost" style="text-decoration:none" target="_blank" rel="noopener" href="https://wa.me/?text=${encodeURIComponent("برجاء الإجابة على "+Q.t+":\n"+url)}">إرسال على واتساب</a><a class="btn sm ghost" style="text-decoration:none" target="_blank" rel="noopener" href="${esc(url)}">جرّبه بنفسك</a></div>${url.length>6000?`<p class="muted" style="font-size:14px">⚠ اللينك طويل (${url.length} حرف) لكثرة البنود؛ يعمل في المتصفحات وواتساب، وإذا قُطع فقلل عدد البنود أو استخدم Google Forms.</p>`:""}`;
+  $("#cpL").onclick=()=>{const d=()=>toast("تم نسخ اللينك");navigator.clipboard?navigator.clipboard.writeText(url).then(d,()=>fallbackCopy(url,d)):fallbackCopy(url,d)};renderCollect(c)};
+ $("#shGF").onclick=()=>{const Q=buildQ();const code=gfScript(Q);
+  $("#shOut").innerHTML=`<div class="box note" style="margin-top:12px"><b>إنشاء النموذج على Google Forms تلقائيًا (دقيقة واحدة)</b><ol style="margin:4px 0"><li>اضغط «نسخ الكود».</li><li>افتح <a href="https://script.google.com/home/projects/create" target="_blank" rel="noopener">script.google.com</a> بحسابك في جوجل (مشروع جديد).</li><li>امسح الموجود والصق الكود (Ctrl+V) ثم اضغط <b>Run ▶</b>.</li><li>وافق على الصلاحيات (Review permissions ← اختر حسابك ← Allow). لو ظهر «Google hasn't verified this app» اضغط Advanced ثم Go to project.</li><li>في <b>Execution log</b> هيظهر لك <b>لينك النموذج للمشاركين</b> ولينك التعديل، ونموذجك هيكون في Google Forms ومعاه Google Sheet للردود.</li></ol>${Q.nm?"الاسم مضاف كسؤال إلزامي.":""} بعد جمع الردود: من Google Sheets اعمل File ← Download ← CSV، واستورده في «ابنِ مقياسك» (خطوة جمع البيانات ← Google Forms أو Excel).</div><div class="codebox">${esc(code)}</div><div class="row" style="margin-top:8px"><button class="btn sm gold" id="cpG">نسخ الكود</button><a class="btn sm ghost" style="text-decoration:none" target="_blank" rel="noopener" href="https://script.google.com/home/projects/create">افتح Google Apps Script</a></div>`;
+  $("#cpG").onclick=()=>{const d=()=>toast("تم نسخ كود Google Forms");navigator.clipboard?navigator.clipboard.writeText(code).then(d,()=>fallbackCopy(code,d)):fallbackCopy(code,d)}};
+}
+function gfScript(Q){const opts=Q.sc&&Q.sc.length?Q.sc:null;const items=Q.items.map(it=>({text:it.x,options:it.o||opts||["نعم","لا"]}));
+ return `// كود إنشاء نموذج Google Forms — مختبر المقاييس النفسية
+function createScaleForm() {
+  var TITLE = ${JSON.stringify(Q.t)};
+  var INSTRUCTIONS = ${JSON.stringify(Q.ins)};
+  var REQUIRE_NAME = ${Q.nm?"true":"false"};
+  var DEMOGRAPHICS = ${JSON.stringify(Q.dm)};
+  var ITEMS = ${JSON.stringify(items,null,1)};
+
+  var form = FormApp.create(TITLE);
+  form.setDescription(INSTRUCTIONS);
+  form.setProgressBar(true);
+  if (REQUIRE_NAME) form.addTextItem().setTitle('الاسم').setRequired(true);
+  DEMOGRAPHICS.forEach(function (d) { form.addTextItem().setTitle(d).setRequired(true); });
+  ITEMS.forEach(function (it, i) {
+    form.addMultipleChoiceItem().setTitle((i + 1) + '. ' + it.text).setChoiceValues(it.options).setRequired(true);
+  });
+  var sheet = SpreadsheetApp.create(TITLE + ' - الردود');
+  form.setDestination(FormApp.DestinationType.SPREADSHEET, sheet.getId());
+  Logger.log('لينك النموذج للمشاركين: ' + form.getPublishedUrl());
+  Logger.log('لينك تعديل النموذج: ' + form.getEditUrl());
+  Logger.log('شيت الردود: ' + sheet.getUrl());
+}`}
+function scoreOf(Q,i,idx){const it=Q.items[i],n=(it.o&&it.o.length)||(Q.sc&&Q.sc.length)||2;if(Q.s==="b")return idx===0?1:0;if(Q.s==="d")return n-idx;return idx+1}
+function renderCollect(c){let Q=null;try{Q=JSON.parse(localStorage.getItem(QKEY)||"null")}catch(e){}
+ if(!Q){c.innerHTML=`<h3>6) جمّع الردود وحللها</h3><p class="muted" style="margin:0">أنشئ اللينك المباشر أولًا، ثم الصق هنا أكواد الردود اللي توصلك.</p>`;return}
+ const g=gsCfg();
+ c.innerHTML=`<h3>6) جمّع ردود «${esc(Q.t)}» وحللها</h3>${Q.ep&&g&&g.url===Q.ep?`<div class="row" style="margin-bottom:10px"><button class="btn gold" id="rcPull">📥 اسحب الردود من Google Sheet</button>${g.sheet?`<a class="btn sm ghost" style="text-decoration:none" target="_blank" rel="noopener" href="${esc(g.sheet)}">افتح الشيت</a>`:""}</div><p class="muted" style="margin-top:0">أو لو حد بعتلك كود رد يدوي (لو النت كان ضعيف عنده) الصقه هنا:</p>`:`<p class="muted" style="margin-top:0">الصق رسائل الواتساب أو أكواد الردود كما هي (كل كود يبدأ بـ RSP1)، حتى لو كانت كلها في رسالة واحدة.</p>`}<textarea id="rcIn" style="min-height:110px" placeholder="RSP1:..."></textarea><div class="row" style="margin-top:8px"><button class="btn" id="rcGo">حوّل الأكواد إلى بيانات وحللها</button></div><div id="rcOut"></div>`;
+ const pull=$("#rcPull",c);if(pull)pull.onclick=async()=>{pull.disabled=true;pull.textContent="جارٍ السحب…";let j=null;try{const r=await fetch(g.url+"?key="+encodeURIComponent(g.key)+"&qid="+encodeURIComponent(Q.id));j=await r.json()}catch(e){}pull.disabled=false;pull.textContent="📥 اسحب الردود من Google Sheet";
+  if(!j||!j.ok){$("#rcOut",c).innerHTML=`<div class="verdict no">تعذر الاتصال بالشيت${j&&j.error==="key"?" (المفتاح غير مطابق — هل غيّرت الكود؟)":""}. جرّب من نسخة GitHub للموقع، وتأكد من النشر بـ Anyone.</div>`;return}
+  if(!j.rows.length){$("#rcOut",c).innerHTML=`<div class="verdict mid">لا توجد ردود بعد على هذا المقياس.</div>`;return}respToScale(Q,j.rows,0,'Google Sheet')};
+ $("#rcGo",c).onclick=()=>{const txt=$("#rcIn",c).value,re=/RSP1:([a-z0-9]+):([A-Za-z0-9_-]+)/g;let mm,rows=[],bad=0,other=0;while((mm=re.exec(txt))){if(mm[1]!==Q.id){other++;continue}try{rows.push(JSON.parse(new TextDecoder().decode(b64d(mm[2]))))}catch(e){bad++}}
+  if(!rows.length){$("#rcOut",c).innerHTML=`<div class="verdict no">لم أجد أكواد صالحة لهذا المقياس${other?` (${other} كود تخص مقياسًا آخر)`:""}.</div>`;return}
+  respToScale(Q,rows,bad,'كود رد')};
+}
+async function renderTake(code){let Q;try{Q=await unpackQ(code)}catch(e){view.innerHTML=`<div class="panel verdict no">الرابط غير صالح أو ناقص. اطلب من الباحث إرسال الرابط كاملًا.</div>`;return}
+ const opts=it=>it.o||Q.sc||[];
+ view.innerHTML=`<div class="lhead"><h2>${esc(Q.t)}</h2><p style="margin:6px 0 0">${esc(Q.ins)}</p></div>
+ ${Q.nm||Q.dm.length?`<div class="panel">${Q.nm?`<label class="fl" for="tkN">الاسم <span style="color:var(--bad)">*</span></label><input type="text" id="tkN" autocomplete="name">`:""}${Q.dm.map((d,i)=>`<label class="fl" for="tkD${i}">${esc(d)} <span style="color:var(--bad)">*</span></label><input type="text" id="tkD${i}">`).join("")}</div>`:""}
+ ${Q.items.map((it,i)=>`<div class="tk-item" id="tk${i}"><b>${i+1}.</b> ${esc(it.x)}<div class="tk-opts ${it.o?"col":""}">${opts(it).map((op,k)=>`<label><input type="radio" name="tq${i}" value="${k}"> ${esc(op)}</label>`).join("")}</div></div>`).join("")}
+ <div class="row"><button class="btn" id="tkGo">إرسال الإجابات</button></div><div id="tkOut"></div><p class="muted" style="font-size:13.5px;margin-top:16px">لا يتم حفظ إجاباتك على أي خادم؛ تُرسل فقط للباحث عن طريق الكود.</p>`;
+ $("#tkGo").onclick=async()=>{let miss=0;const a=Q.items.map((_,i)=>{const s=$(`input[name="tq${i}"]:checked`);$("#tk"+i).classList.toggle("miss",!s);if(!s)miss++;return s?+s.value:-1});
+  const n=Q.nm?$("#tkN").value.trim():"";const d=Q.dm.map((_,i)=>$("#tkD"+i).value.trim());
+  if(Q.nm&&!n){toast("اكتب اسمك أولًا");$("#tkN").focus();return}if(d.some(x=>!x)){toast("أكمل البيانات المطلوبة");return}if(miss){toast(`باقي ${miss} سؤال بدون إجابة`);const f=$(".tk-item.miss");f&&f.scrollIntoView({behavior:"smooth",block:"center"});return}
+  const rc=`RSP1:${Q.id}:${b64e(new TextEncoder().encode(JSON.stringify({n,d,a})))}`;
+  $("#tkGo").disabled=true;
+  if(Q.ep&&/^https:\/\/script\.google\.com\/macros\/s\/[\w-]+\/exec$/.test(Q.ep)){$("#tkGo").textContent="جارٍ الإرسال…";
+   const h=[...(Q.nm?["الاسم"]:[]),...Q.dm,...Q.items.map((it,i)=>"q"+(i+1)+": "+it.x.slice(0,40))];
+   const st=await gsPost(Q.ep,{qid:Q.id,t:Q.t,h,nm:Q.nm,n,d,a,s:a.map((x,i)=>scoreOf(Q,i,x))});
+   if(st!=="fail"){$("#tkGo").textContent="تم الإرسال";$("#tkOut").innerHTML=`<div class="panel" style="margin-top:12px;text-align:center"><div style="font-size:48px">✅</div><h3 style="justify-content:center">تم إرسال إجاباتك بنجاح${n?" يا "+esc(n):""}. شكرًا لمشاركتك!</h3><p class="muted">يمكنك إغلاق الصفحة الآن.</p><details class="steps" style="text-align:start"><summary>لو طلب منك الباحث كود الرد</summary><div class="codebox">${esc(rc)}</div></details></div>`;$("#tkOut").scrollIntoView({behavior:"smooth"});return}
+   toast("تعذر الإرسال التلقائي — ابعت الكود للباحث")}
+  $("#tkGo").textContent="إرسال الإجابات";$("#tkOut").innerHTML=`<div class="panel" style="margin-top:12px"><h3>✔ شكرًا${n?" يا "+esc(n):""}! خطوة أخيرة</h3><p>ابعت كود الرد ده للباحث (الأسهل بزر الواتساب):</p><div class="codebox">${esc(rc)}</div><div class="row" style="margin-top:10px"><a class="btn gold" style="text-decoration:none" target="_blank" rel="noopener" href="https://wa.me/?text=${encodeURIComponent("ردي على "+Q.t+":\n"+rc)}">إرسال على واتساب</a><button class="btn ghost" id="tkCp">نسخ الكود</button><a class="btn ghost" style="text-decoration:none" href="mailto:?subject=${encodeURIComponent("رد "+Q.t)}&body=${encodeURIComponent(rc)}">إرسال بالإيميل</a></div></div>`;
+  $("#tkCp").onclick=()=>{const dn=()=>toast("تم نسخ الكود");navigator.clipboard?navigator.clipboard.writeText(rc).then(dn,()=>fallbackCopy(rc,dn)):fallbackCopy(rc,dn)};$("#tkOut").scrollIntoView({behavior:"smooth"})};
+}
+function defInstr(m){return m.id==="thurstone"?"ضع علامة أمام العبارات التي توافق عليها فقط.":m.id==="guttman"?"أجب بنعم أو لا على كل عبارة.":m.id==="osgood"?"قيّم المفهوم على كل زوج من الصفات بوضع علامة في الخانة الأقرب لرأيك (1 = الصفة اليمنى، 7 = الصفة اليسرى).":m.id==="sjt"?"اقرأ كل موقف واختر التصرف الذي ستقوم به فعلًا.":m.id==="forced"?"اختر من كل زوج العبارة التي تنطبق عليك أكثر، حتى لو انطبقت الاثنتان.":"اقرأ كل عبارة واختر البديل الذي يعبر عنك بصدق، لا توجد إجابات صحيحة أو خاطئة."}
+  /* simulated score -> chosen option index, following the link's scoring direction */
+  function simIdx(Q, x, bin, steps) { if (Q.s === 'b' || bin) return x ? 0 : 1; if (Q.s === 'd') return steps - x; return x - 1; }
+  /* collected link/Sheet responses -> a scale in the 12-step builder (raw values follow the builder convention) */
+  function respToScale(Q, rows, bad, src) {
+    const opts = it => it.o || Q.sc || [];
+    const kind = Q.m === 'sjt' ? 'sjt' : Q.m === 'forced' ? 'forced' : Q.s;
+    let labels, raw;
+    if (kind === 'sjt') { labels = ['أ', 'ب', 'ج', 'د']; raw = idx => 4 - idx; }
+    else if (kind === 'forced') { labels = ['العبارة الأولى', 'العبارة الثانية']; raw = idx => idx === 0 ? 1 : 0; }
+    else if (kind === 'b') { labels = Q.sc.slice(0, 2); raw = idx => idx === 0 ? 1 : 0; }
+    else if (kind === 'd') { labels = Q.sc.slice(); raw = idx => labels.length - idx; }
+    else { labels = Q.sc.slice().reverse(); raw = idx => idx + 1; }
+    const items = Q.items.map(it => {
+      let text = it.x;
+      if (kind === 'sjt') text = [it.x, ...opts(it).slice(0, 4)].join(' | ');
+      else if (kind === 'forced') text = opts(it).slice(0, 2).join(' | ');
+      else if (Q.m === 'osgood') { const p = it.x.split(/\s*(?:ـــ\s*)+/).filter(Boolean); if (p.length === 2) text = p.join(' | '); }
+      return { text, dim: it.g || '', dir: it.r ? -1 : 1, sv: it.v ?? null, key: 0 };
+    });
+    const seen = new Set(); let dup = 0; const out = [];
+    rows.forEach(rw => { const k = JSON.stringify(rw); if (seen.has(k)) { dup++; return; } seen.add(k); out.push({ vals: Q.items.map((_, i) => { const a = rw.a && rw.a[i]; return a == null || a < 0 ? null : raw(a); }), extra: rw.n ? { name: String(rw.n).slice(0, 100) } : {} }); });
+    const n = BUILD.importScale({ name: Q.t, method: Q.m, labels, instr: Q.ins, items, rows: out, src });
+    toast(`تم تحويل ${n} رد إلى «ابنِ مقياسك»${dup ? ` (حُذف ${dup} مكرر)` : ''}${bad ? ` — ${bad} كود تالف` : ''}`);
+  }
+  VIEWS.qbuild = el => { view = el; el.classList.add('qb'); el.onclick = e => { if (e.target.closest('#qFull')) go('build'); }; labBuild(); };
+  VIEWS.take = (el, code) => { view = el; el.classList.add('qb'); renderTake(code || ''); };
+  return { reset: () => { B.m = null; B.res = null; } };
 })();
 
 /* ===== Objective questions & exam bank — بناء المقاييس النفسية =====
@@ -2137,3 +2430,12 @@ applyPrefs(); tick(); shell();
 window.addEventListener('hashchange', route);
 ACCT.init();
 route();
+/* GoatCounter visit counter — only on the public GitHub Pages copy (dashboard: https://mo-psych-stats-lab.goatcounter.com) */
+(function () {
+  if (!/\.github\.io$/.test(location.hostname)) return;
+  const path = () => { const h = location.hash || '#home'; return location.pathname + (h.startsWith('#take/') ? '#take' : h.startsWith('#form-') ? '#form' : h); };
+  const hit = () => { try { window.goatcounter && window.goatcounter.count && window.goatcounter.count({ path: path(), title: document.title }); } catch (e) { } };
+  window.goatcounter = { no_onload: true };
+  const gs = document.createElement('script'); gs.async = true; gs.dataset.goatcounter = 'https://mo-psych-stats-lab.goatcounter.com/count'; gs.src = 'https://gc.zgo.at/count.js'; gs.referrerPolicy = 'no-referrer'; gs.onload = hit;
+  document.head.appendChild(gs); window.addEventListener('hashchange', hit);
+})();
