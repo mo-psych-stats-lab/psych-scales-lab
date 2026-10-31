@@ -1,0 +1,84 @@
+rules_version = '2';
+// Security rules shared by both sites (psych-scales-lab and psych-stats-lab).
+// Default: everything is denied unless a rule below allows it.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() { return request.auth != null; }
+    function isUser(uid) { return signedIn() && request.auth.uid == uid; }
+    function verified() { return signedIn() && request.auth.token.email_verified == true; }
+    function isStr(v, max) { return v is string && v.size() <= max; }
+    function isInt(v, max) { return v is int && v >= 0 && v <= max; }
+    // write throttle: a document may change at most once every 2 seconds
+    function throttled() { return resource == null || !('updated' in resource.data) || request.time > resource.data.updated + duration.value(2, 's'); }
+
+    // ---- per-user progress (one document per account; only its owner can read or write it) ----
+    match /users/{uid} {
+      allow read, delete: if isUser(uid);
+      allow create, update: if isUser(uid)
+        && request.resource.data.keys().hasOnly(['name', 'scales', 'stats', 'prefs', 'updated'])
+        && (!('name' in request.resource.data) || isStr(request.resource.data.name, 40))
+        && (!('scales' in request.resource.data) || (request.resource.data.scales.keys().hasOnly(['state', 'xp']) && isStr(request.resource.data.scales.state, 400000)))
+        && (!('stats' in request.resource.data) || (request.resource.data.stats.keys().hasOnly(['state', 'xp']) && isStr(request.resource.data.stats.state, 400000)))
+        && (!('prefs' in request.resource.data) || request.resource.data.prefs.keys().hasOnly(['lb']))
+        && (!('updated' in request.resource.data) || request.resource.data.updated == request.time)
+        && throttled();
+
+      // saved scales (definitions + their responses), private to the owner
+      match /scales/{sid} {
+        allow read, delete: if isUser(uid);
+        allow create, update: if isUser(uid)
+          && request.resource.data.keys().hasOnly(['json', 'updated'])
+          && isStr(request.resource.data.json, 900000)
+          && request.resource.data.updated == request.time;
+      }
+    }
+
+    // ---- leaderboard: opt-in, verified accounts only, readable by signed-in users ----
+    match /leaderboard/{uid} {
+      allow read: if signedIn();
+      allow delete: if isUser(uid);
+      allow create, update: if isUser(uid) && verified()
+        && request.resource.data.keys().hasOnly(['name', 'xp', 'w', 'total', 'week', 'updated'])
+        && isStr(request.resource.data.name, 40)
+        && request.resource.data.xp.keys().hasOnly(['scales', 'stats'])
+        && request.resource.data.w.keys().hasOnly(['scales', 'stats'])
+        && isInt(request.resource.data.xp.scales, 1000000) && isInt(request.resource.data.xp.stats, 1000000)
+        && isInt(request.resource.data.w.scales, 1000000) && isInt(request.resource.data.w.stats, 1000000)
+        && request.resource.data.total == request.resource.data.xp.scales + request.resource.data.xp.stats
+        && request.resource.data.week == request.resource.data.w.scales + request.resource.data.w.stats
+        && request.resource.data.updated == request.time
+        && throttled();
+    }
+
+    // ---- live scale forms ----
+    match /forms/{fid} {
+      // anyone with the link can read an open form; the owner can always read it
+      allow read: if resource.data.open == true || isUser(resource.data.owner);
+      allow create: if verified()
+        && request.resource.data.keys().hasOnly(['owner', 'title', 'def', 'open', 'created'])
+        && request.resource.data.owner == request.auth.uid
+        && isStr(request.resource.data.title, 120) && isStr(request.resource.data.def, 100000)
+        && request.resource.data.open is bool && request.resource.data.created == request.time;
+      allow update: if isUser(resource.data.owner)
+        && request.resource.data.owner == resource.data.owner
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['open', 'def', 'title'])
+        && isStr(request.resource.data.def, 100000) && isStr(request.resource.data.title, 120) && request.resource.data.open is bool;
+      allow delete: if isUser(resource.data.owner);
+
+      // responses: anyone may submit to an OPEN form; only the form owner may read or delete them; nobody edits them
+      match /responses/{rid} {
+        allow create: if get(/databases/$(database)/documents/forms/$(fid)).data.open == true
+          && request.resource.data.keys().hasOnly(['r', 'v', 'g', 'a', 'ts'])
+          && request.resource.data.r is string && request.resource.data.r.matches('^[0-7]{1,200}$')
+          && isStr(request.resource.data.v, 20) && isStr(request.resource.data.g, 10) && isStr(request.resource.data.a, 3)
+          && request.resource.data.ts == request.time;
+        allow read, delete: if isUser(get(/databases/$(database)/documents/forms/$(fid)).data.owner);
+        allow update: if false;
+      }
+    }
+
+    // everything else is closed
+    match /{document=**} { allow read, write: if false; }
+  }
+}
