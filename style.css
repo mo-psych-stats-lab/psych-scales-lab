@@ -406,3 +406,12 @@ canvas.confetti{position:fixed;inset:0;width:100vw;height:100vh;pointer-events:n
 .ai-head{display:flex;gap:10px;align-items:center}
 .ai-out .ai-ans{background:var(--surface-2);border-radius:14px;padding:12px 14px;line-height:1.9;font-size:15px;max-height:46vh;overflow:auto}
 @media print{.ai-fab{display:none!important}}
+.exbox{background:var(--primary-soft);border-inline-start:3px solid var(--primary);padding:8px 12px;border-radius:10px}
+.qb .sci{display:flex;gap:6px;align-items:center;flex-wrap:wrap;font-size:12.5px;color:var(--primary);background:var(--primary-soft);border-radius:8px;padding:4px 8px;margin-top:4px}
+
+/* brand mark + avatars */
+.brand .logo{background:none!important;width:36px;height:36px;border-radius:11px;box-shadow:0 6px 16px -8px rgba(60,30,160,.7)}
+.brand .logo svg{width:36px!important;height:36px!important}
+.avatar{background:linear-gradient(135deg,#7c5cff,#2a1a6e);color:#fff;border:2px solid var(--neon);box-shadow:0 0 0 2px var(--surface),0 6px 14px -8px rgba(60,30,160,.8);font-family:var(--f-display)}
+.avatar.guest{background:linear-gradient(135deg,var(--primary-soft),var(--surface));color:var(--primary);border-color:var(--primary)}
+.avatar svg{width:62%;height:62%}

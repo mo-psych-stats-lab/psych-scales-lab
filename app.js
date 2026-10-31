@@ -407,21 +407,24 @@ ENV.web = !ENV.claude;
 
 /* ---------- shell & router ---------- */
 const NAV = [
-  ['home', 'الرئيسية', 'home'], ['learn', 'الدروس', 'book'], ['labs', 'المعامل', 'flask'], ['build', 'ابنِ مقياسك', 'build'], ['exam', 'أسئلة موضوعية', 'check'],
+  ['home', 'الرئيسية', 'home'], ['learn', 'الدروس', 'book'], ['labs', 'المعامل', 'flask'], ['build', 'ابنِ مقياسك', 'build'], ['exam', 'أسئلة موضوعية', 'check'], ['bank', 'بنك الأسئلة', 'cards'],
   ['formulas', 'المعادلات', 'sigma'], ['practice', 'التدريب', 'cards'], ['respond', 'أجب عن مقياس', 'form'], ['me', 'إنجازاتي', 'trophy'], ['account', 'حسابي', 'user']
 ];
+const LOGO_SVG = `<svg viewBox="0 0 40 40" aria-hidden="true"><defs><linearGradient id="lgS" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7c5cff"/><stop offset="1" stop-color="#1f1452"/></linearGradient></defs><rect width="40" height="40" rx="11" fill="url(#lgS)"/><path d="M9 25a11 11 0 0 1 22 0" fill="none" stroke="rgba(255,255,255,.28)" stroke-width="3.2" stroke-linecap="round"/><path d="M9 25a11 11 0 0 1 15.8-9.9" fill="none" stroke="#bef264" stroke-width="3.2" stroke-linecap="round"/><path d="M20 25l6.2-7.6" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/><circle cx="20" cy="25" r="2.7" fill="#bef264"/><path d="M8.5 31h23" stroke="rgba(255,255,255,.55)" stroke-width="1.6" stroke-linecap="round"/><path d="M12 31v-2.2M16 31v-2.2M20 31v-3.4M24 31v-2.2M28 31v-2.2" stroke="rgba(255,255,255,.7)" stroke-width="1.3" stroke-linecap="round"/></svg>`;
+const GUEST_SVG = `<svg viewBox="0 0 24 24" aria-hidden="true" fill="none"><circle cx="12" cy="9" r="3.6" fill="currentColor"/><path d="M5.2 19.2c1.3-3.1 3.9-4.7 6.8-4.7s5.5 1.6 6.8 4.7" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>`;
+const avatarInner = nm => nm && nm.trim() ? esc(nm.trim()[0]) : GUEST_SVG;
 const VIEWS = {};
 let current = 'home';
 function shell() {
   $('#app').innerHTML = `
   <aside class="rail" aria-label="التنقل">
-    <a class="brand" href="#home"><span class="logo">${ic('flask')}</span><span>مختبر المقاييس النفسية<small>تعلّم · احسب · ابنِ مقياسك</small></span></a>
-    <nav>${NAV.slice(0, 7).map(n => `<button data-go="${n[0]}">${ic(n[2])}${n[1]}</button>`).join('')}<div class="navsep">أدوات أخرى</div>${NAV.slice(7).map(n => `<button data-go="${n[0]}">${ic(n[2])}${n[1]}</button>`).join('')}</nav>
+    <a class="brand" href="#home"><span class="logo">${LOGO_SVG}</span><span>مختبر المقاييس النفسية<small>تعلّم · احسب · ابنِ مقياسك</small></span></a>
+    <nav>${NAV.slice(0, 8).map(n => `<button data-go="${n[0]}">${ic(n[2])}${n[1]}</button>`).join('')}<div class="navsep">أدوات أخرى</div>${NAV.slice(8).map(n => `<button data-go="${n[0]}">${ic(n[2])}${n[1]}</button>`).join('')}</nav>
     <div class="me" id="railMe"></div>
   </aside>
   <div class="col">
     <header class="topbar">
-      <a class="brand" href="#home"><span class="logo">${ic('flask')}</span><span>مختبر المقاييس</span></a>
+      <a class="brand" href="#home"><span class="logo">${LOGO_SVG}</span><span>مختبر المقاييس</span></a>
       <span class="pill fire" id="pStreak" title="أيام متتالية"></span><span class="pill xp" id="pXp" title="نقاطك"></span>
       <button class="ibtn" id="bSearch" aria-label="بحث">${ic('search')}</button>
       <button class="ibtn" id="bTheme" aria-label="تبديل الوضع الليلي">${ic('moon')}</button>
@@ -436,7 +439,7 @@ function shell() {
   $('#bAcct').onclick = () => go('account');
 }
 function moreSheet() {
-  modal(`<h3>المزيد</h3><div class="stack">${[['qbuild', 'البناء السريع وGoogle Forms', 'bolt', 'طرق البناء، ولينك مباشر، ونموذج Google Forms، وردود Google Sheets'], ['exam', 'أسئلة موضوعية', 'check', 'صح وخطأ، واختيار من متعدد، وامتحان تجريبي ونموذج محلول'], ['formulas', 'المعادلات', 'sigma', 'كل معادلات الصدق والثبات بأمثلة'], ['practice', 'التدريب', 'cards', 'بطاقات ومطابقة ومسائل حسابية'], ['respond', 'أجب عن مقياس', 'form', 'استخدم كود المقياس الذي أرسله الباحث'], ['me', 'إنجازاتي', 'trophy', 'النقاط والأوسمة والإعدادات'], ['account', 'حسابي', 'user', 'تسجيل الدخول وحفظ التقدم']].map(n => `<button class="linkcard" data-m="${n[0]}"><span class="ic">${ic(n[2])}</span><span><b>${n[1]}</b><span>${n[3]}</span></span></button>`).join('')}</div><div class="row" style="margin-top:12px"><button class="btn ghost" data-close>إغلاق</button></div>`,
+  modal(`<h3>المزيد</h3><div class="stack">${[['bank', 'بنك الأسئلة', 'cards', 'كل أسئلة المادة: بحث وتصفية واختبار سريع'], ['exam', 'أسئلة موضوعية', 'check', 'صح وخطأ، واختيار من متعدد، وامتحان تجريبي ونموذج محلول'], ['formulas', 'المعادلات', 'sigma', 'كل معادلات الصدق والثبات بأمثلة'], ['practice', 'التدريب', 'cards', 'بطاقات ومطابقة ومسائل حسابية'], ['respond', 'أجب عن مقياس', 'form', 'استخدم كود المقياس الذي أرسله الباحث'], ['me', 'إنجازاتي', 'trophy', 'النقاط والأوسمة والإعدادات'], ['account', 'حسابي', 'user', 'تسجيل الدخول وحفظ التقدم']].map(n => `<button class="linkcard" data-m="${n[0]}"><span class="ic">${ic(n[2])}</span><span><b>${n[1]}</b><span>${n[3]}</span></span></button>`).join('')}</div><div class="row" style="margin-top:12px"><button class="btn ghost" data-close>إغلاق</button></div>`,
     (bg, close) => $$('[data-m]', bg).forEach(b => b.onclick = () => { close(); go(b.dataset.m); }));
 }
 function go(v) { if (v === 'labs' && typeof LABS !== 'undefined') LABS.clear(); if (v === 'learn' && typeof LEARN !== 'undefined') LEARN.clearOpen(); if (v === 'exam' && typeof EXAM !== 'undefined') EXAM.clear(); if (location.hash !== '#' + v) location.hash = v; else route(); }
@@ -447,7 +450,7 @@ function route() {
   const m = h.match(/^form-([A-Za-z0-9]+)$/); if (m) { h = 'respond'; arg = m[1]; } const tk = h.match(/^take\/([A-Za-z0-9_-]+)$/); if (tk) { h = 'take'; arg = tk[1]; }
   if (!VIEWS[h]) h = 'home';
   current = h;
-  $$('[data-go]').forEach(b => b.setAttribute('aria-current', b.dataset.go === h || (b.dataset.go === 'more' && ['qbuild', 'take', 'exam', 'formulas', 'practice', 'respond', 'me', 'account'].includes(h)) ? 'page' : 'false'));
+  $$('[data-go]').forEach(b => b.setAttribute('aria-current', b.dataset.go === h || (b.dataset.go === 'more' && ['qbuild', 'take', 'bank', 'exam', 'formulas', 'practice', 'respond', 'me', 'account'].includes(h)) ? 'page' : 'false'));
   const v = $('#view'); v.innerHTML = '<div class="container" id="vc"></div>';
   if (typeof MOTION !== 'undefined') MOTION.scrollTop();
   VIEWS[h]($('#vc'), arg);
@@ -462,9 +465,9 @@ function renderStats() {
   $('#pStreak').innerHTML = ic('fire') + `<span class="num">${S.streak}</span>`; $('#pStreak').style.opacity = done ? 1 : .55;
   $('#pXp').innerHTML = ic('bolt') + `<span class="num">${S.xp}</span>`;
   const nm = (window.ACCT && ACCT.displayName()) || S.name || '';
-  $('#bAcct').textContent = nm ? nm.trim()[0] : '؟';
+  $('#bAcct').innerHTML = avatarInner(nm); $('#bAcct').classList.toggle('guest', !(nm && nm.trim()));
   const rk = rankOf(S.xp);
-  const rm = $('#railMe'); if (rm) rm.innerHTML = `<div class="row" style="gap:8px"><span class="avatar">${esc(nm ? nm.trim()[0] : '؟')}</span><div class="grow small"><b>${esc(nm || 'زائر')}</b><div class="muted">${esc(rk.name)}</div></div></div><div class="row small"><span class="pill xp">${ic('bolt')}<span class="num">${S.xp}</span></span><span class="pill fire">${ic('fire')}<span class="num">${S.streak}</span></span></div>${window.ACCT && !ACCT.signedIn() && ACCT.available() ? `<button class="btn sm soft" data-go2="account">احفظ تقدمك بحساب</button>` : ''}<div class="row"><button class="btn sm ghost" id="rTheme">${ic('moon')} الوضع</button><button class="btn sm ghost" id="rFs">أ± الخط</button></div>`;
+  const rm = $('#railMe'); if (rm) rm.innerHTML = `<div class="row" style="gap:8px"><span class="avatar${nm && nm.trim() ? '' : ' guest'}">${avatarInner(nm)}</span><div class="grow small"><b>${esc(nm || 'زائر')}</b><div class="muted">${esc(rk.name)}</div></div></div><div class="row small"><span class="pill xp">${ic('bolt')}<span class="num">${S.xp}</span></span><span class="pill fire">${ic('fire')}<span class="num">${S.streak}</span></span></div>${window.ACCT && !ACCT.signedIn() && ACCT.available() ? `<button class="btn sm soft" data-go2="account">احفظ تقدمك بحساب</button>` : ''}<div class="row"><button class="btn sm ghost" id="rTheme">${ic('moon')} الوضع</button><button class="btn sm ghost" id="rFs">أ± الخط</button></div>`;
   $$('[data-go2]').forEach(b => b.onclick = () => go(b.dataset.go2));
   const rt = $('#rTheme'); if (rt) rt.onclick = () => $('#bTheme').click();
   const rf = $('#rFs'); if (rf) rf.onclick = () => { S.fs = S.fs >= 1.2 ? 1 : +(S.fs + 0.1).toFixed(1); applyPrefs(); save(); };
@@ -533,6 +536,7 @@ VIEWS.home = el => {
       ['build', 'build', 'ابنِ مقياسك', 'معالج من 12 خطوة، جمع البيانات مباشرة، وتحليل فوري', '--good', '--good-soft'],
       ['formulas', 'sigma', 'المعادلات', 'كل المعادلات برموزها ومتى تُستخدم وأمثلة محلولة', '--violet', '--violet-soft'],
       ['practice', 'cards', 'التدريب', 'بطاقات مراجعة، ومطابقة، ومسائل حسابية مولدة', '--amber', '--amber-soft'],
+      ['bank', 'cards', 'بنك الأسئلة', 'أكثر من 200 سؤال بإجاباتها: صح وخطأ، واختيار، ومسائل، ومقالي', '--lime', '--lime-soft'],
       ['exam', 'check', 'أسئلة موضوعية والامتحان', 'صح وخطأ واختيار من متعدد بنمط امتحان القسم، ونموذج محلول', '--bad', '--bad-soft']]
       .map(c => `<button class="linkcard" data-go3="${c[0]}" style="--c:var(${c[4]});--s:var(${c[5]})"><span class="ic">${ic(c[1])}</span><span><b>${c[2]}</b><span>${c[3]}</span></span></button>`).join('')}
   </div>
@@ -1331,10 +1335,14 @@ const BUILD = (() => {
     const L = SCALES.list();
     el.innerHTML = `<div class="section-title"><h2>ابنِ مقياسك</h2><div class="row"><button class="btn" id="bNew">${ic('plus')} مقياس جديد</button><button class="btn ghost" id="bEx">ابدأ من مثال</button><button class="btn ghost" id="bImp">${ic('upload')} استيراد ملف مقياس</button><input type="file" id="fImp" accept=".json,application/json" hidden></div></div>
       <div class="notice small"><b>كيف يعمل؟</b>يسير المعالج على القواعد الاثنتي عشرة لبناء المقياس: من تعريف السمة إلى التحكيم والتجريب، ثم جمع الاستجابات (على جهازك مباشرة، أو بكود ترسله للمستجيبين، أو من Google Forms)، ويحسب التحليل فور وصول البيانات.</div>
-      <button class="linkcard" id="bQuick" style="--c:var(--amber);--s:var(--amber-soft)"><span class="ic">${ic('bolt')}</span><span><b>البناء السريع + لينك مباشر وGoogle Forms وGoogle Sheets</b><span>زي «بناء المقياس» في مختبر الإحصاء: اختر طريقة من 9 طرق، وابنِ العبارات من قوالب جاهزة، وجرّب عينة افتراضية، وابعت المقياس بلينك أو نموذج Google Forms، واسحب الردود من Google Sheet للتحليل هنا.</span></span></button>
+
       ${L.length ? `<div class="grid2">${L.map(s => { const st = status(s), done = st.filter(Boolean).length, r = s.responses.filter(x => !x.pilot).length; return `<article class="card stack" style="gap:8px"><div class="row"><b class="grow" style="font-family:var(--f-display);font-size:17px">${esc(s.name)}</b><span class="chip ${done === 12 ? 'good' : 'blue'}">${done}/12 خطوة</span></div><div class="row small muted"><span>${kept(s).length} عبارة</span><span>${s.dims.length} أبعاد</span><span>${r} استجابة</span></div><div class="pbar good"><i style="width:${done / 12 * 100}%"></i></div><div class="row"><button class="btn sm" data-open="${s.id}">فتح</button><button class="btn sm ghost" data-dup="${s.id}">نسخة</button><button class="btn sm ghost" data-del="${s.id}" aria-label="حذف">${ic('trash')}</button></div></article>`; }).join('')}</div>` : `<div class="card empty"><p>لم تنشئ مقياسًا بعد.</p><p class="small">ابدأ بمقياس جديد، أو افتح مثال «التسويف الأكاديمي» لترى الخطوات مكتملة.</p></div>`}`;
-    $('#bQuick').onclick = () => go('qbuild');
-    $('#bNew').onclick = () => { const s = blank(); SCALES.save(s); checkBadges(); openId = s.id; rerender(); };
+    $('#bNew').onclick = () => modal(`<h3>مقياس جديد: اختر طريقة العمل</h3><div class="stack">
+      <button class="linkcard" data-nw="quick" style="--c:var(--amber);--s:var(--amber-soft)"><span class="ic">${ic('bolt')}</span><span><b>البناء السريع (مثل مختبر الإحصاء)</b><span>اختر طريقة من 9 طرق مع عالِمها ونموذج حقيقي لها، وابنِ العبارات، وأرسل المقياس بلينك أو Google Forms، واجمع الردود في Google Sheet.</span></span></button>
+      <button class="linkcard" data-nw="full"><span class="ic">${ic('build')}</span><span><b>المعالج الكامل: 12 خطوة</b><span>من التعريف والأبعاد وجدول المواصفات إلى التحكيم والتجريب والتحليل والمعايير ودليل المقياس.</span></span></button>
+      <button class="linkcard" data-nw="ex" style="--c:var(--good);--s:var(--good-soft)"><span class="ic">${ic('star')}</span><span><b>ابدأ من مثال جاهز</b><span>مقياس التسويف الأكاديمي (12 عبارة في 3 أبعاد) لتجرب كل الخطوات.</span></span></button>
+      <button class="linkcard" data-nw="real" style="--c:var(--violet);--s:var(--violet-soft)"><span class="ic">${ic('book')}</span><span><b>نماذج حقيقية لكل طريقة ولكل عالم</b><span>ثرستون، وليكرت (روزنبرج)، وجتمان (بوجاردس)، وأوسجود، وراش، وPROMIS، والاختيار القسري.</span></span></button></div>
+      <div class="row" style="margin-top:10px"><button class="btn ghost" data-close>إلغاء</button></div>`, (bg, close) => $$('[data-nw]', bg).forEach(x => x.onclick = () => { close(); const k = x.dataset.nw; if (k === 'quick') return go('qbuild'); if (k === 'real') return LEARN.open('real'); const s = k === 'ex' ? example() : blank(); SCALES.save(s); checkBadges(); openId = s.id; rerender(); }));
     $('#bEx').onclick = () => { const s = example(); SCALES.save(s); checkBadges(); openId = s.id; rerender(); };
     $('#bImp').onclick = () => $('#fImp').click();
     $('#fImp').onchange = e => { const f = e.target.files[0]; if (!f) return; const rd = new FileReader(); rd.onload = () => { try { const s = JSON.parse(rd.result); if (!s.items || !s.dims || !s.scale) throw 0; s.id = uid('s'); s.responses = Array.isArray(s.responses) ? s.responses : []; SCALES.save(s); toast('استُورد المقياس'); rerender(); } catch (err) { toast('الملف ليس ملف مقياس صالحًا'); } }; rd.readAsText(f); };
@@ -1699,6 +1707,7 @@ const QUICK = (() => {
   const labHead = t => `<div class="section-title"><h2>${t}</h2><button class="btn sm ghost" id="qFull">${ic('build')} المعالج الكامل (12 خطوة)</button></div><div class="notice small"><b>مثل «بناء المقياس» في مختبر الإحصاء</b>اختر طريقة البناء، وولّد العبارات، وأرسل المقياس بلينك مباشر أو نموذج Google Forms، واجمع الردود في Google Sheet؛ ثم تفتح الردود في «ابنِ مقياسك» لتحليل الفقرات والثبات والصدق العاملي والمعايير.</div>`;
   const f2 = (x, d = 2) => fmt(x, d);
   const alphaOf = cols => { const rows = cols[0].map((_, i) => cols.map(c => c[i])); return PSY.itemStats(rows).alpha; };
+  const SCI = { thurstone: ['لويس ثرستون (مع شيف)', 'الاتجاه نحو الكنيسة (1929)'], likert: ['رنسيس ليكرت', 'مقياس روزنبرج لتقدير الذات (1965)'], guttman: ['لويس جتمان', 'مقياس بوجاردس للبعد الاجتماعي (1925)'], osgood: ['تشارلز أوسجود', 'تمايز مفهوم «التعلم» (مجيد، 2014)'], rasch: ['جورج راش · ديفيد أندريش', 'استبيان «حب العلوم» (رايت وماسترز، 1982)'], cat: ['فريدريك لورد · ديفيد فايس', 'بنوك فقرات PROMIS'], sjt: ['موتوويدلو ودونيت وكارتر (1990)', 'اختبار الحكم الموقفي في UCAT للطب'], forced: ['آلن إدواردز · آنا براون', 'دراسة القيم؛ وجدول إدواردز (1959)'], aig: ['هومل وزملاؤه · جوتس وزملاؤه', 'مولدات الفقرات بالمحولات (2022–2024)'] };
   const relLbl = a => a >= 0.9 ? ['ممتاز', 'ok'] : a >= 0.8 ? ['جيد', 'ok'] : a >= 0.7 ? ['مقبول', 'mid'] : ['ضعيف', 'no'];
 const AI={p:null};
 function aiGet(){if(!AI.p)AI.p=(async()=>{try{if(window.claude&&typeof window.claude.use==="function")return await window.claude.use("sample")}catch(e){}return null})();return AI.p}
@@ -1741,7 +1750,7 @@ function simulate(items,n,binary,steps){
  return rows;
 }
 function labBuild(){
- const step=()=>{if(!B.m){view.innerHTML=labHead("البناء السريع للمقياس")+`<div class="panel"><h3>1) اختر طريقة البناء</h3><p class="muted" style="margin-top:0">مرتبة من الأقدم إلى الأحدث.</p><div class="meth">${METHODS.map(m=>`<button class="opt" data-m="${m.id}"><b>${m.t}</b><span class="yr">${m.yr}</span> <span class="chip ${m.era.startsWith("كلاس")?"":"gold"}">${m.era}</span><span class="en" style="display:block;text-align:start">${m.en}</span><small>${m.d}</small></button>`).join("")}</div></div><div class="panel" id="collect0"></div>`;renderCollect($("#collect0"));$$("[data-m]").forEach(b=>b.onclick=()=>{B.m=METHODS.find(x=>x.id===b.dataset.m);B.res=null;step();window.scrollTo(0,0)});return}
+ const step=()=>{if(!B.m){view.innerHTML=labHead("البناء السريع للمقياس")+`<div class="panel"><h3>1) اختر طريقة البناء</h3><p class="muted" style="margin-top:0">مرتبة من الأقدم إلى الأحدث.</p><div class="meth">${METHODS.map(m=>`<button class="opt" data-m="${m.id}"><b>${m.t}</b><span class="yr">${m.yr}</span> <span class="chip ${m.era.startsWith("كلاس")?"":"gold"}">${m.era}</span><span class="en" style="display:block;text-align:start">${m.en}</span><small>${m.d}</small><span class="sci">${ic("user")} ${SCI[m.id][0]} · <b>نموذج حقيقي:</b> ${SCI[m.id][1]}</span></button>`).join("")}</div><div class="row"><button class="btn sm soft" id="qReal">${ic("book")} شاهد النماذج الحقيقية لكل طريقة ولكل عالم</button></div></div><div class="panel" id="collect0"></div>`;renderCollect($("#collect0"));$("#qReal").onclick=()=>LEARN.open("real");$$("[data-m]").forEach(b=>b.onclick=()=>{B.m=METHODS.find(x=>x.id===b.dataset.m);B.res=null;step();window.scrollTo(0,0)});return}
   const m=B.m;
   view.innerHTML=labHead("البناء السريع للمقياس")+`<div class="panel"><div class="row" style="justify-content:space-between"><span class="chip">${m.t} · ${m.yr}</span><button class="btn sm ghost" id="chg">تغيير الطريقة</button></div><p class="muted">${m.d}</p>
   <h3>2) بيانات المقياس</h3><div class="g2"><div><label class="fl" for="bC">السمة أو المفهوم المراد قياسه</label><input type="text" id="bC" value="${esc(B.c||"القلق الاجتماعي")}"></div><div><label class="fl" for="bP">الفئة المستهدفة</label><input type="text" id="bP" value="${esc(B.p||"طلاب الجامعة")}"></div></div>
@@ -2196,6 +2205,136 @@ const EXAM = (() => {
   return { clear: () => { mode = null; run = null; clearTimer(); }, TF, MCQ, PROB, ESSAY, MODEL };
 })();
 
+/* ===== Question bank: every question on the site in one place, filterable by type and topic, with search and a quiz
+   on the current selection. Adds questions drawn from Majeed (2014), ch. 10, and the real-examples lesson. ===== */
+const BANK = (() => {
+  const B = 'مجيد، 2014';
+  // book-based true/false: [statement, true?, explanation]
+  const BTF = [
+    ['في طريقة ثرستون تُحسب القيمة المقياسية للعبارة بوسيط تقديرات المحكمين.', 1, `القيمة المقياسية = الوسيط، والمدى الربيعي Q مؤشر غموض العبارة (${B}، ص 358–359).`],
+    ['العبارة التي يكون مداها الربيعي كبيرًا في طريقة ثرستون تُختار لأنها واضحة.', 0, 'المدى الربيعي الكبير يعني اختلاف المحكمين، فالعبارة غامضة وتُستبعد.'],
+    ['استخدم ثرستون وشيف 300 محكم لتصنيف 130 عبارة عن الاتجاه نحو الكنيسة في 11 فئة.', 1, `فئات من A إلى K، والفئة F محايدة (${B}، ص 356).`],
+    ['يرى المفحوص الأوزان (القيم المقياسية) بجانب عبارات مقياس ثرستون عند التطبيق.', 0, 'الأوزان يعرفها الباحث فقط، ويختار المفحوص العبارات التي يوافق عليها.'],
+    ['درجة المفحوص في مقياس ثرستون هي وسيط (أو متوسط) القيم المقياسية للعبارات التي وافق عليها.', 1, 'وليست عدد العبارات التي وافق عليها.'],
+    ['أشارت الدراسات إلى أن عددًا قليلًا من المحكمين (نحو 15–50) يعطي قيمًا مقياسية قريبة من قيم العدد الكبير.', 1, `بلغ الارتباط بين قيم مجموعتين من المحكمين نحو 0.99 (${B}، ص 359–360).`],
+    ['من مزايا طريقة ليكرت أنها أقل جهدًا ووقتًا من طريقة ثرستون.', 1, `ولا تحتاج مجموعة كبيرة من المحكمين (${B}، ص 366).`],
+    ['في طريقة ليكرت تُختار العبارات بعد مقارنة استجابات المجموعتين العليا والدنيا لكل عبارة.', 1, 'باختبار (ت) بين أعلى 25% وأدنى 25%؛ والعبارة المميزة تبقى.'],
+    ['يبلغ ثبات مقياس ليكرت المكون من 20 عبارة عادة 0.85 فأكثر.', 1, `(${B}، ص 365).`],
+    ['مقياس بوجاردس للبعد الاجتماعي (1925) من أوائل المقاييس ذات التدرج التراكمي.', 1, 'سبع درجات من قبول الزواج حتى الاستبعاد من الوطن.'],
+    ['وحدات مقياس بوجاردس متساوية المسافات تمامًا.', 0, `من عيوبه أن الوحدات ليست متساوية (${B}، ص 355).`],
+    ['في سلم جتمان يمكن من معرفة الدرجة الكلية للمفحوص استنتاج نمط إجاباته على العبارات.', 1, 'وهذه خاصية التدرج التراكمي.'],
+    ['يُشترط في سلم جتمان ألا يقل معامل القياسية (Scalability) عن 0.60.', 1, `مع معامل إعادة إنتاج لا يقل عن 0.90 (${B}، ص 370).`],
+    ['نسبة الخطأ المقبولة في سلم جتمان تصل إلى 25%.', 0, 'لا تتجاوز 10%، أي معامل إعادة إنتاج ≥ 0.90.'],
+    ['وضع أوسجود طريقة التمايز الدلالي عام 1957 لدراسة المعاني.', 1, 'في كتاب «قياس المعنى» مع سوسي وتاننباوم.'],
+    ['تقيس طريقة التمايز الدلالي الجانب المعرفي (المعلومات) أكثر من الجانب الوجداني.', 0, 'تقيس الجانب الوجداني (المشاعر نحو المفهوم) أكثر.'],
+    ['تراوح ارتباط درجات التمايز الدلالي بدرجات مقياسي ثرستون وليكرت بين 0.74 و0.82.', 1, `(${B}، ص 372).`],
+    ['مقياس الاتجاه نحو المعوقين (ATDP) له صورتان متكافئتان A وB.', 1, 'في كل منهما 30 عبارة، ومعامل التكافؤ 0.83.'],
+    ['الصور المتكافئة تُستخدم لتقدير الثبات بمعامل التكافؤ.', 1, 'وتسمح بإعادة القياس دون أثر التذكر.'],
+    ['دراسة القيم لألبورت وفيرنون وليندزي تقيس ست قيم بطريقة الاختيار القسري والترتيب.', 1, 'النظرية والاقتصادية والجمالية والاجتماعية والسياسية والدينية.'],
+    ['درجات الاختيار القسري التقليدية تصلح لمقارنة الأفراد بعضهم ببعض مثل درجات ليكرت.', 0, 'هي درجات إبساتية تقارن قيم الفرد ببعضها؛ والمقارنة بين الأفراد تحتاج نموذج Thurstonian IRT.'],
+    ['مقياس روزنبرج لتقدير الذات مثال على مقياس ليكرت ذي العبارات الموجبة والسالبة.', 1, 'عشر عبارات، خمس منها سالبة تُعكس.'],
+    ['في المقياس اللفظي للاتجاهات قد لا تتطابق الاستجابة اللفظية مع السلوك الفعلي.', 1, `ذكر الكتاب أمثلة على التعارض بين القول والسلوك (${B}، ص 349–350).`],
+    ['طريقة المقارنة المزدوجة تعرض على المفحوص كل زوج من الموضوعات ليختار المفضل منهما.', 1, `(${B}، ص 352).`],
+    ['الاختبار التكيفي المحوسب يعرض على كل المفحوصين الفقرات نفسها بالترتيب نفسه.', 0, 'يختار الفقرة التالية حسب إجابات الفرد، فيختلف ما يراه كل مفحوص.']
+  ];
+  // book-based MCQ: [stem, options, correct index, explanation]
+  const BMCQ = [
+    ['القيمة المقياسية للعبارة في طريقة ثرستون هي:', ['متوسط استجابات المفحوصين', 'وسيط تقديرات المحكمين', 'المدى الربيعي', 'معامل التمييز'], 1, 'الوسيط، والمدى الربيعي للغموض.'],
+    ['عدد الفئات التي صنّف فيها المحكمون عبارات ثرستون:', ['5', '7', '9', '11'], 3, 'من A إلى K.'],
+    ['مفحوص وافق على عبارات ثرستون ذات القيم 1.5 و2.2 و3.3؛ درجته:', ['3', '2.2', '7', '1.5'], 1, 'وسيط القيم = 2.2.'],
+    ['في مقياس ليكرت خماسي تُختار العبارة إذا:', ['وافق عليها كل المحكمين', 'ميزت دالًا بين المجموعتين العليا والدنيا', 'كانت قيمتها المقياسية 6', 'كان مداها الربيعي كبيرًا'], 1, 'تحليل الفقرات بالمقارنة الطرفية.'],
+    ['أول من قاس البعد الاجتماعي بمقياس تراكمي (1925):', ['ثرستون', 'ليكرت', 'بوجاردس', 'أوسجود'], 2, 'مقياس بوجاردس.'],
+    ['في مقياس بوجاردس، الدرجة التي تمثل أقصى قرب اجتماعي:', ['قبول الزواج من فرد منهم', 'قبوله زائرًا', 'قبوله مواطنًا', 'استبعاده'], 0, 'الزواج = أقرب درجة.'],
+    ['في تطبيق بوجاردس على 1725 أمريكيًا، أعلى قبول للزواج كان لـ:', ['الكوريين', 'البولنديين', 'السويديين', 'الإنجليز'], 3, 'الإنجليز 93.7%.'],
+    ['الحد الأدنى لمعامل إعادة الإنتاج في سلم جتمان:', ['0.60', '0.75', '0.80', '0.90'], 3, 'أي أخطاء لا تتجاوز 10%.'],
+    ['20 مفحوصًا × 5 عبارات جتمان، وعدد الأخطاء 7؛ معامل إعادة الإنتاج:', ['0.93', '0.65', '0.70', '0.97'], 0, '1 − 7/100.'],
+    ['معامل القياسية في سلم جتمان يساوي:', ['نسبة التحسن ÷ نسبة التحسن المحتملة', 'عدد الأخطاء ÷ عدد الاستجابات', '1 − CR', 'CR × 2'], 0, 'ولا يقل عن 0.60.'],
+    ['عدد نقاط تدريج التمايز الدلالي عادة:', ['3', '5', '7', '11'], 2, 'سباعي.'],
+    ['زوج الصفات (قوي – ضعيف) في التمايز الدلالي ينتمي إلى بعد:', ['التقييم', 'القوة', 'النشاط', 'الفهم'], 1, 'Potency.'],
+    ['زوج الصفات (سريع – بطيء) ينتمي إلى بعد:', ['التقييم', 'القوة', 'النشاط', 'الصدق'], 2, 'Activity.'],
+    ['معامل التكافؤ بين صورتي مقياس الاتجاه نحو المعوقين:', ['0.41', '0.65', '0.83', '0.99'], 2, '(مجيد، 2014، ص 386).'],
+    ['عدد القيم التي تقيسها دراسة القيم لألبورت وفيرنون وليندزي:', ['4', '5', '6', '8'], 2, 'تصنيف شبرنجر.'],
+    ['نوع الدرجات الناتجة عن الاختيار القسري التقليدي:', ['معيارية', 'إبساتية (نسبية داخل الفرد)', 'نسبية بصفر مطلق', 'محكية'], 1, 'مجموعها ثابت لكل مفحوص.'],
+    ['في مقياس روزنبرج (رباعي)، الدرجة المعكوسة لاستجابة «أوافق» (3) على عبارة سالبة:', ['1', '2', '3', '4'], 1, '5 − 3 = 2.'],
+    ['مدى الدرجة الكلية في مقياس روزنبرج لتقدير الذات:', ['0–10', '10–40', '10–50', '1–4'], 1, '10 عبارات × (1 إلى 4).'],
+    ['نموذج سلم التقدير لمقاييس ليكرت في عائلة راش وضعه:', ['أندريش', 'لوشي', 'كوهين', 'سبيرمان'], 0, 'Andrich (1978).'],
+    ['بنوك فقرات PROMIS مثال حقيقي على:', ['طريقة ثرستون', 'الاختبار التكيفي المحوسب المعاير بنظرية الاستجابة للمفردة', 'التمايز الدلالي', 'سلم جتمان'], 1, 'يختار الحاسوب الفقرة التالية.'],
+    ['يتوقف الاختبار التكيفي غالبًا عندما:', ['تنتهي كل الفقرات', 'يصبح الخطأ المعياري لتقدير السمة صغيرًا بما يكفي', 'يخطئ المفحوص مرة', 'تمر 10 دقائق'], 1, 'محك الدقة.'],
+    ['مفتاح تصحيح اختبارات الحكم الموقفي يُحدَّد غالبًا بـ:', ['الصدفة', 'إجماع الخبراء', 'معامل ألفا', 'المتوسط'], 1, 'Expert consensus.'],
+    ['الطريقة التي يرتب فيها المفحوص موضوعات أو ألوانًا حسب تفضيله:', ['التصويت', 'الترتيب', 'التقدير', 'جتمان'], 1, `(${B}، ص 351–352).`],
+    ['أي مما يلي من أهداف قياس الاتجاهات التي ذكرها الكتاب؟', ['استطلاع الرأي العام', 'دراسة الإعلان والتسويق', 'تقويم برامج التربية', 'كل ما سبق'], 3, `(${B}، ص 348–349).`],
+    ['الفقرات المولدة بالذكاء الاصطناعي في بحوث بناء المقاييس:', ['تُستخدم مباشرة دون مراجعة', 'تمر بمراجعة الخبراء والتحليل الإحصائي', 'تغني عن العينة', 'لا تحتاج صدقًا'], 1, 'Hommel et al. (2022)؛ Götz et al. (2024).']
+  ];
+  const TOPICS = [['concepts', 'المفاهيم والمستويات', /القياس|التقويم|التقييم|مستوى|الاسمي|الرتبي|النسبي|الفئوي/], ['steps', 'خطوات البناء والصياغة', /قاعد|خطو|صياغ|جدول المواصفات|فيض|العبار|التجريب|تعريف/], ['methods', 'طرق البناء', /ثرستون|ليكرت|جتمان|أوسجود|التمايز|بوجاردس|قسري|موقفي|ذكاء اصطناعي|المقارنة المزدوجة|الترتيب|ألبورت|روزنبرج/], ['validity', 'الصدق', /صدق|محك|CVR|CVI|أيكن|تقارب|تمييزي|بناء/], ['reliability', 'الثبات', /ثبات|ألفا|KR|كودر|سبيرمان|جتمان للتجزئة|تجزئة|إعادة|كابا|أوميغا|الخطأ المعياري/], ['items', 'تحليل الفقرات', /صعوب|تمييز|الفقرة|المفردة|طرفي|27%/], ['factor', 'التحليل العاملي', /عامل|KMO|بارتليت|تشبع|تدوير|فاريماكس|كايزر/], ['norms', 'المعايير والدرجات', /معيار|مئين|تائي|التساعي|z|T =|قطع|أنجوف/], ['irt', 'نظرية الاستجابة والحديثة', /راش|الاستجابة للمفردة|IRT|تكيفي|PROMIS|DIF|التفاضلي|لوجيت/]];
+  const topicOf = t => { for (const [k, , re] of TOPICS) if (re.test(t)) return k; return 'steps'; };
+  const TYPES = [['tf', 'صح وخطأ'], ['mcq', 'اختيار من متعدد'], ['prob', 'مسائل'], ['essay', 'مقالي'], ['review', 'مراجعة وفهم']];
+  const L4 = ['أ', 'ب', 'ج', 'د'];
+  let ALL = null;
+  function build() {
+    if (ALL) return ALL;
+    const out = [], add = o => { o.id = 'q' + out.length; o.topic = o.topic || topicOf(o.q + ' ' + (o.w || '')); out.push(o); };
+    (EXAM.TF || []).forEach(x => add({ type: 'tf', q: x[0], a: x[1] ? 1 : 0, w: x[2], src: 'نمط الامتحان' }));
+    BTF.forEach(x => add({ type: 'tf', q: x[0], a: x[1] ? 1 : 0, w: x[2], src: 'كتاب مجيد' }));
+    (EXAM.MCQ || []).forEach(x => add({ type: 'mcq', q: x[0], o: x[1], a: x[2], w: x[3], src: 'نمط الامتحان' }));
+    BMCQ.forEach(x => add({ type: 'mcq', q: x[0], o: x[1], a: x[2], w: x[3], src: 'كتاب مجيد' }));
+    (C.mcq || []).forEach(x => add({ type: 'mcq', q: x.q, o: x.o, a: x.a, w: x.w || '', src: 'الدروس' }));
+    (EXAM.PROB || []).forEach(x => add({ type: 'prob', q: `${x.t}: ${x.q}`, ans: x.a, src: 'مسائل محلولة' }));
+    (EXAM.ESSAY || []).forEach(x => add({ type: 'essay', q: x.q, ans: x.a, src: 'نمط الامتحان' }));
+    (C.bank || []).forEach(x => add({ type: 'review', q: x.q, ans: esc(x.a), src: 'الدروس' }));
+    return (ALL = out);
+  }
+  const st = { type: '', topic: '', q: '', page: 0 };
+  const PER = 25;
+  function filtered() { const s = st.q.trim(); return build().filter(x => (!st.type || x.type === st.type) && (!st.topic || x.topic === st.topic) && (!s || (x.q + ' ' + (x.o || []).join(' ')).includes(s))); }
+  function card(x, n) {
+    let body = '';
+    if (x.type === 'tf') body = `<div class="small"><b>${x.a ? '✓ صحيحة' : '✗ خاطئة'}</b> — ${esc(x.w)}</div>`;
+    else if (x.type === 'mcq') body = `<div class="small"><b>(${L4[x.a]}) ${esc(x.o[x.a])}</b>${x.w ? ' — ' + esc(x.w) : ''}</div>`;
+    else body = `<div class="small">${x.ans}</div>`;
+    const tname = (TYPES.find(t => t[0] === x.type) || [])[1], top = (TOPICS.find(t => t[0] === x.topic) || [])[1];
+    return `<details class="card bq"><summary><span class="num muted">${n}.</span> ${esc(x.q)}${x.o ? `<div class="small muted">${x.o.map((o, j) => `${L4[j]}) ${esc(o)}`).join(' · ')}</div>` : ''}<div class="row" style="gap:6px;margin-top:6px"><span class="chip">${tname}</span><span class="chip violet">${top}</span><span class="chip">${esc(x.src)}</span></div></summary><div style="margin-top:8px">${body}</div></details>`;
+  }
+  VIEWS.bank = el => {
+    const all = build(), list = filtered(), pages = Math.max(1, Math.ceil(list.length / PER)); st.page = Math.min(st.page, pages - 1);
+    const cnt = k => all.filter(x => x.type === k).length, tcnt = k => all.filter(x => x.topic === k).length;
+    el.innerHTML = `<div class="section-title"><h2>بنك الأسئلة</h2><span class="chip lime">${all.length} سؤال</span></div>
+      <div class="notice small"><b>كل أسئلة المادة في مكان واحد</b>أسئلة الدروس، وأسئلة بنمط امتحان القسم، وأسئلة من كتاب «أسس بناء الاختبارات والمقاييس النفسية والتربوية» (مجيد، 2014)، ومسائل محلولة، وأسئلة مقالية بإجاباتها. اختر النوع والموضوع، ثم اضغط على السؤال لترى الإجابة، أو اختبر نفسك في الأسئلة المختارة.</div>
+      <div class="seg" style="flex-wrap:wrap"><button data-ty="" aria-pressed="${!st.type}">الكل (${all.length})</button>${TYPES.map(t => `<button data-ty="${t[0]}" aria-pressed="${st.type === t[0]}">${t[1]} (${cnt(t[0])})</button>`).join('')}</div>
+      <div class="seg" style="flex-wrap:wrap"><button data-tp="" aria-pressed="${!st.topic}">كل الموضوعات</button>${TOPICS.map(t => `<button data-tp="${t[0]}" aria-pressed="${st.topic === t[0]}">${t[1]} (${tcnt(t[0])})</button>`).join('')}</div>
+      <div class="row"><input type="search" id="bqS" class="grow" placeholder="ابحث في الأسئلة… (مثلًا: ألفا، ثرستون، صدق المحتوى)" value="${esc(st.q)}" aria-label="بحث في بنك الأسئلة"><button class="btn lime" id="bqQuiz">${ic('bolt')} اختبرني في المختار</button></div>
+      <p class="small muted" style="margin:0">${list.length} سؤال مطابق${pages > 1 ? ` · صفحة ${st.page + 1} من ${pages}` : ''}</p>
+      <div class="stack" style="gap:8px">${list.slice(st.page * PER, st.page * PER + PER).map((x, i) => card(x, st.page * PER + i + 1)).join('') || '<p class="muted">لا توجد أسئلة مطابقة.</p>'}</div>
+      ${pages > 1 ? `<div class="row"><button class="btn ghost sm" id="bqPrev" ${st.page === 0 ? 'disabled' : ''}>السابق</button><span class="grow"></span><button class="btn ghost sm" id="bqNext" ${st.page >= pages - 1 ? 'disabled' : ''}>التالي</button></div>` : ''}`;
+    $$('[data-ty]', el).forEach(b => b.onclick = () => { st.type = b.dataset.ty; st.page = 0; rerender(); });
+    $$('[data-tp]', el).forEach(b => b.onclick = () => { st.topic = b.dataset.tp; st.page = 0; rerender(); });
+    const s = $('#bqS', el); let tm; s.oninput = () => { clearTimeout(tm); tm = setTimeout(() => { st.q = s.value; st.page = 0; rerender(); setTimeout(() => { const n = $('#bqS'); if (n) { n.focus(); n.setSelectionRange(n.value.length, n.value.length); } }, 0); }, 350); };
+    const pv = $('#bqPrev', el), nx = $('#bqNext', el); if (pv) pv.onclick = () => { st.page--; rerender(); }; if (nx) nx.onclick = () => { st.page++; rerender(); };
+    $('#bqQuiz', el).onclick = () => quiz(list.filter(x => x.type === 'tf' || x.type === 'mcq'));
+  };
+  function quiz(pool) {
+    if (pool.length < 3) return toast('اختر نوعًا أو موضوعًا فيه 3 أسئلة موضوعية على الأقل');
+    const qs = pool.slice().sort(() => Math.random() - 0.5).slice(0, 10); let i = 0, right = 0;
+    modal('<div id="bqM"></div>', (bg, close) => {
+      const box = $('#bqM', bg);
+      const show = () => {
+        if (i >= qs.length) { const pct = right / qs.length * 100; S.correct = (S.correct || 0) + right; if (right === qs.length) { S.perfect = (S.perfect || 0) + 1; if (typeof MOTION !== 'undefined') MOTION.confetti(); } addXP(right + 3); box.innerHTML = `<h3>النتيجة</h3><div class="row" style="gap:16px">${ring(pct, right + '/' + qs.length, 'النتيجة')}<p class="grow">${pct >= 80 ? 'ممتاز! استمر.' : 'راجع الشرح تحت كل سؤال في البنك.'}</p></div><div class="row"><button class="btn" id="bqAgain">اختبار جديد</button><button class="btn ghost" data-close>إغلاق</button></div>`; $('#bqAgain', box).onclick = () => { close(); quiz(pool); }; $$('[data-close]', box).forEach(b => b.onclick = close); return; }
+        const x = qs[i], opts = x.type === 'tf' ? ['✓ صح', '✗ خطأ'] : x.o;
+        box.innerHTML = `<div class="row"><span class="chip">${i + 1} / ${qs.length}</span><span class="grow"></span><button class="ibtn" data-close aria-label="إغلاق">✕</button></div><h3 style="margin:8px 0">${esc(x.q)}</h3><div class="opts">${opts.map((o, j) => `<button class="opt" data-j="${j}"><span class="k">${x.type === 'tf' ? '' : L4[j]}</span>${esc(o)}</button>`).join('')}</div><div id="bqF"></div>`;
+        $$('[data-close]', box).forEach(b => b.onclick = close);
+        $$('[data-j]', box).forEach(b => b.onclick = () => {
+          const j = +b.dataset.j, correct = x.type === 'tf' ? (x.a ? 0 : 1) : x.a, ok = j === correct; if (ok) right++;
+          $$('[data-j]', box).forEach(o => { o.disabled = true; if (+o.dataset.j === correct) o.style.borderColor = 'var(--good)'; });
+          if (!ok) b.style.borderColor = 'var(--bad)';
+          $('#bqF', box).innerHTML = `<div class="notice small ${ok ? 'good' : 'bad'}"><b>${ok ? 'إجابة صحيحة' : 'إجابة خاطئة'}</b>${esc(x.w || '')}</div><button class="btn" id="bqN">${i + 1 < qs.length ? 'التالي' : 'النتيجة'}</button>`;
+          $('#bqN', box).onclick = () => { i++; show(); };
+        });
+      };
+      show();
+    });
+  }
+  return { count: () => build().length };
+})();
+
 /* ===== Motion layer: Lenis smooth scroll synced with GSAP ScrollTrigger, route transitions, scroll reveals,
    XP floaters, badge confetti, hero effects (Squares grid + measuring ruler, ported from React Bits ideas).
    Everything degrades to static UI when GSAP is missing or the viewer prefers reduced motion. ===== */
@@ -2552,7 +2691,7 @@ const AI = (() => {
       ${APP === 'scales' ? `<li>${ic('check')} تنشر نموذج مقياسك أونلاين وتصلك الإجابات لحظيًا.</li>` : ''}
       <li>${ic('check')} وسام «عضو مسجل» و15 نقطة.</li></ul>`;
     if (st.mode === 'claude') {
-      el.innerHTML = `<div class="section-title"><h2>حسابي</h2></div><section class="card stack"><div class="row"><span class="avatar">${h((st.claudeName || '؟')[0])}</span><div class="grow"><b>${h(st.claudeName || 'حساب Claude')}</b><div class="small muted">${h(rk)}</div></div></div><p class="small" style="margin:0">داخل Claude يُستخدم حسابك في Claude مباشرة؛ لا تحتاج إلى تسجيل منفصل.</p><div class="notice small ${st.claudeDb ? 'good' : ''}">${st.claudeDb ? 'تقدمك ومقاييسك تُحفظ في حسابك وتتزامن بين أجهزتك.' : 'تقدمك يُحفظ في هذا المتصفح. لحفظه على كل أجهزتك استخدم نسخة الموقع المنشورة على GitHub وأنشئ حسابًا هناك.'}</div></section>`;
+      el.innerHTML = `<div class="section-title"><h2>حسابي</h2></div><section class="card stack"><div class="row"><span class="avatar${st.claudeName ? '' : ' guest'}">${typeof avatarInner === 'function' ? avatarInner(st.claudeName) : h((st.claudeName || '؟')[0])}</span><div class="grow"><b>${h(st.claudeName || 'حساب Claude')}</b><div class="small muted">${h(rk)}</div></div></div><p class="small" style="margin:0">داخل Claude يُستخدم حسابك في Claude مباشرة؛ لا تحتاج إلى تسجيل منفصل.</p><div class="notice small ${st.claudeDb ? 'good' : ''}">${st.claudeDb ? 'تقدمك ومقاييسك تُحفظ في حسابك وتتزامن بين أجهزتك.' : 'تقدمك يُحفظ في هذا المتصفح. لحفظه على كل أجهزتك استخدم نسخة الموقع المنشورة على GitHub وأنشئ حسابًا هناك.'}</div></section>`;
       return;
     }
     if (st.mode !== 'firebase') {
@@ -2603,7 +2742,7 @@ const AI = (() => {
     }
     const u = st.user;
     el.innerHTML = `<div class="section-title"><h2>حسابي</h2></div>
-      <div class="grid2"><section class="card stack"><div class="row"><span class="avatar">${h((st.name || u.email || '؟')[0])}</span><div class="grow"><b>${h(st.name || 'باحث')}</b><div class="small muted ltr" style="text-align:right">${h(u.email || '')}</div></div><span class="chip amber">${h(rk)}</span></div>
+      <div class="grid2"><section class="card stack"><div class="row"><span class="avatar">${typeof avatarInner === 'function' ? avatarInner(st.name || u.email) : h((st.name || u.email || '؟')[0])}</span><div class="grow"><b>${h(st.name || 'باحث')}</b><div class="small muted ltr" style="text-align:right">${h(u.email || '')}</div></div><span class="chip amber">${h(rk)}</span></div>
         ${st.verified ? '<div class="notice good small">بريدك مؤكد. تقدمك يُحفظ في حسابك تلقائيًا.</div>' : '<div class="notice warn small"><b>أكّد بريدك الإلكتروني</b>افتح الرسالة التي أرسلناها ثم أعد تحميل الصفحة. التأكيد مطلوب للظهور في لوحة المتصدرين ونشر النماذج.<div class="row" style="margin-top:6px"><button class="btn sm ghost" id="aVer">إعادة إرسال الرسالة</button><button class="btn sm ghost" id="aRel">تحققت، حدّث الحالة</button></div></div>'}
         <div class="field"><label class="fl" for="aNm">الاسم الظاهر</label><div class="row"><input type="text" id="aNm" maxlength="40" value="${h(st.name)}" class="grow"><button class="btn sm ghost" id="aNmS">حفظ</button></div></div>
         <label class="row small"><input type="checkbox" id="aLb" ${st.lbOptIn ? 'checked' : ''}> اعرض اسمي في لوحة المتصدرين</label>
