@@ -1,7 +1,9 @@
-/* Layout: a study workbench — fixed nav rail on the right (desktop) or bottom tabs (phone), one reading column, tools in cards. Cool slate neutrals, one deep-blue action color, amber only for points/progress. */
+/* Identity: «رحلة الباحث» — a game-like research lab. Deep violet night + neon lime for progress, amber for points.
+   Layout: a study workbench — fixed nav rail on the right (desktop) or bottom tabs (phone), one reading column, tools in cards. Cool slate neutrals, one deep-blue action color, amber only for points/progress. */
 :root{
-  --bg:#f3f5f8; --surface:#ffffff; --surface-2:#eef2f6; --ink:#162231; --muted:#5a6676; --line:#d9e0e8;
-  --primary:#1f5b8e; --primary-ink:#ffffff; --primary-soft:#e3edf6;
+  --bg:#f5f3fb; --surface:#ffffff; --surface-2:#efecf8; --ink:#1b1534; --muted:#5f5a75; --line:#e0dcef;
+  --primary:#5b3fd1; --primary-ink:#ffffff; --primary-soft:#ece8fc;
+  --lime:#65a30d; --lime-soft:#ecfccb; --neon:#bef264; --coral:#f2643c; --hero:#160f33; --hero-2:#251a57;
   --amber:#b7790f; --amber-soft:#f8efdc;
   --good:#2e7a4f; --good-soft:#e2f1e8; --warn:#9a6400; --warn-soft:#fbf0d9; --bad:#b0412f; --bad-soft:#f8e5e1; --violet:#5b4f9c; --violet-soft:#ecebf6;
   --f-display:"Readex Pro","IBM Plex Sans Arabic",Tahoma,sans-serif;
@@ -11,14 +13,16 @@
   --fs:1; color-scheme:light;
 }
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
-  --bg:#12171d; --surface:#1a2129; --surface-2:#222b35; --ink:#e6ebf0; --muted:#a3afbc; --line:#2f3a46;
-  --primary:#7fb2e0; --primary-ink:#0f1720; --primary-soft:#1f2f40;
+  --bg:#0f0c1d; --surface:#18142c; --surface-2:#221d3a; --ink:#ece9f8; --muted:#aaa4c4; --line:#322b52;
+  --primary:#b4a3ff; --primary-ink:#140d2e; --primary-soft:#2a2350;
+  --lime:#bef264; --lime-soft:#26331a; --neon:#bef264; --coral:#ff8a65; --hero:#0d0920; --hero-2:#1a1340;
   --amber:#e0b056; --amber-soft:#33291a;
   --good:#7cc79a; --good-soft:#1c3126; --warn:#e3b45a; --warn-soft:#352a17; --bad:#ec9584; --bad-soft:#3a2420; --violet:#b3a9e6; --violet-soft:#29263c;
   --shadow:0 1px 2px rgba(0,0,0,.3); color-scheme:dark}}
 :root[data-theme="dark"]{
-  --bg:#12171d; --surface:#1a2129; --surface-2:#222b35; --ink:#e6ebf0; --muted:#a3afbc; --line:#2f3a46;
-  --primary:#7fb2e0; --primary-ink:#0f1720; --primary-soft:#1f2f40;
+  --bg:#0f0c1d; --surface:#18142c; --surface-2:#221d3a; --ink:#ece9f8; --muted:#aaa4c4; --line:#322b52;
+  --primary:#b4a3ff; --primary-ink:#140d2e; --primary-soft:#2a2350;
+  --lime:#bef264; --lime-soft:#26331a; --neon:#bef264; --coral:#ff8a65; --hero:#0d0920; --hero-2:#1a1340;
   --amber:#e0b056; --amber-soft:#33291a;
   --good:#7cc79a; --good-soft:#1c3126; --warn:#e3b45a; --warn-soft:#352a17; --bad:#ec9584; --bad-soft:#3a2420; --violet:#b3a9e6; --violet-soft:#29263c;
   --shadow:0 1px 2px rgba(0,0,0,.3); color-scheme:dark}
@@ -343,3 +347,62 @@ details.steps summary{cursor:pointer;font-weight:600;color:var(--primary)}
 .qb .tk-opts.col{flex-direction:column}
 .qb .tk-opts label{border:1.5px solid var(--line);border-radius:10px;padding:8px 12px;cursor:pointer;display:flex;gap:6px;align-items:center;min-height:44px}
 .qb .tk-opts label:has(input:checked){border-color:var(--primary);background:var(--primary-soft);color:var(--primary);font-weight:700}
+
+/* ===== «رحلة الباحث» identity: hero, journey map, motion bits ===== */
+html.lenis,html.lenis body{height:auto}.lenis.lenis-smooth{scroll-behavior:auto!important}.lenis.lenis-smooth [data-lenis-prevent]{overscroll-behavior:contain}
+.chip.lime{background:var(--lime-soft);color:var(--lime)}
+.btn.lime{background:var(--neon);color:#1a2b05;border-color:var(--neon);font-weight:700;box-shadow:0 10px 30px -10px rgba(190,242,100,.55)}
+.btn.lime:hover{filter:brightness(1.05)}
+.btn.glass{background:rgba(255,255,255,.08);color:#fff;border:1px solid rgba(255,255,255,.18);backdrop-filter:blur(8px)}
+.btn.glass:hover{background:rgba(255,255,255,.14)}
+.hx{position:relative;overflow:hidden;border-radius:24px;background:radial-gradient(900px 420px at 85% -10%,var(--hero-2),var(--hero) 60%);color:#f1eeff;isolation:isolate;box-shadow:0 30px 70px -35px rgba(40,20,110,.75)}
+.hx canvas.sq{position:absolute;inset:0;width:100%;height:100%;z-index:-1}
+.hx::after{content:"";position:absolute;inset:auto -20% -60% 30%;height:340px;background:radial-gradient(closest-side,rgba(190,242,100,.18),transparent);z-index:-1;pointer-events:none}
+.hx-in{padding:clamp(20px,4vw,40px);display:flex;flex-direction:column;gap:12px;max-width:820px}
+.hx-kick{margin:0;display:flex;gap:10px;align-items:center;flex-wrap:wrap;color:#cfc7f5;font-size:14px}
+.hx .chip.lime{background:rgba(190,242,100,.14);color:var(--neon)}
+.hx-title{margin:0;font-family:var(--f-display);font-weight:700;font-size:clamp(28px,5.2vw,52px);line-height:1.2;letter-spacing:0;overflow:hidden;padding-bottom:4px}
+.hx-title .word,.hx-title div{display:inline-block}
+.hx-sub{margin:0;color:#cfc8ee;font-size:clamp(15px,1.8vw,17.5px);max-width:640px}
+.hx-cta{display:flex;flex-wrap:wrap;gap:10px;margin-top:4px}
+.hx-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-top:6px}
+.hx-stats>div{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:14px;padding:10px 12px}
+.hx-stats b{display:block;font-family:var(--f-mono);font-size:clamp(20px,3vw,28px);color:#fff;direction:ltr;text-align:right}
+.hx-stats small{color:#b9b1e0;font-size:12.5px}
+@media (max-width:560px){.hx-stats{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.ruler{position:relative;height:44px;display:flex;align-items:flex-end;justify-content:space-between;margin-top:10px;border-bottom:2px solid rgba(255,255,255,.25)}
+.ruler i{display:block;width:2px;height:10px;background:rgba(255,255,255,.35);border-radius:1px}
+.ruler i.m{height:16px;background:rgba(255,255,255,.55)}.ruler i.l{height:24px;background:var(--neon)}
+.ruler .needle{position:absolute;bottom:-2px;width:3px;height:40px;background:var(--neon);border-radius:2px;transform:translateX(-50%);box-shadow:0 0 18px var(--neon)}
+.ruler .needle b{position:absolute;top:-24px;left:50%;transform:translateX(-50%);background:var(--neon);color:#1a2b05;font-size:12px;padding:1px 7px;border-radius:999px;white-space:nowrap}
+.ruler-cap{margin:0;color:#b9b1e0;font-size:13.5px}
+.journey .jmap{width:100%;height:auto;display:block;overflow:visible}
+.jmap .trail-bg{fill:none;stroke:var(--line);stroke-width:8;stroke-linecap:round;stroke-dasharray:2 14}
+.jmap .trail{fill:none;stroke:var(--primary);stroke-width:8;stroke-linecap:round}
+.jmap .jn circle{fill:var(--surface);stroke:var(--line);stroke-width:4}
+.jmap .jn .n{text-anchor:middle;font:700 24px var(--f-mono);fill:var(--muted)}
+.jmap .jn .l{text-anchor:middle;font:600 19px var(--f-body);fill:var(--muted)}
+.jmap .jn.lit circle{fill:var(--primary);stroke:var(--primary)}.jmap .jn.lit .n{fill:#fff}.jmap .jn.lit .l{fill:var(--ink)}
+.jmap .jn.now circle{fill:var(--surface);stroke:var(--lime);stroke-width:6}.jmap .jn.now .n{fill:var(--lime)}.jmap .jn.now .l{fill:var(--ink)}
+.jmap .jn.now circle{animation:pulse 1.8s ease-in-out infinite;transform-origin:center;transform-box:fill-box}
+@keyframes pulse{50%{stroke-width:12;stroke-opacity:.5}}
+.jlist{display:none;list-style:none;margin:0;padding:0;gap:6px}
+.jlist li{display:flex;gap:10px;align-items:center;padding:6px 10px;border-radius:12px;background:var(--surface-2);font-size:14.5px}
+.jlist li span{flex:none;width:28px;height:28px;border-radius:50%;display:grid;place-items:center;font:700 13px var(--f-mono);background:var(--surface);border:2px solid var(--line);color:var(--muted)}
+.jlist li.lit span{background:var(--primary);border-color:var(--primary);color:#fff}.jlist li.now{outline:2px solid var(--lime)}.jlist li.now span{border-color:var(--lime);color:var(--lime)}
+@media (max-width:640px){.journey .jmap{display:none}.jlist{display:grid}}
+.xpfloat{position:fixed;z-index:200;transform:translateX(-50%);pointer-events:none;font:700 15px var(--f-mono);color:#1a2b05;background:var(--neon);padding:2px 10px;border-radius:999px;box-shadow:0 8px 20px -6px rgba(101,163,13,.6)}
+canvas.confetti{position:fixed;inset:0;width:100vw;height:100vh;pointer-events:none;z-index:300}
+.linkcard{transition:transform .2s ease,box-shadow .2s ease,border-color .2s}
+@media (hover:hover){.linkcard:hover{transform:translateY(-3px);box-shadow:0 14px 30px -18px rgba(60,30,150,.45);border-color:var(--c,var(--primary))}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+/* AI assistant */
+.ai-fab{position:fixed;left:18px;bottom:20px;z-index:60;display:flex;align-items:center;gap:8px;padding:10px 16px 10px 12px;border-radius:999px;border:1px solid rgba(255,255,255,.18);background:linear-gradient(135deg,var(--hero-2),var(--hero));color:#fff;font-weight:700;box-shadow:0 14px 34px -14px rgba(40,20,110,.8);cursor:pointer}
+.ai-fab:hover{transform:translateY(-2px)}
+.ai-orb{width:22px;height:22px;border-radius:50%;flex:none;background:conic-gradient(from 0deg,var(--neon),#8b5cf6,#22d3ee,var(--neon));animation:spin 4s linear infinite;box-shadow:0 0 14px rgba(190,242,100,.6)}
+@keyframes spin{to{transform:rotate(360deg)}}
+@media (max-width:900px){.ai-fab{bottom:calc(76px + env(safe-area-inset-bottom,0px));padding:10px}.ai-fab span:last-child{display:none}}
+.ai-sheet .modal{max-width:640px;width:100%;display:flex;flex-direction:column;gap:10px;max-height:88vh;overflow:auto}
+.ai-head{display:flex;gap:10px;align-items:center}
+.ai-out .ai-ans{background:var(--surface-2);border-radius:14px;padding:12px 14px;line-height:1.9;font-size:15px;max-height:46vh;overflow:auto}
+@media print{.ai-fab{display:none!important}}

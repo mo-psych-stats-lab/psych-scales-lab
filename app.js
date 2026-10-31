@@ -328,6 +328,7 @@ function tick() {
 }
 function quest(k, amt = 1) { if (!S.quests) return; S.quests.list.forEach(q => { if (q.k !== k || q.done) return; q.p += amt; if (q.p >= q.n) { q.done = true; S.xp += 10; toast('أنجزت مهمة اليوم: ' + q.t + ' (+10)'); } }); }
 function addXP(n) {
+  if (typeof MOTION !== 'undefined') MOTION.xp(n);
   const t = today(); S.xp += n; S.hist[t] = (S.hist[t] || 0) + n; quest('xp', n);
   if (S.last !== t) { S.streak = (S.last && dayDiff(S.last, t) === 1) ? S.streak + 1 : 1; S.last = t; S.best = Math.max(S.best, S.streak); if (S.streak > 1) toast('سلسلتك الآن ' + S.streak + ' أيام متتالية'); }
   checkBadges(); save(); renderStats();
@@ -348,13 +349,13 @@ const BADGES = [
   { id: 'all', t: 'عالِم قياس', d: 'أنهِ كل الأجزاء', f: () => LEARN.doneCount() >= LEARN.total() },
   { id: 'acct', t: 'عضو مسجل', d: 'أنشئ حسابًا لحفظ تقدمك', f: () => !!(window.ACCT && ACCT.signedIn()) }
 ];
-function checkBadges() { BADGES.forEach(b => { if (!S.badges.includes(b.id) && b.f()) { S.badges.push(b.id); S.xp += 15; setTimeout(() => toast('وسام جديد: ' + b.t + ' (+15)'), 300); } }); }
+function checkBadges() { BADGES.forEach(b => { if (!S.badges.includes(b.id) && b.f()) { S.badges.push(b.id); S.xp += 15; if (typeof MOTION !== 'undefined') setTimeout(MOTION.confetti, 250); setTimeout(() => toast('وسام جديد: ' + b.t + ' (+15)'), 300); } }); }
 function labUse(k) { const first = !S.labs[k]; S.labs[k] = (S.labs[k] || 0) + 1; quest('lab', 1); if (first) addXP(5); else save(); }
 
 /* ---------- UI helpers ---------- */
 let toastT; function toast(m) { const t = $('#toast'); t.textContent = m; t.hidden = false; clearTimeout(toastT); toastT = setTimeout(() => t.hidden = true, 2600); }
 function modal(html, onMount) {
-  const bg = document.createElement('div'); bg.className = 'modal-bg'; bg.innerHTML = `<div class="modal" role="dialog" aria-modal="true">${html}</div>`;
+  const bg = document.createElement('div'); bg.className = 'modal-bg'; bg.setAttribute('data-lenis-prevent', ''); bg.innerHTML = `<div class="modal" role="dialog" aria-modal="true">${html}</div>`;
   document.body.appendChild(bg);
   const close = () => { bg.remove(); document.removeEventListener('keydown', onKey); };
   const onKey = e => { if (e.key === 'Escape') close(); };
@@ -362,6 +363,7 @@ function modal(html, onMount) {
   bg.addEventListener('click', e => { if (e.target === bg) close(); });
   $$('[data-close]', bg).forEach(b => b.onclick = close);
   onMount && onMount(bg, close);
+  if (typeof MOTION !== 'undefined' && MOTION.on) gsap.from($('.modal', bg), { y: 24, autoAlpha: 0, scale: 0.97, duration: 0.32, ease: 'power3.out' });
   const f = $('input,textarea,button', bg); f && f.focus();
   return close;
 }
@@ -447,7 +449,9 @@ function route() {
   current = h;
   $$('[data-go]').forEach(b => b.setAttribute('aria-current', b.dataset.go === h || (b.dataset.go === 'more' && ['qbuild', 'take', 'exam', 'formulas', 'practice', 'respond', 'me', 'account'].includes(h)) ? 'page' : 'false'));
   const v = $('#view'); v.innerHTML = '<div class="container" id="vc"></div>';
+  if (typeof MOTION !== 'undefined') MOTION.scrollTop();
   VIEWS[h]($('#vc'), arg);
+  if (typeof MOTION !== 'undefined') MOTION.page($('#vc'));
   renderStats();
   if (!routeKeepScroll) scrollTo(0, 0); routeKeepScroll = false;
 }
@@ -488,20 +492,36 @@ function searchSheet() {
 }
 
 /* ---------- home ---------- */
+const RULES12 = ['الوضوح المفاهيمي', 'المراجعة الأدبية', 'تحديد الأبعاد', 'جدول المواصفات', 'فيض الفقرات', 'جودة الصياغة', 'سلم الاستجابة', 'صدق المحتوى', 'التجريب الاستطلاعي', 'تحليل الفقرات', 'الثبات', 'الصدق العاملي والتقنين'];
+function heroX(rk, nx) {
+  const lo = (RANKS.filter(r => r[0] <= S.xp).pop() || RANKS[0])[0], hi = rk.next ? rk.next[0] : lo + 1, pct = rk.next ? Math.min(100, (S.xp - lo) / (hi - lo) * 100) : 100;
+  const lvl = RANKS.filter(r => r[0] <= S.xp).length, nScales = (typeof SCALES !== 'undefined') ? SCALES.list().length : 0;
+  return `<section class="hx" aria-labelledby="hxT"><canvas class="sq" aria-hidden="true"></canvas><div class="hx-in">
+    <p class="hx-kick"><span class="chip lime">${ic('star')} ${esc(rk.name)}</span><span>المستوى <b class="num">${lvl}</b> من ${RANKS.length}</span></p>
+    <h1 class="hx-title" id="hxT">قِسْ ما لا يُرى، وابنِ مقياسك بيدك</h1>
+    <p class="hx-sub">دروس قصيرة، ومعامل تحسب الصدق والثبات في ثوانٍ، ومعالج يبني مقياسك ويجمع بياناته ويحللها. كل خطوة تكسبك نقاطًا وتقربك من رتبة «عالِم قياس نفسي».</p>
+    <div class="hx-cta"><button class="btn lime magnet" id="hCont">${ic('play')}${S.xp ? 'تابع' : 'ابدأ'}: ${esc(nx.short)}</button><button class="btn glass magnet" data-go3="build">${ic('build')}ابنِ مقياسك</button><button class="btn glass" data-go3="exam">${ic('timer')}تحدّي الامتحان</button></div>
+    <div class="hx-stats"><div><b class="num" data-count="${S.xp}">${S.xp}</b><small>نقطة</small></div><div><b class="num" data-count="${S.streak}">${S.streak}</b><small>يوم متتالٍ</small></div><div><b class="num" data-count="${LEARN.doneCount()}">${LEARN.doneCount()}</b><small>من ${LEARN.total()} دروس</small></div><div><b class="num" data-count="${nScales}">${nScales}</b><small>مقياس بنيته</small></div></div>
+    <div class="ruler" aria-hidden="true">${Array.from({ length: 61 }, (_, i) => `<i class="${i % 10 === 0 ? 'l' : i % 5 === 0 ? 'm' : ''}"></i>`).join('')}<span class="needle" style="left:${100 - pct}%"><b class="num">${S.xp}</b></span></div>
+    <p class="ruler-cap">${rk.next ? `باقٍ <b class="num">${hi - S.xp}</b> نقطة لتصبح «${esc(rk.next[1])}»` : 'وصلت إلى أعلى رتبة. أنت عالِم قياس!'}</p>
+  </div></section>`;
+}
+function journeyX() {
+  const lit = (typeof BUILD !== 'undefined' && BUILD.bestSteps) ? BUILD.bestSteps() : 0;
+  const pos = i => { const row = i < 6 ? 0 : 1, k = row ? i - 6 : i; return [row ? 90 + k * 164 : 910 - k * 164, row ? 235 : 75]; };
+  const pts = RULES12.map((_, i) => pos(i));
+  let d = `M ${pts[0][0]} ${pts[0][1]}`; for (let i = 1; i < 12; i++) { const [x, y] = pts[i], [px, py] = pts[i - 1]; d += i === 6 ? ` C ${px - 120} ${py}, ${px - 120} ${y}, ${x} ${y}` : ` L ${x} ${y}`; }
+  return `<section class="card journey"><div class="row"><h3 class="grow" style="margin:0">${ic('trophy')} رحلة الباحث: 12 مستوى</h3><span class="chip ${lit === 12 ? 'good' : 'lime'}">${lit}/12</span></div>
+    <p class="small muted" style="margin:0">كل مستوى قاعدة من قواعد بناء المقياس. أكمل خطواته في «ابنِ مقياسك» لتضيء الخريطة.</p>
+    <svg class="jmap" viewBox="0 0 1000 310" role="img" aria-label="أكملت ${lit} من 12 مستوى"><path class="trail-bg" d="${d}"/><path class="trail" d="${d}" style="--lit:${lit / 11}"/>${pts.map(([x, y], i) => `<g class="jn ${i < lit ? 'lit' : i === lit ? 'now' : ''}" transform="translate(${x} ${y})"><circle r="30"/><text class="n" y="9">${i < lit ? '✓' : i + 1}</text><text class="l" y="${y > 100 ? 62 : -44}">${RULES12[i]}</text></g>`).join('')}</svg>
+    <ol class="jlist">${RULES12.map((r, i) => `<li class="${i < lit ? 'lit' : i === lit ? 'now' : ''}"><span>${i < lit ? '✓' : i + 1}</span>${r}</li>`).join('')}</ol>
+    <div class="row"><button class="btn soft sm" data-go3="build">${ic('build')} ${lit ? 'تابع رحلتك' : 'ابدأ المستوى الأول'}</button><button class="btn ghost sm" id="hRules2">اقرأ القواعد</button></div></section>`;
+}
 VIEWS.home = el => {
   const t = today(), tx = S.hist[t] || 0, rk = rankOf(S.xp), nx = LEARN.next();
   const acctNudge = window.ACCT && ACCT.available() && !ACCT.signedIn();
   el.innerHTML = `
-  <section class="card hero">
-    ${ring(tx / S.goal, tx + '/' + S.goal, 'هدف اليوم')}
-    <div class="stack" style="gap:6px">
-      <span class="chip amber">${ic('star')} ${esc(rk.name)}</span>
-      <h1>مختبر المقاييس النفسية</h1>
-      <p class="muted" style="margin:0">ادرس بناء المقاييس، واحسب معاملات الصدق والثبات، وابنِ مقياسك واجمع بياناته وحللها في مكان واحد.</p>
-      <p class="small muted" style="margin:0">${rk.next ? `باقٍ <b class="num">${rk.next[0] - S.xp}</b> نقطة لتصبح «${esc(rk.next[1])}»` : 'وصلت إلى أعلى رتبة'}</p>
-      <div class="row"><button class="btn" id="hCont">${ic('play')}${S.xp ? 'تابع' : 'ابدأ'}: ${esc(nx.short)}</button><button class="btn ghost" data-go3="build">${ic('build')}ابنِ مقياسك</button></div>
-    </div>
-  </section>
+  ${heroX(rk, nx)}
   ${acctNudge ? `<div class="notice amber row"><div class="grow"><b>احفظ تقدمك على كل أجهزتك</b><span class="small">أنشئ حسابًا مجانيًا بالبريد الإلكتروني (اختياري): تحفظ نقاطك وسلسلتك ومقاييسك، وتظهر في لوحة المتصدرين.</span></div><button class="btn amber sm" data-go3="account">إنشاء حساب</button></div>` : ''}
   <div class="grid2">
     <section class="card"><h3>${ic('bolt')} مهام اليوم</h3>${S.quests.list.map(q => `<div class="quest"><span>${esc(q.t)} ${q.done ? '<span class="chip good">تم</span>' : ''}</span><span class="muted num small">+10</span><div class="pbar amber"><i style="width:${Math.min(100, q.p / q.n * 100)}%"></i></div></div>`).join('')}</section>
@@ -516,13 +536,12 @@ VIEWS.home = el => {
       ['exam', 'check', 'أسئلة موضوعية والامتحان', 'صح وخطأ واختيار من متعدد بنمط امتحان القسم، ونموذج محلول', '--bad', '--bad-soft']]
       .map(c => `<button class="linkcard" data-go3="${c[0]}" style="--c:var(${c[4]});--s:var(${c[5]})"><span class="ic">${ic(c[1])}</span><span><b>${c[2]}</b><span>${c[3]}</span></span></button>`).join('')}
   </div>
-  <section class="card"><h3>${ic('shield')} القواعد الاثنتا عشرة لبناء المقياس</h3>
-    <ol class="small" style="columns:2 220px;margin:0;padding-inline-start:1.4em">${['الوضوح المفاهيمي', 'المراجعة الأدبية', 'تحديد الأبعاد', 'جدول المواصفات', 'فيض الفقرات', 'جودة الصياغة', 'سلم الاستجابة', 'صدق المحتوى', 'التجريب الاستطلاعي', 'التحليل الإحصائي للفقرات', 'الثبات', 'الصدق العاملي والتقنين'].map(x => `<li>${x}</li>`).join('')}</ol>
-    <div class="row" style="margin-top:10px"><button class="btn soft sm" id="hRules">اقرأ القواعد</button></div></section>
+  ${journeyX()}
   <p class="foot">إعداد الطالب: محمد عثمان — الدبلوم الخاص في علم النفس · إشراف: الدكتورة نجاة زكي</p>`;
   $('#hCont').onclick = () => LEARN.open(nx.key);
-  $('#hRules').onclick = () => LEARN.open('rules12');
+  $('#hRules2').onclick = () => LEARN.open('rules12');
   $$('[data-go3]', el).forEach(b => b.onclick = () => go(b.dataset.go3));
+  if (typeof MOTION !== 'undefined') { MOTION.hero($('.hx', el)); MOTION.journey($('.journey', el)); MOTION.magnetic(el); }
 };
 
 /* ===== Learn: path, lessons, interactive stepper, quizzes, practice, profile ===== */
@@ -1395,12 +1414,18 @@ const BUILD = (() => {
     const draw = () => {
       b.innerHTML = intro(4, 'اكتب عبارات أكثر من المطلوب (من مصادر استنباطية واستقرائية)، وحدد لكل عبارة بعدها واتجاهها: (+) موجبة، (−) سالبة تُعكس درجتها عند التصحيح.') +
         s.dims.map(d => { const its = s.items.filter(i => i.dim === d.id), need = Math.round(s.target * (+d.w || 0) / 100 * s.mult); return `<div class="stack" style="gap:4px"><div class="row"><b class="grow">${esc(d.name)}</b><span class="chip ${its.length >= need ? 'good' : 'warn'}">${its.length}/${need}</span></div>${its.map(it => itemRow(s, it)).join('')}<div class="row"><input type="text" placeholder="اكتب عبارة جديدة لهذا البعد ثم اضغط إضافة" data-new="${d.id}" class="grow" aria-label="عبارة جديدة في ${esc(d.name)}"><button class="btn sm" data-add="${d.id}">${ic('plus')} إضافة</button></div></div>`; }).join('<hr style="border:none;border-top:1px solid var(--line)">') +
-        `<div class="row"><span class="chip">${METHODS[meth(s)].t}</span><button class="btn sm soft" id="tplGo">${ic('bolt')} مسودة من قوالب جاهزة</button><button class="btn sm ghost" id="aiCopy">${ic('copy')} انسخ طلب التوليد بالذكاء الاصطناعي</button></div><p class="small muted" style="margin:0">القوالب والطلب يتبعان طريقة البناء المختارة في الخطوة 7 (سلم الاستجابة). المسودة نقطة بداية فقط: عدّلها لتناسب سمتك، ثم حكّمها.</p>` +
+        `<div class="row"><span class="chip">${METHODS[meth(s)].t}</span><button class="btn sm soft" id="tplGo">${ic('bolt')} مسودة من قوالب جاهزة</button><button class="btn sm lime" id="aiGen" hidden>${ic('bolt')} ولّد العبارات بحسابك في Claude</button><button class="btn sm ghost" id="aiCopy">${ic('copy')} انسخ طلب التوليد بالذكاء الاصطناعي</button></div><p class="small muted" style="margin:0">القوالب والطلب يتبعان طريقة البناء المختارة في الخطوة 7 (سلم الاستجابة). المسودة نقطة بداية فقط: عدّلها لتناسب سمتك، ثم حكّمها.</p>` +
         `<details class="steps"><summary>إضافة عبارات كثيرة دفعة واحدة</summary><p class="small muted">كل عبارة في سطر. اكتب (−) في بداية العبارة السالبة.</p><select id="bulkDim" aria-label="البعد">${s.dims.map(d => `<option value="${d.id}">${esc(d.name)}</option>`).join('')}</select><textarea id="bulk" style="margin-top:6px"></textarea><button class="btn sm" id="bulkAdd" style="margin-top:6px">إضافة الكل</button></details>`;
       bindItems(b, s, persist, draw);
       $$('[data-add]', b).forEach(x => x.onclick = () => { const inp = $(`[data-new="${x.dataset.add}"]`, b), t = inp.value.trim(); if (!t) return; s.items.push({ id: uid('i'), text: t, dim: x.dataset.add, dir: 1, src: 'استنباطي', ess: null, use: null, keep: true }); quest('items', 1); persist(); draw(); const n = $(`[data-new="${x.dataset.add}"]`, b); n && n.focus(); });
       $$('[data-new]', b).forEach(x => x.onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); $(`[data-add="${x.dataset.new}"]`, b).click(); } });
       $('#tplGo', b).onclick = () => { const k = Math.max(4, Math.round(s.target * s.mult) || 12); const its = tplItems(meth(s), s.construct || s.name || 'السمة', s.dims.map(d => d.id), k); its.forEach(x => s.items.push(Object.assign({ id: uid('i'), src: 'قالب جاهز', ess: null, use: null, keep: true }, x))); quest('items', its.length); persist(); draw(); toast(`أُضيفت ${its.length} عبارة من القوالب`); };
+      if (typeof AI !== 'undefined') AI.available().then(ok => { const g = $('#aiGen', b); if (!ok || !g) return; g.hidden = false; g.onclick = async () => {
+        g.disabled = true; const old = g.innerHTML; g.textContent = 'Claude يكتب العبارات…';
+        try { const k = Math.max(6, Math.round(s.target * s.mult) || 12); const its = await AI.items(s, k); if (!its || !its.length) throw { code: 'invalid_json' };
+          its.forEach(x => { const d = s.dims.find(dd => dd.name === String(x.dim || '').trim()) || s.dims[0]; s.items.push({ id: uid('i'), text: String(x.text || '').trim().slice(0, 300), dim: d.id, dir: x.neg ? -1 : 1, src: 'ذكاء اصطناعي', ess: null, use: null, keep: true }); });
+          quest('items', its.length); persist(); draw(); toast(`أضاف Claude ${its.length} عبارة؛ راجعها وعدّلها قبل التحكيم`);
+        } catch (e) { toast(AI.ERR[e && e.code] || 'تعذر التوليد الآن؛ استخدم القوالب أو انسخ الطلب'); g.disabled = false; g.innerHTML = old; } }; });
       $('#aiCopy', b).onclick = () => copyText(aiPrompt(s)).then(() => toast('نُسخ الطلب؛ الصقه في Claude ثم انسخ العبارات إلى «إضافة عبارات كثيرة»'));
       $('#bulkAdd', b).onclick = () => { const d = $('#bulkDim', b).value; const lines = $('#bulk', b).value.split(/\n/).map(x => x.trim()).filter(Boolean); lines.forEach(l => { const neg = /^\(?[−-]\)?\s*/.test(l); s.items.push({ id: uid('i'), text: l.replace(/^\(?[−-]\)?\s*/, ''), dim: d, dir: neg ? -1 : 1, src: 'استنباطي', ess: null, use: null, keep: true }); }); quest('items', lines.length); persist(); draw(); };
     };
@@ -1663,7 +1688,8 @@ const BUILD = (() => {
     s.step = o.rows && o.rows.length ? 9 : 4; SCALES.save(s); checkBadges(); openId = s.id; go('build');
     return added;
   }
-  return { analyze, kept, formDef, importScale, open: id => { openId = id; go('build'); }, clear: () => { openId = null; } };
+  const bestSteps = () => SCALES.list().reduce((m, s) => Math.max(m, status(s).filter(Boolean).length), 0);
+  return { analyze, kept, formDef, importScale, bestSteps, open: id => { openId = id; go('build'); }, clear: () => { openId = null; } };
 })();
 
 /* ===== Quick scale builder — ported from the statistics lab (#lab/build): methods, templates, simulation,
@@ -2170,6 +2196,203 @@ const EXAM = (() => {
   return { clear: () => { mode = null; run = null; clearTimer(); }, TF, MCQ, PROB, ESSAY, MODEL };
 })();
 
+/* ===== Motion layer: Lenis smooth scroll synced with GSAP ScrollTrigger, route transitions, scroll reveals,
+   XP floaters, badge confetti, hero effects (Squares grid + measuring ruler, ported from React Bits ideas).
+   Everything degrades to static UI when GSAP is missing or the viewer prefers reduced motion. ===== */
+const MOTION = (() => {
+  const G = window.gsap, ST = window.ScrollTrigger, SPLIT = window.SplitText;
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const on = !!G && !reduce;
+  let lenis = null;
+  if (G && ST) G.registerPlugin(ST);
+  if (G && SPLIT) G.registerPlugin(SPLIT);
+
+  function initLenis() {
+    if (!on || !window.Lenis || !ST) return;
+    lenis = new window.Lenis({ duration: 1.05, smoothWheel: true, syncTouch: false });
+    lenis.on('scroll', ST.update);
+    G.ticker.add(t => lenis.raf(t * 1000));
+    G.ticker.lagSmoothing(0);
+    document.documentElement.classList.add('lenis');
+  }
+  const scrollTop = () => { if (lenis) lenis.scrollTo(0, { immediate: true }); else window.scrollTo(0, 0); };
+
+  /* page enter: stagger the top-level blocks, then reveal the rest on scroll */
+  function page(root) {
+    if (!on || !root) return;
+    ST && ST.getAll().forEach(t => t.vars && t.vars.id === 'rv' && t.kill());
+    const blocks = [...root.children].filter(n => n.nodeType === 1);
+    const first = blocks.slice(0, 3), rest = blocks.slice(3);
+    G.fromTo(first, { autoAlpha: 0, y: 18 }, { autoAlpha: 1, y: 0, duration: 0.55, ease: 'power3.out', stagger: 0.07, clearProps: 'transform,opacity,visibility' });
+    if (ST && rest.length) {
+      G.set(rest, { autoAlpha: 0, y: 26 });
+      ST.batch(rest, { id: 'rv', start: 'top 92%', once: true, onEnter: b => G.to(b, { autoAlpha: 1, y: 0, duration: 0.6, ease: 'power3.out', stagger: 0.06, clearProps: 'transform,opacity,visibility' }) });
+      ST.refresh();
+    }
+    const cards = root.querySelectorAll('.grid2 > .linkcard, .grid3 > .linkcard, .kpis > .tile');
+    if (cards.length) G.from(cards, { autoAlpha: 0, y: 14, scale: 0.98, duration: 0.45, ease: 'power2.out', stagger: 0.04, delay: 0.12, clearProps: 'all' });
+  }
+
+  /* +XP floater near the points pill */
+  function xp(n) {
+    if (!n) return;
+    const pill = document.querySelector('#pXp') || document.querySelector('.pill.xp');
+    const r = pill ? pill.getBoundingClientRect() : { left: innerWidth / 2, top: 60, width: 0 };
+    const f = document.createElement('div'); f.className = 'xpfloat'; f.textContent = '+' + n;
+    f.style.left = (r.left + r.width / 2) + 'px'; f.style.top = (r.top + 6) + 'px';
+    document.body.appendChild(f);
+    if (!on) { setTimeout(() => f.remove(), 900); return; }
+    G.fromTo(f, { y: 18, autoAlpha: 0, scale: 0.6 }, { y: -28, autoAlpha: 1, scale: 1.15, duration: 0.45, ease: 'back.out(2)' });
+    G.to(f, { y: -60, autoAlpha: 0, duration: 0.6, delay: 0.55, ease: 'power1.in', onComplete: () => f.remove() });
+    if (pill) G.fromTo(pill, { scale: 1 }, { scale: 1.18, yoyo: true, repeat: 1, duration: 0.18, ease: 'power2.out' });
+  }
+
+  /* confetti burst (canvas) for badges and perfect scores */
+  function confetti() {
+    if (!on) return;
+    const c = document.createElement('canvas'); c.className = 'confetti'; c.width = innerWidth * devicePixelRatio; c.height = innerHeight * devicePixelRatio;
+    document.body.appendChild(c); const x = c.getContext('2d'); x.scale(devicePixelRatio, devicePixelRatio);
+    const css = getComputedStyle(document.documentElement), cols = ['--lime', '--primary', '--amber', '--good', '--coral'].map(v => css.getPropertyValue(v).trim()).filter(Boolean);
+    const P = Array.from({ length: 140 }, () => ({ x: innerWidth / 2, y: innerHeight * 0.35, vx: (Math.random() - 0.5) * 14, vy: -Math.random() * 13 - 4, s: 4 + Math.random() * 6, r: Math.random() * 6, vr: (Math.random() - 0.5) * 0.4, c: cols[Math.floor(Math.random() * cols.length)] || '#a3e635' }));
+    let t = 0; const tick = () => { t++; x.clearRect(0, 0, innerWidth, innerHeight); P.forEach(p => { p.vy += 0.38; p.vx *= 0.99; p.x += p.vx; p.y += p.vy; p.r += p.vr; x.save(); x.translate(p.x, p.y); x.rotate(p.r); x.fillStyle = p.c; x.fillRect(-p.s / 2, -p.s / 4, p.s, p.s / 2); x.restore(); }); if (t < 150) requestAnimationFrame(tick); else c.remove(); };
+    tick();
+  }
+
+  /* React Bits "Squares"-style animated grid on a canvas, hovered cell lights up */
+  function squares(canvas, opts = {}) {
+    if (!canvas) return () => { };
+    const ctx = canvas.getContext('2d'), size = opts.size || 38; let off = 0, hover = null, raf = 0, w = 0, h = 0;
+    const fit = () => { const r = canvas.getBoundingClientRect(); w = r.width; h = r.height; canvas.width = w * devicePixelRatio; canvas.height = h * devicePixelRatio; ctx.setTransform(devicePixelRatio, 0, 0, devicePixelRatio, 0, 0); };
+    const line = opts.line || 'rgba(255,255,255,.07)', fill = opts.fill || 'rgba(190,242,100,.22)';
+    const draw = () => {
+      ctx.clearRect(0, 0, w, h); const o = off % size;
+      for (let x = -size + o; x < w + size; x += size) for (let y = -size + o; y < h + size; y += size) {
+        if (hover && Math.abs(hover[0] - x - size / 2) < size / 2 && Math.abs(hover[1] - y - size / 2) < size / 2) { ctx.fillStyle = fill; ctx.fillRect(x, y, size, size); }
+        ctx.strokeStyle = line; ctx.strokeRect(x + 0.5, y + 0.5, size, size);
+      }
+      const g = ctx.createRadialGradient(w * 0.3, h * 0.2, 0, w * 0.3, h * 0.2, Math.max(w, h) * 0.9); g.addColorStop(0, 'rgba(0,0,0,0)'); g.addColorStop(1, opts.vignette || 'rgba(14,8,40,.85)'); ctx.fillStyle = g; ctx.fillRect(0, 0, w, h);
+      if (on) { off += opts.speed || 0.25; raf = requestAnimationFrame(draw); }
+    };
+    const mv = e => { const r = canvas.getBoundingClientRect(); hover = [e.clientX - r.left, e.clientY - r.top]; if (!on) draw(); };
+    const lv = () => { hover = null; if (!on) draw(); };
+    fit(); draw(); addEventListener('resize', fit); canvas.parentElement.addEventListener('pointermove', mv); canvas.parentElement.addEventListener('pointerleave', lv);
+    return () => { cancelAnimationFrame(raf); removeEventListener('resize', fit); };
+  }
+
+  /* hero: split headline by words (Arabic letters must stay joined), ruler ticks, count-up numbers */
+  function hero(root) {
+    if (!root) return;
+    const stop = squares(root.querySelector('canvas.sq'));
+    const obs = new MutationObserver(() => { if (!document.body.contains(root)) { stop(); obs.disconnect(); } }); obs.observe(document.body, { childList: true, subtree: true });
+    if (!on) return;
+    const h = root.querySelector('.hx-title');
+    if (h && SPLIT) { const sp = new SPLIT(h, { type: 'words' }); G.from(sp.words, { yPercent: 110, autoAlpha: 0, rotate: 4, duration: 0.7, ease: 'power4.out', stagger: 0.06 }); }
+    G.from(root.querySelectorAll('.hx-kick, .hx-sub, .hx-cta > *'), { autoAlpha: 0, y: 12, duration: 0.5, ease: 'power2.out', stagger: 0.08, delay: 0.25 });
+    const ticks = root.querySelectorAll('.ruler i'); if (ticks.length) G.from(ticks, { scaleY: 0, transformOrigin: '50% 100%', duration: 0.5, ease: 'power3.out', stagger: { each: 0.012, from: 'end' }, delay: 0.2 });
+    const needle = root.querySelector('.ruler .needle'); if (needle) G.from(needle, { left: '100%', duration: 1.4, ease: 'power3.out', delay: 0.5 });
+    root.querySelectorAll('[data-count]').forEach(n => { const v = +n.dataset.count || 0, o = { v: 0 }; G.to(o, { v, duration: 1.2, ease: 'power2.out', delay: 0.3, onUpdate: () => n.textContent = Math.round(o.v).toLocaleString('en-US') }); });
+  }
+
+  /* journey map: draw the path on scroll and pop the lit nodes */
+  function journey(root) {
+    if (!root) return;
+    const p = root.querySelector('path.trail');
+    if (p) { const L = p.getTotalLength(), fr = Math.max(0, Math.min(1, +getComputedStyle(p).getPropertyValue('--lit') || 0)); p.style.strokeDasharray = L; p.style.strokeDashoffset = L * (1 - fr);
+      if (on && ST && fr > 0) G.fromTo(p, { strokeDashoffset: L }, { strokeDashoffset: L * (1 - fr), ease: 'none', scrollTrigger: { trigger: root, start: 'top 85%', end: 'center 55%', scrub: 0.6 } }); }
+    if (!on || !ST) return;
+    G.from(root.querySelectorAll('.jn'), { scale: 0, autoAlpha: 0, duration: 0.45, ease: 'back.out(2.2)', stagger: 0.05, scrollTrigger: { trigger: root, start: 'top 80%', once: true } });
+  }
+
+  /* magnetic buttons */
+  function magnetic(root) {
+    if (!on || matchMedia('(hover: none)').matches) return;
+    root.querySelectorAll('.magnet').forEach(b => {
+      const qx = G.quickTo(b, 'x', { duration: 0.35, ease: 'power3' }), qy = G.quickTo(b, 'y', { duration: 0.35, ease: 'power3' });
+      b.addEventListener('pointermove', e => { const r = b.getBoundingClientRect(); qx((e.clientX - r.left - r.width / 2) * 0.25); qy((e.clientY - r.top - r.height / 2) * 0.35); });
+      b.addEventListener('pointerleave', () => { qx(0); qy(0); });
+    });
+  }
+
+  return { on, initLenis, scrollTop, page, xp, confetti, hero, journey, magnetic, squares, get lenis() { return lenis; } };
+})();
+
+/* ===== AI assistant on the student's own account =====
+   Inside claude.ai the page asks Claude through the viewer's own account (claude.use("sample")): nothing is billed to the site.
+   On the public GitHub copy there is no in-page AI, so the panel builds the same request for the student to paste
+   into their own Claude or ChatGPT account. */
+const AI = (() => {
+  let samp, ready = null;
+  const get = () => {
+    if (!ready) ready = (async () => { try { if (window.claude && typeof window.claude.use === 'function') return await window.claude.use('sample'); } catch (e) { } return null; })();
+    return ready.then(s => (samp = s));
+  };
+  const ERR = { not_granted: 'لم تسمح للموقع باستخدام Claude من حسابك.', sampling_disabled: 'Claude غير متاح لحسابك الآن.', rate_limited: 'وصلت للحد المسموح؛ حاول بعد قليل.', session_expired: 'سجّل الدخول في Claude مرة أخرى.', refused: 'رفض Claude هذا الطلب؛ عدّل السؤال وحاول.', invalid_json: 'الرد لم يكن بالشكل المتوقع؛ حاول مرة أخرى.' };
+  const SYS = 'أنت مساعد تعليمي في مادة «بناء المقاييس النفسية» لطالب في الدبلوم الخاص في علم النفس (جامعة المنيا). أجب بالعربية الفصحى المبسطة وباختصار منظم (نقاط قصيرة)، واذكر المعادلة عند الحاجة، واربط الإجابة بما يظهر في صفحة الطالب. لا تخترع مراجع أو أرقامًا غير موجودة. إذا كان السؤال خارج القياس النفسي والإحصاء فاعتذر بلطف.';
+  const TASKS = [
+    ['explain', 'اشرح لي هذه الصفحة', 'اشرح لي محتوى هذه الصفحة خطوة بخطوة كأنك تشرح لزميل، وركز على المفاهيم الأساسية.'],
+    ['result', 'فسّر نتائجي', 'فسّر الأرقام والنتائج الظاهرة في هذه الصفحة (الثبات، الصدق، تحليل الفقرات...) وماذا أفعل بعدها.'],
+    ['quiz', 'اختبرني', 'اكتب لي 3 أسئلة اختيار من متعدد (أ، ب، ج، د) على محتوى هذه الصفحة بنمط امتحانات الدبلوم، ثم الإجابات في النهاية.'],
+    ['items', 'راجع عبارات مقياسي', 'راجع صياغة عبارات المقياس الظاهرة في الصفحة وفق قواعد الصياغة الجيدة (فكرة واحدة، بلا نفي مزدوج، لغة مناسبة)، واقترح بديلًا لكل عبارة ضعيفة.'],
+    ['simple', 'بسّط لي مفهومًا', 'بسّط أهم مفهوم في هذه الصفحة بمثال من الحياة اليومية لطالب جامعي.']
+  ];
+  const ctxText = () => {
+    const vc = document.querySelector('#vc'); let t = vc ? vc.innerText : '';
+    t = t.replace(/\n{2,}/g, '\n').slice(0, 4500);
+    return `الصفحة الحالية: ${(location.hash || '#home').slice(1).split('/')[0]}\n----- محتوى الصفحة -----\n${t}`;
+  };
+  const prompt = q => `${SYS}\n\n${ctxText()}\n\n----- سؤال الطالب -----\n${q}`;
+  const fmtAns = s => esc(s).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>').replace(/^#{1,4}\s*(.+)$/gm, '<b>$1</b>').replace(/\n/g, '<br>');
+
+  function open(preset) {
+    modal(`<div class="ai-head"><span class="ai-orb" aria-hidden="true"></span><div class="grow"><h3 style="margin:0">مساعد Claude</h3><p class="small muted" style="margin:0" id="aiMode">يتحقق من حسابك…</p></div><button class="ibtn" data-close aria-label="إغلاق">✕</button></div>
+      <div class="seg ai-tasks" style="flex-wrap:wrap">${TASKS.map(t => `<button data-t="${t[0]}">${t[1]}</button>`).join('')}</div>
+      <label class="fl" for="aiQ">أو اكتب سؤالك</label><textarea id="aiQ" placeholder="مثلًا: متى أستخدم KR‑20 بدل ألفا؟"></textarea>
+      <div class="row"><button class="btn" id="aiGo">${ic('bolt')} اسأل</button><span class="small muted grow">الإجابة تعتمد على محتوى الصفحة المفتوحة.</span></div>
+      <div id="aiOut" class="ai-out" aria-live="polite"></div>`, (bg, close) => {
+      bg.classList.add('ai-sheet');
+      const out = $('#aiOut', bg), q = $('#aiQ', bg), mode = $('#aiMode', bg);
+      $$('[data-t]', bg).forEach(b => b.onclick = () => { q.value = TASKS.find(t => t[0] === b.dataset.t)[2]; ask(); });
+      if (preset) q.value = preset;
+      get().then(s => { mode.textContent = s ? 'يعمل بحسابك في Claude (أول مرة سيطلب إذنك)' : 'انسخ الطلب وافتحه في حسابك في Claude أو ChatGPT'; $('#aiGo', bg).innerHTML = s ? `${ic('bolt')} اسأل` : `${ic('copy')} انسخ الطلب`; });
+      let ctl = null;
+      async function ask() {
+        const text = q.value.trim(); if (!text) { q.focus(); return; }
+        const p = prompt(text), s = await get();
+        if (!s) {
+          await copyText(p); out.innerHTML = `<div class="notice small"><b>نُسخ الطلب مع محتوى الصفحة</b>الصقه في حسابك الخاص، وسيجيبك مباشرة.</div><div class="row"><a class="btn sm" href="https://claude.ai/new" target="_blank" rel="noopener">افتح Claude</a><a class="btn sm ghost" href="https://chatgpt.com/" target="_blank" rel="noopener">افتح ChatGPT</a></div>`;
+          return;
+        }
+        if (ctl) ctl.abort(); ctl = new AbortController();
+        const btn = $('#aiGo', bg); btn.disabled = true; out.innerHTML = '<div class="ai-ans"><span class="muted">يفكر…</span></div>';
+        try {
+          const r = await s(p, { signal: ctl.signal, cache: false, onText: ({ text }) => { $('.ai-ans', out).innerHTML = fmtAns(text); } });
+          $('.ai-ans', out).innerHTML = fmtAns(r.text) + (r.truncated ? '<p class="small muted">(الإجابة طويلة وتوقفت؛ اطلب «أكمل».)</p>' : '');
+          addXP(2); quest && quest('ai', 1);
+        } catch (e) { if (e && e.name === 'AbortError') return; out.innerHTML = `<div class="notice bad small">${esc(ERR[e && e.code] || 'تعذر الحصول على إجابة الآن.')}</div>`; }
+        btn.disabled = false;
+      }
+      $('#aiGo', bg).onclick = ask;
+      q.addEventListener('keydown', e => { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) ask(); });
+    });
+  }
+
+  /* structured generation for the builder: returns [{text, dim, neg}] or null */
+  async function items(s, k) {
+    const sm = await get(); if (!sm || !sm.json) return null;
+    const dims = s.dims.map(d => d.name + (d.def ? ` (${d.def})` : ''));
+    const r = await sm.json(`أنت خبير في بناء المقاييس النفسية باللغة العربية. اكتب ${k} عبارة لقياس «${s.construct || s.name}» لدى ${s.group || 'طلاب الجامعة'}.\nالتعريف النظري: ${s.defC || '—'}\nالأبعاد: ${dims.join('، ')} — وزّع العبارات عليها.\nقواعد: فصحى واضحة، فكرة واحدة لكل عبارة، عبارة تقريرية بضمير المتكلم، بلا نفي مزدوج، ونحو ربع العبارات سالبة.\nأعد JSON فقط: {"items":[{"text":"...","dim":"اسم البعد كما هو","neg":false}]}`, { modelTier: 'default' });
+    return r && Array.isArray(r.items) ? r.items : null;
+  }
+
+  function fab() {
+    if (document.getElementById('aiFab')) return;
+    const b = document.createElement('button'); b.id = 'aiFab'; b.className = 'ai-fab'; b.setAttribute('aria-label', 'مساعد Claude');
+    b.innerHTML = `<span class="ai-orb" aria-hidden="true"></span><span>اسأل Claude</span>`; b.onclick = () => open();
+    document.body.appendChild(b);
+  }
+  return { open, items, fab, available: () => get().then(Boolean), ERR };
+})();
+
 /* ===== Optional accounts =====
    Web (GitHub Pages): Firebase Authentication (email + password) + Firestore, only when
    window.FIREBASE_CONFIG is set (see SETUP-FIREBASE.md). Passwords never touch this code's
@@ -2427,6 +2650,8 @@ window.ACCT_HOOKS = {
   changed: () => { checkBadges(); renderStats(); if (current === 'account' || current === 'home') rerender(); }
 };
 applyPrefs(); tick(); shell();
+if (typeof MOTION !== 'undefined') MOTION.initLenis();
+if (typeof AI !== 'undefined') AI.fab();
 window.addEventListener('hashchange', route);
 ACCT.init();
 route();
