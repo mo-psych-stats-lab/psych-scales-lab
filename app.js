@@ -349,7 +349,7 @@ const BADGES = [
   { id: 'all', t: 'عالِم قياس', d: 'أنهِ كل الأجزاء', f: () => LEARN.doneCount() >= LEARN.total() },
   { id: 'acct', t: 'عضو مسجل', d: 'أنشئ حسابًا لحفظ تقدمك', f: () => !!(window.ACCT && ACCT.signedIn()) }
 ];
-function checkBadges() { BADGES.forEach(b => { if (!S.badges.includes(b.id) && b.f()) { S.badges.push(b.id); S.xp += 15; if (typeof MOTION !== 'undefined') setTimeout(MOTION.confetti, 250); setTimeout(() => toast('وسام جديد: ' + b.t + ' (+15)'), 300); } }); }
+function checkBadges() { BADGES.forEach(b => { if (!S.badges.includes(b.id) && b.f()) { S.badges.push(b.id); S.xp += 15; if (typeof MOTION !== 'undefined') setTimeout(() => MOTION.stamp('وسام: ' + b.t), 250); setTimeout(() => toast('وسام جديد: ' + b.t + ' (+15)'), 300); } }); }
 function labUse(k) { const first = !S.labs[k]; S.labs[k] = (S.labs[k] || 0) + 1; quest('lab', 1); if (first) addXP(5); else save(); }
 
 /* ---------- UI helpers ---------- */
@@ -410,7 +410,7 @@ const NAV = [
   ['home', 'الرئيسية', 'home'], ['learn', 'الدروس', 'book'], ['labs', 'المعامل', 'flask'], ['build', 'ابنِ مقياسك', 'build'], ['exam', 'أسئلة موضوعية', 'check'], ['bank', 'بنك الأسئلة', 'cards'],
   ['formulas', 'المعادلات', 'sigma'], ['practice', 'التدريب', 'cards'], ['respond', 'أجب عن مقياس', 'form'], ['me', 'إنجازاتي', 'trophy'], ['account', 'حسابي', 'user']
 ];
-const LOGO_SVG = `<svg viewBox="0 0 40 40" aria-hidden="true"><defs><linearGradient id="lgS" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7c5cff"/><stop offset="1" stop-color="#1f1452"/></linearGradient></defs><rect width="40" height="40" rx="11" fill="url(#lgS)"/><path d="M9 25a11 11 0 0 1 22 0" fill="none" stroke="rgba(255,255,255,.28)" stroke-width="3.2" stroke-linecap="round"/><path d="M9 25a11 11 0 0 1 15.8-9.9" fill="none" stroke="#bef264" stroke-width="3.2" stroke-linecap="round"/><path d="M20 25l6.2-7.6" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/><circle cx="20" cy="25" r="2.7" fill="#bef264"/><path d="M8.5 31h23" stroke="rgba(255,255,255,.55)" stroke-width="1.6" stroke-linecap="round"/><path d="M12 31v-2.2M16 31v-2.2M20 31v-3.4M24 31v-2.2M28 31v-2.2" stroke="rgba(255,255,255,.7)" stroke-width="1.3" stroke-linecap="round"/></svg>`;
+const LOGO_SVG = `<svg viewBox="0 0 40 40" aria-hidden="true"><defs><linearGradient id="lgS" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7c5cff"/><stop offset="1" stop-color="#1f1452"/></linearGradient></defs><rect width="40" height="40" rx="11" fill="url(#lgS)"/><rect x="8.5" y="7" width="23" height="27" rx="3.4" fill="#fff"/><rect x="14.5" y="5" width="11" height="4.2" rx="1.6" fill="#bef264"/><circle cx="27" cy="13.5" r="2.3" fill="#65a30d" stroke="#65a30d" stroke-width="1.3"/><path d="M25.9 13.5 l.8 .8 1.5-1.6" stroke="#fff" stroke-width="1" fill="none" stroke-linecap="round" stroke-linejoin="round"/><rect x="12" y="12.4" width="11" height="2.2" rx="1.1" fill="#b9b0e8"/><circle cx="27" cy="20.1" r="2.3" fill="#65a30d" stroke="#65a30d" stroke-width="1.3"/><path d="M25.9 20.1 l.8 .8 1.5-1.6" stroke="#fff" stroke-width="1" fill="none" stroke-linecap="round" stroke-linejoin="round"/><rect x="15" y="19.0" width="8" height="2.2" rx="1.1" fill="#b9b0e8"/><circle cx="27" cy="26.7" r="2.3" fill="#fff" stroke="#7c5cff" stroke-width="1.3"/><rect x="13" y="25.599999999999998" width="10" height="2.2" rx="1.1" fill="#b9b0e8"/></svg>`;
 const GUEST_SVG = `<svg viewBox="0 0 24 24" aria-hidden="true" fill="none"><circle cx="12" cy="9" r="3.6" fill="currentColor"/><path d="M5.2 19.2c1.3-3.1 3.9-4.7 6.8-4.7s5.5 1.6 6.8 4.7" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>`;
 const avatarInner = nm => nm && nm.trim() ? esc(nm.trim()[0]) : GUEST_SVG;
 const VIEWS = {};
@@ -424,7 +424,7 @@ function shell() {
   </aside>
   <div class="col">
     <header class="topbar">
-      <a class="brand" href="#home"><span class="logo">${LOGO_SVG}</span><span>مختبر المقاييس</span></a>
+      <a class="brand" href="#home"><span class="logo">${LOGO_SVG}</span><span>مختبر المقاييس النفسية</span></a>
       <span class="pill fire" id="pStreak" title="أيام متتالية"></span><span class="pill xp" id="pXp" title="نقاطك"></span>
       <button class="ibtn" id="bSearch" aria-label="بحث">${ic('search')}</button>
       <button class="ibtn" id="bTheme" aria-label="تبديل الوضع الليلي">${ic('moon')}</button>
@@ -499,7 +499,7 @@ const RULES12 = ['الوضوح المفاهيمي', 'المراجعة الأدب
 function heroX(rk, nx) {
   const lo = (RANKS.filter(r => r[0] <= S.xp).pop() || RANKS[0])[0], hi = rk.next ? rk.next[0] : lo + 1, pct = rk.next ? Math.min(100, (S.xp - lo) / (hi - lo) * 100) : 100;
   const lvl = RANKS.filter(r => r[0] <= S.xp).length, nScales = (typeof SCALES !== 'undefined') ? SCALES.list().length : 0;
-  return `<section class="hx" aria-labelledby="hxT"><canvas class="sq" aria-hidden="true"></canvas><div class="hx-in">
+  return `<section class="hx" aria-labelledby="hxT"><div class="hx-in">
     <p class="hx-kick"><span class="chip lime">${ic('star')} ${esc(rk.name)}</span><span>المستوى <b class="num">${lvl}</b> من ${RANKS.length}</span></p>
     <h1 class="hx-title" id="hxT">قِسْ ما لا يُرى، وابنِ مقياسك بيدك</h1>
     <p class="hx-sub">دروس قصيرة، ومعامل تحسب الصدق والثبات في ثوانٍ، ومعالج يبني مقياسك ويجمع بياناته ويحللها. كل خطوة تكسبك نقاطًا وتقربك من رتبة «عالِم قياس نفسي».</p>
@@ -507,7 +507,12 @@ function heroX(rk, nx) {
     <div class="hx-stats"><div><b class="num" data-count="${S.xp}">${S.xp}</b><small>نقطة</small></div><div><b class="num" data-count="${S.streak}">${S.streak}</b><small>يوم متتالٍ</small></div><div><b class="num" data-count="${LEARN.doneCount()}">${LEARN.doneCount()}</b><small>من ${LEARN.total()} دروس</small></div><div><b class="num" data-count="${nScales}">${nScales}</b><small>مقياس بنيته</small></div></div>
     <div class="ruler" aria-hidden="true">${Array.from({ length: 61 }, (_, i) => `<i class="${i % 10 === 0 ? 'l' : i % 5 === 0 ? 'm' : ''}"></i>`).join('')}<span class="needle" style="left:${100 - pct}%"><b class="num">${S.xp}</b></span></div>
     <p class="ruler-cap">${rk.next ? `باقٍ <b class="num">${hi - S.xp}</b> نقطة لتصبح «${esc(rk.next[1])}»` : 'وصلت إلى أعلى رتبة. أنت عالِم قياس!'}</p>
-  </div></section>`;
+  </div>
+  <aside class="hx-live" aria-label="مثال حي: كلما زادت الاستجابات المتسقة ارتفع معامل ألفا">
+    <div class="lq-head"><b>مقياس التسويف الأكاديمي</b><span>ن = <b class="lq-n num">0</b></span></div>
+    ${['أؤجل المذاكرة حتى الليلة السابقة للامتحان', 'أنشغل بالهاتف عندما أجلس للمذاكرة', 'أترك المهام الصعبة إلى آخر لحظة', 'أفاجأ بقرب موعد التسليم'].map(t => `<div class="lq-row"><span>${t}</span><div class="lq-dots">${[1, 2, 3, 4, 5].map(() => '<i class="lq-dot"></i>').join('')}</div></div>`).join('')}
+    <div class="lq-gauge"><svg viewBox="0 0 120 70" aria-hidden="true"><path d="M10 62a50 50 0 0 1 100 0" class="lq-bg"/><path d="M10 62a50 50 0 0 1 100 0" class="lq-arc"/></svg><div><small>ثبات ألفا كرونباخ</small><b class="lq-a num">0.00</b><small class="lq-ok">≥ 0.70 مقبول</small></div></div>
+  </aside></section>`;
 }
 function journeyX() {
   const lit = (typeof BUILD !== 'undefined' && BUILD.bestSteps) ? BUILD.bestSteps() : 0;
@@ -516,7 +521,7 @@ function journeyX() {
   let d = `M ${pts[0][0]} ${pts[0][1]}`; for (let i = 1; i < 12; i++) { const [x, y] = pts[i], [px, py] = pts[i - 1]; d += i === 6 ? ` C ${px - 120} ${py}, ${px - 120} ${y}, ${x} ${y}` : ` L ${x} ${y}`; }
   return `<section class="card journey"><div class="row"><h3 class="grow" style="margin:0">${ic('trophy')} رحلة الباحث: 12 مستوى</h3><span class="chip ${lit === 12 ? 'good' : 'lime'}">${lit}/12</span></div>
     <p class="small muted" style="margin:0">كل مستوى قاعدة من قواعد بناء المقياس. أكمل خطواته في «ابنِ مقياسك» لتضيء الخريطة.</p>
-    <svg class="jmap" viewBox="0 0 1000 310" role="img" aria-label="أكملت ${lit} من 12 مستوى"><path class="trail-bg" d="${d}"/><path class="trail" d="${d}" style="--lit:${lit / 11}"/>${pts.map(([x, y], i) => `<g class="jn ${i < lit ? 'lit' : i === lit ? 'now' : ''}" transform="translate(${x} ${y})"><circle r="30"/><text class="n" y="9">${i < lit ? '✓' : i + 1}</text><text class="l" y="${y > 100 ? 62 : -44}">${RULES12[i]}</text></g>`).join('')}</svg>
+    <svg class="jmap" viewBox="0 0 1000 310" role="img" aria-label="أكملت ${lit} من 12 مستوى"><path class="trail-bg" d="${d}"/><path class="trail" d="${d}" style="--lit:${lit / 11}"/>${pts.map(([x, y], i) => `<g class="jn ${i < lit ? 'lit' : i === lit ? 'now' : ''}" transform="translate(${x} ${y})"><circle r="30"/><text class="n" y="9">${i < lit ? '✓' : i + 1}</text><text class="l" y="${y > 100 ? 62 : -44}">${RULES12[i]}</text></g>`).join('')}<g class="jtoken" transform="translate(${pts[0][0]} ${pts[0][1]})"><circle r="17" class="t1"/><circle r="9" class="t2"/></g></svg>
     <ol class="jlist">${RULES12.map((r, i) => `<li class="${i < lit ? 'lit' : i === lit ? 'now' : ''}"><span>${i < lit ? '✓' : i + 1}</span>${r}</li>`).join('')}</ol>
     <div class="row"><button class="btn soft sm" data-go3="build">${ic('build')} ${lit ? 'تابع رحلتك' : 'ابدأ المستوى الأول'}</button><button class="btn ghost sm" id="hRules2">اقرأ القواعد</button></div></section>`;
 }
@@ -2335,20 +2340,23 @@ const BANK = (() => {
   return { count: () => build().length };
 })();
 
-/* ===== Motion layer: Lenis smooth scroll synced with GSAP ScrollTrigger, route transitions, scroll reveals,
-   XP floaters, badge confetti, hero effects (Squares grid + measuring ruler, ported from React Bits ideas).
-   Everything degrades to static UI when GSAP is missing or the viewer prefers reduced motion. ===== */
+/* ===== Motion layer «رحلة الباحث»: motion that explains the content rather than decorating it.
+   - Hero: a live questionnaire — Likert answers get picked one by one while n grows and the α gauge fills.
+   - Headline: masked word reveal (SplitText mask). Page changes: violet wipe + clip-path reveals.
+   - Journey: a researcher token travels the 12-rule path with scroll (MotionPath + ScrollTrigger scrub).
+   - Cards: 3D tilt with a cursor-following light. Badges: a stamp, not confetti.
+   Lenis smooth scroll synced with ScrollTrigger. Reduced-motion viewers get the static, complete UI. ===== */
 const MOTION = (() => {
-  const G = window.gsap, ST = window.ScrollTrigger, SPLIT = window.SplitText;
+  const G = window.gsap, ST = window.ScrollTrigger, SPLIT = window.SplitText, MP = window.MotionPathPlugin;
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const on = !!G && !reduce;
+  const hover = matchMedia('(hover: hover)').matches;
   let lenis = null;
-  if (G && ST) G.registerPlugin(ST);
-  if (G && SPLIT) G.registerPlugin(SPLIT);
+  if (G) [ST, SPLIT, MP].forEach(p => p && G.registerPlugin(p));
 
   function initLenis() {
     if (!on || !window.Lenis || !ST) return;
-    lenis = new window.Lenis({ duration: 1.05, smoothWheel: true, syncTouch: false });
+    lenis = new window.Lenis({ duration: 1.1, smoothWheel: true, syncTouch: false });
     lenis.on('scroll', ST.update);
     G.ticker.add(t => lenis.raf(t * 1000));
     G.ticker.lagSmoothing(0);
@@ -2356,103 +2364,121 @@ const MOTION = (() => {
   }
   const scrollTop = () => { if (lenis) lenis.scrollTo(0, { immediate: true }); else window.scrollTo(0, 0); };
 
-  /* page enter: stagger the top-level blocks, then reveal the rest on scroll */
+  /* ---- page change: a violet wipe passes over, then blocks are revealed with a clip-path cut ---- */
+  let wipe = null, first = true;
   function page(root) {
     if (!on || !root) return;
     ST && ST.getAll().forEach(t => t.vars && t.vars.id === 'rv' && t.kill());
+    if (!first) {
+      if (!wipe) { wipe = document.createElement('div'); wipe.className = 'wipe'; document.body.appendChild(wipe); }
+      G.fromTo(wipe, { scaleX: 1, transformOrigin: '0% 50%' }, { scaleX: 0, duration: 0.55, ease: 'expo.inOut' });
+    }
+    first = false;
     const blocks = [...root.children].filter(n => n.nodeType === 1);
-    const first = blocks.slice(0, 3), rest = blocks.slice(3);
-    G.fromTo(first, { autoAlpha: 0, y: 18 }, { autoAlpha: 1, y: 0, duration: 0.55, ease: 'power3.out', stagger: 0.07, clearProps: 'transform,opacity,visibility' });
+    const top = blocks.slice(0, 2), rest = blocks.slice(2);
+    G.fromTo(top, { clipPath: 'inset(0 0 100% 0)', y: 24 }, { clipPath: 'inset(0 0 0% 0)', y: 0, duration: 0.8, ease: 'expo.out', stagger: 0.08, delay: 0.12, clearProps: 'clipPath,transform' });
     if (ST && rest.length) {
-      G.set(rest, { autoAlpha: 0, y: 26 });
-      ST.batch(rest, { id: 'rv', start: 'top 92%', once: true, onEnter: b => G.to(b, { autoAlpha: 1, y: 0, duration: 0.6, ease: 'power3.out', stagger: 0.06, clearProps: 'transform,opacity,visibility' }) });
+      G.set(rest, { clipPath: 'inset(0 0 100% 0)', y: 30 });
+      ST.batch(rest, { id: 'rv', start: 'top 92%', once: true, onEnter: b => G.to(b, { clipPath: 'inset(0 0 0% 0)', y: 0, duration: 0.85, ease: 'expo.out', stagger: 0.08, clearProps: 'clipPath,transform' }) });
       ST.refresh();
     }
-    const cards = root.querySelectorAll('.grid2 > .linkcard, .grid3 > .linkcard, .kpis > .tile');
-    if (cards.length) G.from(cards, { autoAlpha: 0, y: 14, scale: 0.98, duration: 0.45, ease: 'power2.out', stagger: 0.04, delay: 0.12, clearProps: 'all' });
+    root.querySelectorAll('.ring svg circle:last-child').forEach(c => { const d = c.getAttribute('stroke-dasharray'); if (!d) return; G.from(c, { strokeDashoffset: parseFloat(d), duration: 1.2, ease: 'power3.out', delay: 0.3 }); });
+    tilt(root);
   }
 
-  /* +XP floater near the points pill */
+  /* ---- +XP chip flies into the points pill ---- */
   function xp(n) {
     if (!n) return;
     const pill = document.querySelector('#pXp') || document.querySelector('.pill.xp');
-    const r = pill ? pill.getBoundingClientRect() : { left: innerWidth / 2, top: 60, width: 0 };
-    const f = document.createElement('div'); f.className = 'xpfloat'; f.textContent = '+' + n;
-    f.style.left = (r.left + r.width / 2) + 'px'; f.style.top = (r.top + 6) + 'px';
-    document.body.appendChild(f);
-    if (!on) { setTimeout(() => f.remove(), 900); return; }
-    G.fromTo(f, { y: 18, autoAlpha: 0, scale: 0.6 }, { y: -28, autoAlpha: 1, scale: 1.15, duration: 0.45, ease: 'back.out(2)' });
-    G.to(f, { y: -60, autoAlpha: 0, duration: 0.6, delay: 0.55, ease: 'power1.in', onComplete: () => f.remove() });
-    if (pill) G.fromTo(pill, { scale: 1 }, { scale: 1.18, yoyo: true, repeat: 1, duration: 0.18, ease: 'power2.out' });
+    const f = document.createElement('div'); f.className = 'xpfloat'; f.textContent = '+' + n; document.body.appendChild(f);
+    const r = pill ? pill.getBoundingClientRect() : { left: innerWidth / 2, top: 60, width: 0, height: 0 };
+    if (!on) { f.style.left = (r.left + r.width / 2) + 'px'; f.style.top = (r.top + 6) + 'px'; setTimeout(() => f.remove(), 900); return; }
+    G.set(f, { left: innerWidth / 2, top: innerHeight * 0.55, xPercent: -50, scale: 0.4, autoAlpha: 0 });
+    G.timeline({ onComplete: () => f.remove() })
+      .to(f, { scale: 1.25, autoAlpha: 1, duration: 0.3, ease: 'back.out(2.5)' })
+      .to(f, { left: r.left + r.width / 2, top: r.top + r.height / 2, scale: 0.5, duration: 0.65, ease: 'power3.in' }, '+=0.15')
+      .to(f, { autoAlpha: 0, duration: 0.12 })
+      .add(() => pill && G.fromTo(pill, { scale: 1.3, backgroundColor: 'rgba(190,242,100,.6)' }, { scale: 1, backgroundColor: '', duration: 0.5, ease: 'elastic.out(1,.4)', clearProps: 'backgroundColor' }), '-=0.12');
   }
 
-  /* confetti burst (canvas) for badges and perfect scores */
-  function confetti() {
+  /* ---- badge stamp: the medal slams in with a shock ring (used for badges and perfect scores) ---- */
+  function stamp(label) {
     if (!on) return;
-    const c = document.createElement('canvas'); c.className = 'confetti'; c.width = innerWidth * devicePixelRatio; c.height = innerHeight * devicePixelRatio;
-    document.body.appendChild(c); const x = c.getContext('2d'); x.scale(devicePixelRatio, devicePixelRatio);
-    const css = getComputedStyle(document.documentElement), cols = ['--lime', '--primary', '--amber', '--good', '--coral'].map(v => css.getPropertyValue(v).trim()).filter(Boolean);
-    const P = Array.from({ length: 140 }, () => ({ x: innerWidth / 2, y: innerHeight * 0.35, vx: (Math.random() - 0.5) * 14, vy: -Math.random() * 13 - 4, s: 4 + Math.random() * 6, r: Math.random() * 6, vr: (Math.random() - 0.5) * 0.4, c: cols[Math.floor(Math.random() * cols.length)] || '#a3e635' }));
-    let t = 0; const tick = () => { t++; x.clearRect(0, 0, innerWidth, innerHeight); P.forEach(p => { p.vy += 0.38; p.vx *= 0.99; p.x += p.vx; p.y += p.vy; p.r += p.vr; x.save(); x.translate(p.x, p.y); x.rotate(p.r); x.fillStyle = p.c; x.fillRect(-p.s / 2, -p.s / 4, p.s, p.s / 2); x.restore(); }); if (t < 150) requestAnimationFrame(tick); else c.remove(); };
-    tick();
+    const w = document.createElement('div'); w.className = 'stamp'; w.innerHTML = `<div class="ring"></div><div class="medal">${LOGO_SVG}<b>${esc(label || 'وسام جديد')}</b></div>`;
+    document.body.appendChild(w);
+    G.timeline({ onComplete: () => w.remove() })
+      .fromTo(w.querySelector('.medal'), { scale: 2.6, rotate: -18, autoAlpha: 0 }, { scale: 1, rotate: 0, autoAlpha: 1, duration: 0.45, ease: 'power4.in' })
+      .fromTo(w.querySelector('.ring'), { scale: 0.6, autoAlpha: 0.9 }, { scale: 2.4, autoAlpha: 0, duration: 0.7, ease: 'expo.out' }, '-=0.02')
+      .to(w.querySelector('.medal'), { y: -6, duration: 0.1, yoyo: true, repeat: 1 }, '<')
+      .to(w, { autoAlpha: 0, y: -20, duration: 0.4, delay: 1.1 });
   }
+  const confetti = () => stamp('أداء كامل!');
 
-  /* React Bits "Squares"-style animated grid on a canvas, hovered cell lights up */
-  function squares(canvas, opts = {}) {
-    if (!canvas) return () => { };
-    const ctx = canvas.getContext('2d'), size = opts.size || 38; let off = 0, hover = null, raf = 0, w = 0, h = 0;
-    const fit = () => { const r = canvas.getBoundingClientRect(); w = r.width; h = r.height; canvas.width = w * devicePixelRatio; canvas.height = h * devicePixelRatio; ctx.setTransform(devicePixelRatio, 0, 0, devicePixelRatio, 0, 0); };
-    const line = opts.line || 'rgba(255,255,255,.07)', fill = opts.fill || 'rgba(190,242,100,.22)';
-    const draw = () => {
-      ctx.clearRect(0, 0, w, h); const o = off % size;
-      for (let x = -size + o; x < w + size; x += size) for (let y = -size + o; y < h + size; y += size) {
-        if (hover && Math.abs(hover[0] - x - size / 2) < size / 2 && Math.abs(hover[1] - y - size / 2) < size / 2) { ctx.fillStyle = fill; ctx.fillRect(x, y, size, size); }
-        ctx.strokeStyle = line; ctx.strokeRect(x + 0.5, y + 0.5, size, size);
-      }
-      const g = ctx.createRadialGradient(w * 0.3, h * 0.2, 0, w * 0.3, h * 0.2, Math.max(w, h) * 0.9); g.addColorStop(0, 'rgba(0,0,0,0)'); g.addColorStop(1, opts.vignette || 'rgba(14,8,40,.85)'); ctx.fillStyle = g; ctx.fillRect(0, 0, w, h);
-      if (on) { off += opts.speed || 0.25; raf = requestAnimationFrame(draw); }
-    };
-    const mv = e => { const r = canvas.getBoundingClientRect(); hover = [e.clientX - r.left, e.clientY - r.top]; if (!on) draw(); };
-    const lv = () => { hover = null; if (!on) draw(); };
-    fit(); draw(); addEventListener('resize', fit); canvas.parentElement.addEventListener('pointermove', mv); canvas.parentElement.addEventListener('pointerleave', lv);
-    return () => { cancelAnimationFrame(raf); removeEventListener('resize', fit); };
-  }
-
-  /* hero: split headline by words (Arabic letters must stay joined), ruler ticks, count-up numbers */
+  /* ---- hero: masked headline + live questionnaire filling the α gauge ---- */
   function hero(root) {
     if (!root) return;
-    const stop = squares(root.querySelector('canvas.sq'));
-    const obs = new MutationObserver(() => { if (!document.body.contains(root)) { stop(); obs.disconnect(); } }); obs.observe(document.body, { childList: true, subtree: true });
+    const live = root.querySelector('.hx-live');
     if (!on) return;
     const h = root.querySelector('.hx-title');
-    if (h && SPLIT) { const sp = new SPLIT(h, { type: 'words' }); G.from(sp.words, { yPercent: 110, autoAlpha: 0, rotate: 4, duration: 0.7, ease: 'power4.out', stagger: 0.06 }); }
-    G.from(root.querySelectorAll('.hx-kick, .hx-sub, .hx-cta > *'), { autoAlpha: 0, y: 12, duration: 0.5, ease: 'power2.out', stagger: 0.08, delay: 0.25 });
-    const ticks = root.querySelectorAll('.ruler i'); if (ticks.length) G.from(ticks, { scaleY: 0, transformOrigin: '50% 100%', duration: 0.5, ease: 'power3.out', stagger: { each: 0.012, from: 'end' }, delay: 0.2 });
-    const needle = root.querySelector('.ruler .needle'); if (needle) G.from(needle, { left: '100%', duration: 1.4, ease: 'power3.out', delay: 0.5 });
-    root.querySelectorAll('[data-count]').forEach(n => { const v = +n.dataset.count || 0, o = { v: 0 }; G.to(o, { v, duration: 1.2, ease: 'power2.out', delay: 0.3, onUpdate: () => n.textContent = Math.round(o.v).toLocaleString('en-US') }); });
+    if (h && SPLIT) { const sp = new SPLIT(h, { type: 'words', mask: 'words' }); G.from(sp.words, { yPercent: 120, duration: 0.9, ease: 'expo.out', stagger: 0.07 }); }
+    G.from(root.querySelectorAll('.hx-kick, .hx-sub, .hx-cta > *, .hx-stats > div'), { y: 18, autoAlpha: 0, duration: 0.7, ease: 'expo.out', stagger: 0.05, delay: 0.3, clearProps: 'all' });
+    root.querySelectorAll('[data-count]').forEach(n => { const v = +n.dataset.count || 0, o = { v: 0 }; G.to(o, { v, duration: 1.4, ease: 'expo.out', delay: 0.4, onUpdate: () => n.textContent = Math.round(o.v).toLocaleString('en-US') }); });
+    const ticks = root.querySelectorAll('.ruler i'); if (ticks.length) G.from(ticks, { scaleY: 0, transformOrigin: '50% 100%', duration: 0.6, ease: 'expo.out', stagger: { each: 0.01, from: 'end' }, delay: 0.4 });
+    const needle = root.querySelector('.ruler .needle'); if (needle) G.from(needle, { left: '100%', duration: 1.6, ease: 'expo.out', delay: 0.6 });
+    if (live) questionnaire(live, root);
+  }
+  function questionnaire(live, root) {
+    const rows = [...live.querySelectorAll('.lq-row')], arc = live.querySelector('.lq-arc'), val = live.querySelector('.lq-a'), nEl = live.querySelector('.lq-n'), L = arc ? arc.getTotalLength() : 0;
+    const alphaAt = n => Math.min(0.91, 0.42 + 0.49 * (1 - Math.exp(-n / 9)));
+    let n = 0; if (arc) G.set(arc, { strokeDasharray: L, strokeDashoffset: L });
+    const round = () => {
+      const tl = G.timeline({ onComplete: () => { if (document.body.contains(live)) round(); } });
+      tl.to(live.querySelectorAll('.lq-dot.on'), { scale: 0.6, autoAlpha: 0.25, duration: 0.25, ease: 'power2.in', onComplete: () => live.querySelectorAll('.lq-dot.on').forEach(d => d.classList.remove('on')) });
+      rows.forEach((r, i) => {
+        const dots = r.querySelectorAll('.lq-dot'), pick = dots[Math.floor(Math.random() * 2) + (i % 2 ? 2 : 3)] || dots[3];
+        tl.add(() => pick.classList.add('on')).fromTo(pick, { scale: 0.2 }, { scale: 1, autoAlpha: 1, duration: 0.45, ease: 'back.out(3)' }, '+=0.18');
+      });
+      tl.add(() => { n += 1; nEl.textContent = n; const a = alphaAt(n); G.to(arc, { strokeDashoffset: L * (1 - a), duration: 0.9, ease: 'expo.out' }); const o = { v: parseFloat(val.textContent) || 0 }; G.to(o, { v: a, duration: 0.9, ease: 'expo.out', onUpdate: () => val.textContent = o.v.toFixed(2) }); live.classList.toggle('good', a >= 0.7); }, '+=0.15')
+        .to({}, { duration: 0.9 });
+    };
+    round();
   }
 
-  /* journey map: draw the path on scroll and pop the lit nodes */
+  /* ---- journey: path drawn to the current level, a token rides the path with scroll ---- */
   function journey(root) {
     if (!root) return;
-    const p = root.querySelector('path.trail');
-    if (p) { const L = p.getTotalLength(), fr = Math.max(0, Math.min(1, +getComputedStyle(p).getPropertyValue('--lit') || 0)); p.style.strokeDasharray = L; p.style.strokeDashoffset = L * (1 - fr);
-      if (on && ST && fr > 0) G.fromTo(p, { strokeDashoffset: L }, { strokeDashoffset: L * (1 - fr), ease: 'none', scrollTrigger: { trigger: root, start: 'top 85%', end: 'center 55%', scrub: 0.6 } }); }
+    const p = root.querySelector('path.trail'), tok = root.querySelector('.jtoken');
+    if (p) {
+      const L = p.getTotalLength(), fr = Math.max(0, Math.min(1, +getComputedStyle(p).getPropertyValue('--lit') || 0));
+      p.style.strokeDasharray = L; p.style.strokeDashoffset = L * (1 - fr);
+      if (on && ST && fr > 0) G.fromTo(p, { strokeDashoffset: L }, { strokeDashoffset: L * (1 - fr), ease: 'none', scrollTrigger: { trigger: root, start: 'top 80%', end: 'center 50%', scrub: 0.8 } });
+      if (tok && MP && on && ST) G.to(tok, { motionPath: { path: p, align: p, alignOrigin: [0.5, 0.5], start: 0, end: Math.max(0.0001, fr) }, ease: 'none', scrollTrigger: { trigger: root, start: 'top 80%', end: 'center 50%', scrub: 0.8 } });
+      else if (tok) { const pt = p.getPointAtLength(L * fr); tok.setAttribute('transform', `translate(${pt.x} ${pt.y})`); }
+    }
     if (!on || !ST) return;
-    G.from(root.querySelectorAll('.jn'), { scale: 0, autoAlpha: 0, duration: 0.45, ease: 'back.out(2.2)', stagger: 0.05, scrollTrigger: { trigger: root, start: 'top 80%', once: true } });
+    G.from(root.querySelectorAll('.jn'), { scale: 0, transformOrigin: '50% 50%', duration: 0.6, ease: 'back.out(2.4)', stagger: { each: 0.05, from: 'start' }, scrollTrigger: { trigger: root, start: 'top 80%', once: true } });
   }
 
-  /* magnetic buttons */
+  /* ---- 3D tilt with a cursor-following light ---- */
+  function tilt(root) {
+    if (!on || !hover) return;
+    root.querySelectorAll('.linkcard, .hx-stats > div, .tile').forEach(el => {
+      if (el.dataset.tilt) return; el.dataset.tilt = '1';
+      const rx = G.quickTo(el, 'rotationX', { duration: 0.5, ease: 'power3' }), ry = G.quickTo(el, 'rotationY', { duration: 0.5, ease: 'power3' });
+      G.set(el, { transformPerspective: 700 });
+      el.addEventListener('pointermove', e => { const r = el.getBoundingClientRect(), px = (e.clientX - r.left) / r.width, py = (e.clientY - r.top) / r.height; rx((0.5 - py) * 8); ry((px - 0.5) * 10); el.style.setProperty('--mx', px * 100 + '%'); el.style.setProperty('--my', py * 100 + '%'); });
+      el.addEventListener('pointerleave', () => { rx(0); ry(0); });
+    });
+  }
   function magnetic(root) {
-    if (!on || matchMedia('(hover: none)').matches) return;
+    if (!on || !hover) return;
     root.querySelectorAll('.magnet').forEach(b => {
-      const qx = G.quickTo(b, 'x', { duration: 0.35, ease: 'power3' }), qy = G.quickTo(b, 'y', { duration: 0.35, ease: 'power3' });
-      b.addEventListener('pointermove', e => { const r = b.getBoundingClientRect(); qx((e.clientX - r.left - r.width / 2) * 0.25); qy((e.clientY - r.top - r.height / 2) * 0.35); });
+      const qx = G.quickTo(b, 'x', { duration: 0.4, ease: 'power3' }), qy = G.quickTo(b, 'y', { duration: 0.4, ease: 'power3' });
+      b.addEventListener('pointermove', e => { const r = b.getBoundingClientRect(); qx((e.clientX - r.left - r.width / 2) * 0.22); qy((e.clientY - r.top - r.height / 2) * 0.3); });
       b.addEventListener('pointerleave', () => { qx(0); qy(0); });
     });
   }
-
-  return { on, initLenis, scrollTop, page, xp, confetti, hero, journey, magnetic, squares, get lenis() { return lenis; } };
+  return { on, initLenis, scrollTop, page, xp, confetti, stamp, hero, journey, magnetic, tilt, get lenis() { return lenis; } };
 })();
 
 /* ===== AI assistant on the student's own account =====
