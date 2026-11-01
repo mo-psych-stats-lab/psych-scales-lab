@@ -415,3 +415,39 @@ canvas.confetti{position:fixed;inset:0;width:100vw;height:100vh;pointer-events:n
 .avatar{background:linear-gradient(135deg,#7c5cff,#2a1a6e);color:#fff;border:2px solid var(--neon);box-shadow:0 0 0 2px var(--surface),0 6px 14px -8px rgba(60,30,160,.8);font-family:var(--f-display)}
 .avatar.guest{background:linear-gradient(135deg,var(--primary-soft),var(--surface));color:var(--primary);border-color:var(--primary)}
 .avatar svg{width:62%;height:62%}
+/* full lab name in the rail: allow wrapping instead of clipping */
+.rail .brand{white-space:normal;overflow:visible;align-items:flex-start;font-size:16px;line-height:1.35}
+.rail .brand>span:last-child{min-width:0}
+.rail .brand small{margin-top:2px}
+
+/* desktop: brand with the full name in the top bar (like the statistics lab); the rail starts with navigation */
+@media (min-width:980px){.topbar .brand{visibility:visible!important;white-space:nowrap;overflow:visible;font-size:18px}.topbar .brand>span:last-child{display:inline!important}.rail>.brand{display:none}.rail{padding-top:20px}}
+.topbar .brand>span:last-child{white-space:nowrap}
+
+/* ===== motion redesign ===== */
+.hx{display:grid;grid-template-columns:minmax(0,1fr);background-image:linear-gradient(rgba(255,255,255,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.05) 1px,transparent 1px),radial-gradient(900px 420px at 85% -10%,var(--hero-2),var(--hero) 60%);background-size:38px 38px,38px 38px,auto}
+@media (min-width:1100px){.hx{grid-template-columns:minmax(0,1.25fr) minmax(0,.9fr);align-items:center}}
+.hx-live{margin:0 clamp(16px,3vw,32px) clamp(16px,3vw,32px);background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);border-radius:20px;padding:16px;display:flex;flex-direction:column;gap:8px;backdrop-filter:blur(6px)}
+@media (min-width:1100px){.hx-live{margin:32px 0 32px 32px}}
+.lq-head{display:flex;justify-content:space-between;align-items:center;color:#e9e4ff;font-size:14px}
+.lq-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:center;font-size:13px;color:#cfc7f5}
+.lq-row>span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lq-dots{display:flex;gap:6px}
+.lq-dot{width:14px;height:14px;border-radius:50%;border:2px solid rgba(255,255,255,.35);display:block;position:relative}
+.lq-dot.on{border-color:var(--neon);background:var(--neon);box-shadow:0 0 12px rgba(190,242,100,.7)}
+.lq-gauge{display:flex;align-items:center;gap:12px;margin-top:4px;border-top:1px dashed rgba(255,255,255,.18);padding-top:10px}
+.lq-gauge svg{width:120px;height:70px;flex:none}
+.lq-bg,.lq-arc{fill:none;stroke-width:10;stroke-linecap:round}.lq-bg{stroke:rgba(255,255,255,.14)}.lq-arc{stroke:#f59e0b;transition:stroke .4s}
+.hx-live.good .lq-arc{stroke:var(--neon)}
+.lq-gauge small{display:block;color:#b9b1e0;font-size:12px}.lq-gauge b.lq-a{font:700 30px var(--f-mono);color:#fff}
+.lq-ok{opacity:.4}.hx-live.good .lq-ok{opacity:1;color:var(--neon)!important}
+@media (max-width:560px){.lq-row>span{font-size:12px}.lq-dot{width:12px;height:12px}}
+.wipe{position:fixed;inset:0;z-index:250;pointer-events:none;background:linear-gradient(110deg,var(--hero),var(--primary) 70%,var(--neon));transform:scaleX(0)}
+.jmap .jtoken .t1{fill:rgba(190,242,100,.25)}.jmap .jtoken .t2{fill:var(--lime);stroke:#fff;stroke-width:3}
+.stamp{position:fixed;inset:0;z-index:300;display:grid;place-items:center;pointer-events:none}
+.stamp .ring{position:absolute;width:170px;height:170px;border-radius:50%;border:6px solid var(--neon)}
+.stamp .medal{display:flex;flex-direction:column;align-items:center;gap:8px;background:var(--hero);color:#fff;border:3px solid var(--neon);border-radius:24px;padding:18px 26px;box-shadow:0 30px 60px -20px rgba(20,10,60,.8)}
+.stamp .medal svg{width:64px;height:64px}.stamp .medal b{font-family:var(--f-display);font-size:18px}
+.linkcard,.hx-stats>div,.tile{transform-style:preserve-3d;position:relative}
+@media (hover:hover){.linkcard::after,.hx-stats>div::after,.tile::after{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;background:radial-gradient(220px circle at var(--mx,50%) var(--my,50%),rgba(255,255,255,.18),transparent 60%);opacity:0;transition:opacity .25s}.linkcard:hover::after,.hx-stats>div:hover::after,.tile:hover::after{opacity:1}
+.linkcard:hover{transform:none}}
