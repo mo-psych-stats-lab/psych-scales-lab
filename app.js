@@ -408,7 +408,7 @@ ENV.web = !ENV.claude;
 /* ---------- shell & router ---------- */
 const NAV = [
   ['home', 'الرئيسية', 'home'], ['learn', 'الدروس', 'book'], ['labs', 'المعامل', 'flask'], ['build', 'ابنِ مقياسك', 'build'], ['exam', 'أسئلة موضوعية', 'check'], ['bank', 'بنك الأسئلة', 'cards'],
-  ['formulas', 'المعادلات', 'sigma'], ['practice', 'التدريب', 'cards'], ['respond', 'أجب عن مقياس', 'form'], ['me', 'إنجازاتي', 'trophy'], ['account', 'حسابي', 'user']
+  ['formulas', 'المعادلات', 'sigma'], ['practice', 'التدريب', 'cards'], ['neuro', 'المختبر العصبي', 'flask'], ['respond', 'أجب عن مقياس', 'form'], ['me', 'إنجازاتي', 'trophy'], ['account', 'حسابي', 'user']
 ];
 const LOGO_SVG = `<svg viewBox="0 0 40 40" aria-hidden="true"><defs><linearGradient id="lgS" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7c5cff"/><stop offset="1" stop-color="#1f1452"/></linearGradient></defs><rect width="40" height="40" rx="11" fill="url(#lgS)"/><rect x="8.5" y="7" width="23" height="27" rx="3.4" fill="#fff"/><rect x="14.5" y="5" width="11" height="4.2" rx="1.6" fill="#bef264"/><circle cx="27" cy="13.5" r="2.3" fill="#65a30d" stroke="#65a30d" stroke-width="1.3"/><path d="M25.9 13.5 l.8 .8 1.5-1.6" stroke="#fff" stroke-width="1" fill="none" stroke-linecap="round" stroke-linejoin="round"/><rect x="12" y="12.4" width="11" height="2.2" rx="1.1" fill="#b9b0e8"/><circle cx="27" cy="20.1" r="2.3" fill="#65a30d" stroke="#65a30d" stroke-width="1.3"/><path d="M25.9 20.1 l.8 .8 1.5-1.6" stroke="#fff" stroke-width="1" fill="none" stroke-linecap="round" stroke-linejoin="round"/><rect x="15" y="19.0" width="8" height="2.2" rx="1.1" fill="#b9b0e8"/><circle cx="27" cy="26.7" r="2.3" fill="#fff" stroke="#7c5cff" stroke-width="1.3"/><rect x="13" y="25.599999999999998" width="10" height="2.2" rx="1.1" fill="#b9b0e8"/></svg>`;
 const GUEST_SVG = `<svg viewBox="0 0 24 24" aria-hidden="true" fill="none"><circle cx="12" cy="9" r="3.6" fill="currentColor"/><path d="M5.2 19.2c1.3-3.1 3.9-4.7 6.8-4.7s5.5 1.6 6.8 4.7" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>`;
@@ -439,7 +439,7 @@ function shell() {
   $('#bAcct').onclick = () => go('account');
 }
 function moreSheet() {
-  modal(`<h3>المزيد</h3><div class="stack">${[['bank', 'بنك الأسئلة', 'cards', 'كل أسئلة المادة: بحث وتصفية واختبار سريع'], ['exam', 'أسئلة موضوعية', 'check', 'صح وخطأ، واختيار من متعدد، وامتحان تجريبي ونموذج محلول'], ['formulas', 'المعادلات', 'sigma', 'كل معادلات الصدق والثبات بأمثلة'], ['practice', 'التدريب', 'cards', 'بطاقات ومطابقة ومسائل حسابية'], ['respond', 'أجب عن مقياس', 'form', 'استخدم كود المقياس الذي أرسله الباحث'], ['me', 'إنجازاتي', 'trophy', 'النقاط والأوسمة والإعدادات'], ['account', 'حسابي', 'user', 'تسجيل الدخول وحفظ التقدم']].map(n => `<button class="linkcard" data-m="${n[0]}"><span class="ic">${ic(n[2])}</span><span><b>${n[1]}</b><span>${n[3]}</span></span></button>`).join('')}</div><div class="row" style="margin-top:12px"><button class="btn ghost" data-close>إغلاق</button></div>`,
+  modal(`<h3>المزيد</h3><div class="stack">${[['bank', 'بنك الأسئلة', 'cards', 'كل أسئلة المادة: بحث وتصفية واختبار سريع'], ['neuro', 'المختبر العصبي (TRIBE v2)', 'flask', 'تماسك عبارات مقياسك وفق التنبؤ العصبي — استكشافي'], ['exam', 'أسئلة موضوعية', 'check', 'صح وخطأ، واختيار من متعدد، وامتحان تجريبي ونموذج محلول'], ['formulas', 'المعادلات', 'sigma', 'كل معادلات الصدق والثبات بأمثلة'], ['practice', 'التدريب', 'cards', 'بطاقات ومطابقة ومسائل حسابية'], ['respond', 'أجب عن مقياس', 'form', 'استخدم كود المقياس الذي أرسله الباحث'], ['me', 'إنجازاتي', 'trophy', 'النقاط والأوسمة والإعدادات'], ['account', 'حسابي', 'user', 'تسجيل الدخول وحفظ التقدم']].map(n => `<button class="linkcard" data-m="${n[0]}"><span class="ic">${ic(n[2])}</span><span><b>${n[1]}</b><span>${n[3]}</span></span></button>`).join('')}</div><div class="row" style="margin-top:12px"><button class="btn ghost" data-close>إغلاق</button></div>`,
     (bg, close) => $$('[data-m]', bg).forEach(b => b.onclick = () => { close(); go(b.dataset.m); }));
 }
 function go(v) { if (v === 'labs' && typeof LABS !== 'undefined') LABS.clear(); if (v === 'learn' && typeof LEARN !== 'undefined') LEARN.clearOpen(); if (v === 'exam' && typeof EXAM !== 'undefined') EXAM.clear(); if (location.hash !== '#' + v) location.hash = v; else route(); }
@@ -450,7 +450,7 @@ function route() {
   const m = h.match(/^form-([A-Za-z0-9]+)$/); if (m) { h = 'respond'; arg = m[1]; } const tk = h.match(/^take\/([A-Za-z0-9_-]+)$/); if (tk) { h = 'take'; arg = tk[1]; }
   if (!VIEWS[h]) h = 'home';
   current = h;
-  $$('[data-go]').forEach(b => b.setAttribute('aria-current', b.dataset.go === h || (b.dataset.go === 'more' && ['qbuild', 'take', 'bank', 'exam', 'formulas', 'practice', 'respond', 'me', 'account'].includes(h)) ? 'page' : 'false'));
+  $$('[data-go]').forEach(b => b.setAttribute('aria-current', b.dataset.go === h || (b.dataset.go === 'more' && ['qbuild', 'take', 'bank', 'neuro', 'exam', 'formulas', 'practice', 'respond', 'me', 'account'].includes(h)) ? 'page' : 'false'));
   const v = $('#view'); v.innerHTML = '<div class="container" id="vc"></div>';
   if (typeof MOTION !== 'undefined') MOTION.scrollTop();
   VIEWS[h]($('#vc'), arg);
@@ -1148,6 +1148,130 @@ const LABS = (() => {
   return { list, open, clear: () => { openId = null; } };
 })();
 
+/* ===== Audience adaptation: age group / generation × language register, without breaking measurement =====
+   Shared by the scales lab and the statistics lab. Rules:
+   - wording may change; the construct, the item's direction (positive/negative), the number of response points and the
+     time frame may not — otherwise the versions measure different things and cannot be compared;
+   - every adapted version is checked automatically here, then empirically after data collection (DIF / invariance).
+   Generation labels are birth cohorts (approximate); what drives wording is reading level and life context. */
+var AUD = (function () {
+  var PROFILES = [
+    { id: 'alpha', t: 'الأطفال 8–12 سنة', g: 'جيل ألفا (مواليد 2013 وما بعدها)', maxW: 9, neg: false, pts: [3, 4], ctx: 'المدرسة، والبيت، والأصدقاء، والألعاب', tips: ['جمل قصيرة جدًا (أقل من 9 كلمات) وكلمات مألوفة', 'تجنب النفي والعبارات المعكوسة؛ الأطفال يخطئون في فهمها', 'تدريج من 3 نقاط بكلمات بسيطة أو وجوه', 'زمن قريب ومحدد: «هذا الأسبوع» بدل «عادةً»', 'اقرأ العبارات بصوت مرتفع للصغار'] },
+    { id: 'teen', t: 'المراهقون 13–17 سنة', g: 'جيل Z (مواليد 1997–2012)', maxW: 12, neg: true, pts: [4, 5], ctx: 'المدرسة، والأصدقاء، ووسائل التواصل، والأسرة', tips: ['جمل قصيرة (حتى 12 كلمة)', 'عبارات سالبة قليلة وواضحة، ولا نفي مزدوج', 'لغة غير وعظية ولا تبدو كأسئلة الكبار', 'أكّد السرية: المراهقون أكثر حساسية للمرغوبية الاجتماعية'] },
+    { id: 'youth', t: 'الشباب 18–28 سنة', g: 'جيل Z (مواليد 1997–2012)', maxW: 15, neg: true, pts: [5, 7], ctx: 'الجامعة، والعمل الأول، والعلاقات، والحياة الرقمية', tips: ['جمل مباشرة (حتى 15 كلمة)', 'التدريج الخماسي مناسب', 'الأمثلة الرقمية مقبولة في التعليمات لا في العبارات'] },
+    { id: 'millennial', t: 'البالغون 29–44 سنة', g: 'جيل الألفية Y (مواليد 1981–1996)', maxW: 18, neg: true, pts: [5, 7], ctx: 'العمل، والأسرة، والأبوة والأمومة', tips: ['الصياغة القياسية مناسبة', 'راعِ ضيق الوقت: مقياس أقصر يرفع جودة الاستجابة'] },
+    { id: 'genx', t: 'منتصف العمر 45–60 سنة', g: 'الجيل X (مواليد 1965–1980)', maxW: 16, neg: true, pts: [4, 5], ctx: 'العمل، والأسرة، والصحة', tips: ['فصحى ميسرة غالبًا أوضح من العامية في السياق الرسمي', 'تجنب المصطلحات الرقمية الحديثة غير الشائعة', 'خط أكبر وتباعد مريح'] },
+    { id: 'older', t: 'كبار السن 60+ سنة', g: 'جيل الطفرة وما قبله (مواليد قبل 1965)', maxW: 12, neg: false, pts: [3, 4], ctx: 'الصحة، والأسرة، والأنشطة اليومية', tips: ['جمل قصيرة وخط كبير', 'تجنب العبارات المعكوسة؛ تزيد أخطاء الاستجابة', 'تدريج من 3 أو 4 نقاط بكلمات واضحة', 'يمكن التطبيق بالمقابلة بدل الورقة'] }
+  ];
+  var REGISTERS = [
+    { id: 'fusha', t: 'فصحى رسمية', d: 'للمقاييس المقننة والبحوث المنشورة' },
+    { id: 'easy', t: 'فصحى ميسرة', d: 'فصحى بكلمات شائعة وتراكيب قصيرة؛ الأنسب لمعظم الفئات' },
+    { id: 'ammiya', t: 'عامية مصرية', d: 'أقرب للغة الحياة اليومية؛ مناسبة للأطفال والمراهقين والاستبيانات غير الرسمية' }
+  ];
+  // phrase-level dictionary (longest first). Output always needs human review.
+  var EASY = [['يصعب عليّ', 'من الصعب عليّ'], ['في كثير من الأحيان', 'كثيرًا'], ['لديّ', 'عندي'], ['لدي', 'عندي'], ['المحيطون بي', 'من حولي'], ['أدائي الدراسي', 'دراستي'], ['المهام', 'الأعمال المطلوبة'], ['أتجنب', 'أبتعد عن'], ['أستطيع', 'أقدر'], ['عندما', 'لما']];
+  var AMM = [
+    ['لا أستطيع', 'مش قادر'], ['ليست لديّ', 'معنديش'], ['ليست لدي', 'معنديش'], ['في كثير من', 'في كتير من'], ['المواقف اليومية', 'مواقف كل يوم'], ['لا أقدر', 'مش قادر'], ['ليس لديّ', 'معنديش'], ['ليس لدي', 'معنديش'], ['في كثير من الأحيان', 'كتير'], ['في المواقف اليومية', 'في يومي'],
+    ['يصعب عليّ', 'صعب عليا'], ['أجد صعوبة في', 'بلاقي صعوبة في'], ['يلاحظ المحيطون بي', 'اللي حواليا بياخدوا بالهم من'], ['المحيطون بي', 'اللي حواليا'],
+    ['أشعر بالضيق', 'بتضايق'], ['أشعر بأنني', 'بحس إني'], ['أشعر أنني', 'بحس إني'], ['أشعر بـ', 'بحس بـ'], ['أشعر', 'بحس'], ['أستطيع', 'أقدر'],
+    ['أفكر', 'بفكر'], ['أحب', 'بحب'], ['أتصرف', 'بتصرف'], ['أتذكر', 'فاكر'], ['أؤجل', 'بأجّل'], ['أنشغل', 'بتلهي'], ['أتجنب', 'ببعد عن'], ['أقلق', 'بقلق'], ['أخاف', 'بخاف'],
+    ['أنجز', 'بخلّص'], ['أنام', 'بنام'], ['أستيقظ', 'بصحى'], ['أترك', 'بسيب'], ['أبدأ', 'ببدأ'], ['أضع', 'بحط'], ['ألتزم', 'بلتزم'], ['أواجه', 'بواجه'], ['أهرب', 'بهرب'], ['أفاجأ', 'بتفاجئ'],
+    ['أجد نفسي', 'بلاقي نفسي'], ['أتمنى', 'نفسي'], ['أريد', 'عايز'], ['يظهر', 'بيبان'], ['يؤثر', 'بيأثر'], ['يستمر', 'بيفضل'], ['تتكرر', 'بتتكرر'],
+    ['لديّ', 'عندي'], ['لدي', 'عندي'], ['عندما', 'لما'], ['الذي', 'اللي'], ['التي', 'اللي'], ['الذين', 'اللي'], ['هذا', 'ده'], ['هذه', 'دي'], ['هؤلاء', 'دول'],
+    ['كثيرًا', 'كتير'], ['كثيرا', 'كتير'], ['أحيانًا', 'ساعات'], ['أحيانا', 'ساعات'], ['دائمًا', 'دايمًا'], ['جدًا', 'أوي'], ['الآن', 'دلوقتي'], ['كيف', 'إزاي'], ['لماذا', 'ليه'], ['ماذا', 'إيه'],
+    ['ليست', 'مش'], ['ليس', 'مش'], ['لست', 'مش'], ['أكثر من غيري', 'أكتر من غيري'], ['أكثر', 'أكتر'], ['أمام', 'قدام'], ['مع ذلك', 'ومع كده'], ['فقط', 'بس'], ['أيضًا', 'كمان']
+  ];
+  var LABELS = {
+    fusha: { 3: ['تنطبق كثيرًا', 'تنطبق أحيانًا', 'لا تنطبق'], 4: ['تنطبق دائمًا', 'تنطبق غالبًا', 'تنطبق نادرًا', 'لا تنطبق أبدًا'], 5: ['تنطبق دائمًا', 'تنطبق غالبًا', 'تنطبق أحيانًا', 'تنطبق نادرًا', 'لا تنطبق أبدًا'] },
+    easy: { 3: ['كثيرًا', 'أحيانًا', 'لا'], 4: ['دائمًا', 'غالبًا', 'قليلًا', 'أبدًا'], 5: ['دائمًا', 'غالبًا', 'أحيانًا', 'نادرًا', 'أبدًا'] },
+    ammiya: { 3: ['كتير', 'ساعات', 'لأ'], 4: ['دايمًا', 'غالبًا', 'قليل', 'خالص'], 5: ['دايمًا', 'غالبًا', 'ساعات', 'نادرًا', 'خالص'] }
+  };
+  var AGREE = { fusha: ['أوافق بشدة', 'أوافق', 'محايد', 'أرفض', 'أرفض بشدة'], easy: ['موافق جدًا', 'موافق', 'مش متأكد', 'غير موافق', 'غير موافق أبدًا'], ammiya: ['موافق جدًا', 'موافق', 'مش متأكد', 'مش موافق', 'مش موافق خالص'] };
+  var NEG = /(^|\s)(لا|لم|لن|ليس|ليست|لست|غير|عدم|بدون|دون|مش|ما)(\s|$)/;
+  function prof(id) { return PROFILES.filter(function (p) { return p.id === id; })[0] || PROFILES[2]; }
+  function esc(s) { return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
+  // whole-word replacement; a first-person verb right after «لم/لن» is left for human review (its negated form differs)
+  function swap(text, dict, notes) {
+    var t = ' ' + text + ' ';
+    dict.slice().sort(function (a, b) { return b[0].length - a[0].length; }).forEach(function (p) {
+      var tail = /بـ$/.test(p[0]) ? '' : '(?=$|[\\s.،؟!])';
+      t = t.replace(new RegExp('(^|\\s)(لم\\s|لن\\s)?' + esc(p[0]) + tail, 'g'), function (m, sp, neg) {
+        if (neg && /^أ/.test(p[0])) { notes && notes.push('negverb'); return m; }
+        return sp + (neg || '') + p[1];
+      });
+    });
+    return t.trim();
+  }
+  function adapt(text, profileId, registerId) {
+    var t = String(text || '').replace(/[«»"]/g, ''), notes = [];
+    if (registerId === 'ammiya') t = swap(t, AMM, notes); else if (registerId === 'easy') t = swap(t, EASY, notes);
+    t = t.replace(/بـ(?=[^\s])/g, 'ب').replace(/\s+/g, ' ').replace(/\s+([.،؟])/g, '$1').trim();
+    var w = check(text, t, profileId, registerId);
+    if (notes.length) w.push(['warn', 'فيها فعل منفي بـ«لم/لن»؛ صُغه بالعامية يدويًا مع الحفاظ على النفي']);
+    if (registerId === 'ammiya' && /(لم|لن|سوف|إنني|لكنني)\s/.test(t)) w.push(['warn', 'ما زالت فيها تراكيب فصحى؛ راجعها']);
+    return { text: t, warnings: w };
+  }
+  // measurement-safety checks between the original and an adapted item
+  function check(orig, adapted, profileId, registerId) {
+    var w = [], p = prof(profileId), wc = String(adapted).split(/\s+/).filter(Boolean).length, wo = String(orig).split(/\s+/).filter(Boolean).length;
+    if (!String(adapted).trim()) return [['bad', 'عبارة فارغة']];
+    if (wc > p.maxW) w.push(['warn', 'أطول من المناسب لهذه الفئة (' + wc + ' كلمة؛ الحد ' + p.maxW + ')']);
+    if (wo && wc > wo * 1.6 + 2) w.push(['warn', 'أطول كثيرًا من الأصل؛ تأكد أنك لم تضف معنى جديدًا']);
+    var negO = NEG.test(' ' + orig + ' '), negA = NEG.test(' ' + adapted + ' ');
+    if (negO !== negA) w.push(['bad', 'تغيّر اتجاه العبارة (نفي/إثبات)؛ هذا يغيّر التصحيح ويكسر المقارنة']);
+    if (negA && !p.neg) w.push(['warn', 'عبارة منفية لفئة يصعب عليها النفي؛ اكتب بديلًا مثبتًا وعدّل اتجاه التصحيح في كل النسخ']);
+    if ((String(adapted).match(/ و/g) || []).length >= 2) w.push(['warn', 'قد تحمل أكثر من فكرة']);
+    if (/[؟?]/.test(adapted)) w.push(['warn', 'صيغة سؤال؛ اجعلها عبارة تقريرية']);
+    return w;
+  }
+  function labels(base, profileId, registerId) {
+    var n = (base || []).length, isAgree = (base || []).some(function (x) { return /أوافق|موافق|أرفض/.test(x); });
+    if (n === 5 && isAgree) return AGREE[registerId] ? AGREE[registerId].slice() : base;
+    var L = (LABELS[registerId] || LABELS.fusha)[n];
+    return L ? L.slice() : base;
+  }
+  function instructions(profileId, registerId) {
+    var kid = profileId === 'alpha';
+    if (registerId === 'ammiya') return kid ? 'هنقرا جمل قصيرة. اختار الإجابة اللي شبهك. مفيش إجابة صح وإجابة غلط.' : 'اقرا كل جملة كويس، واختار الإجابة اللي بتعبّر عنك فعلًا. مفيش إجابة صح وغلط، وإجاباتك سرية.';
+    if (registerId === 'easy') return kid ? 'اقرأ كل جملة، واختر الإجابة التي تشبهك. لا توجد إجابة صحيحة وأخرى خاطئة.' : 'اقرأ كل عبارة، واختر الإجابة التي تعبّر عنك. لا توجد إجابات صحيحة أو خاطئة، وإجاباتك سرية.';
+    return null;
+  }
+  function prompt(items, profileId, registerId, construct) {
+    var p = prof(profileId), r = REGISTERS.filter(function (x) { return x.id === registerId; })[0] || REGISTERS[0];
+    return 'أنت خبير في القياس النفسي وتكييف المقاييس. أعد صياغة عبارات مقياس «' + (construct || 'السمة') + '» لتناسب ' + p.t + ' (' + p.g + ') بلغة: ' + r.t + '.\n' +
+      'قواعد إلزامية حتى لا يختل القياس:\n1) احتفظ بالمعنى والسمة المقاسة نفسها؛ لا تضف ولا تحذف فكرة.\n2) احتفظ باتجاه كل عبارة (المثبتة تبقى مثبتة والمنفية تبقى منفية).\n3) احتفظ بالإطار الزمني وشدة العبارة (لا تحوّل «أحيانًا» إلى «دائمًا»).\n4) فكرة واحدة لكل عبارة، وبحد أقصى ' + p.maxW + ' كلمة.\n5) سياقات مألوفة للفئة: ' + p.ctx + '، دون تغيير ما تقيسه العبارة.\n' +
+      'أعد JSON فقط: {"items":[{"id":"...","text":"..."}]}\nالعبارات:\n' + items.map(function (x) { return JSON.stringify({ id: x.id, text: x.text }); }).join('\n');
+  }
+  /* empirical check after data: standardization DIF (Dorans & Kulick) of each item between two versions,
+     conditioning on the rest score; returns per-item STD on the item's own scale. */
+  function stdDIF(rowsRef, rowsFoc, nItems, lo, hi) {
+    var first = stdPass(rowsRef, rowsFoc, nItems, lo, hi, {});
+    var drop = {}; first.forEach(function (x, j) { if (x.level === 'flag' || x.level === 'review') drop[j] = 1; });
+    return Object.keys(drop).length && Object.keys(drop).length < nItems - 1 ? stdPass(rowsRef, rowsFoc, nItems, lo, hi, drop) : first;
+  }
+  function stdPass(rowsRef, rowsFoc, nItems, lo, hi, drop) {
+    var out = [], R = hi - lo || 1;
+    for (var j = 0; j < nItems; j++) {
+      var rest = function (r) { var s = 0; for (var k = 0; k < nItems; k++) if (k !== j && !drop[k]) s += r[k]; return s; };
+      var all = rowsRef.map(rest).concat(rowsFoc.map(rest)), mn = Math.min.apply(null, all), mx = Math.max.apply(null, all), B = Math.max(1, Math.min(8, Math.round((mx - mn) / 2) + 1)), bw = (mx - mn) / B || 1;
+      var bin = function (v) { return Math.min(B - 1, Math.floor((v - mn) / bw)); }, sR = {}, nR = {}, sF = {}, nF = {};
+      rowsRef.forEach(function (r) { var b = bin(rest(r)); sR[b] = (sR[b] || 0) + r[j]; nR[b] = (nR[b] || 0) + 1; });
+      rowsFoc.forEach(function (r) { var b = bin(rest(r)); sF[b] = (sF[b] || 0) + r[j]; nF[b] = (nF[b] || 0) + 1; });
+      var num = 0, den = 0; Object.keys(nF).forEach(function (b) { if (!nR[b]) return; num += nF[b] * (sF[b] / nF[b] - sR[b] / nR[b]); den += nF[b]; });
+      var std = den ? num / den : NaN, rel = Math.abs(std) / R;
+      out.push({ std: std, level: !isFinite(std) ? 'na' : rel < 0.1 ? 'ok' : rel < 0.2 ? 'review' : 'flag' });
+    }
+    return out;
+  }
+  function selectorsHTML(sel, idp) {
+    idp = idp || 'au';
+    return '<div class="aud-sel"><label class="fl" for="' + idp + 'P">الفئة العمرية المستهدفة</label><select id="' + idp + 'P">' + PROFILES.map(function (p) { return '<option value="' + p.id + '"' + (sel && sel.p === p.id ? ' selected' : '') + '>' + p.t + ' — ' + p.g + '</option>'; }).join('') + '</select>' +
+      '<label class="fl" for="' + idp + 'R">لغة الصياغة</label><select id="' + idp + 'R">' + REGISTERS.map(function (r) { return '<option value="' + r.id + '"' + (sel && sel.r === r.id ? ' selected' : '') + '>' + r.t + ' — ' + r.d + '</option>'; }).join('') + '</select></div>';
+  }
+  function tipsHTML(profileId) { var p = prof(profileId); return '<ul class="aud-tips">' + p.tips.map(function (t) { return '<li>' + t + '</li>'; }).join('') + '</ul>'; }
+  return { PROFILES: PROFILES, REGISTERS: REGISTERS, prof: prof, adapt: adapt, check: check, labels: labels, instructions: instructions, prompt: prompt, stdDIF: stdDIF, selectorsHTML: selectorsHTML, tipsHTML: tipsHTML };
+})();
+
 /* ===== Scale builder: 12-step wizard, data collection, live analysis ===== */
 const SCALES = (() => {
   const K = 'scaleslab-scales-v1';
@@ -1302,13 +1426,16 @@ const BUILD = (() => {
   const b64e = str => btoa(unescape(encodeURIComponent(str))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
   const b64d = str => decodeURIComponent(escape(atob(str.replace(/-/g, '+').replace(/_/g, '/'))));
   const hash = str => { let h = 7; for (let i = 0; i < str.length; i++) h = (h * 31 + str.charCodeAt(i)) % 1000003; return h.toString(36); };
-  function version(s) { const ids = kept(s).map(i => i.id); const v = hash(ids.join(',')); s.versions = s.versions || {}; s.versions[v] = ids; return v; }
-  function formDef(s) { const v = version(s); return { i: s.id, v, n: s.name, in: s.instr, l: s.scale.labels, b: isBin(s) ? 1 : 0, d: s.demo, m: meth(s), q: kept(s).map(i => i.text) }; }
+  function version(s) { const ids = kept(s).map(i => i.id), f = activeForm(s); const v = hash(ids.join(',') + (f ? '|' + f.id : '')); s.versions = s.versions || {}; s.versions[v] = ids; s.vform = s.vform || {}; s.vform[v] = f ? f.id : 'base'; return v; }
+  /* audience versions: same items, adapted wording per age group / register; responses are tagged with their version */
+  const activeForm = s => (s.forms || []).find(f => f.id === s.activeForm) || null;
+  const formText = (s, it, f) => { f = f === undefined ? activeForm(s) : f; return f && f.texts && f.texts[it.id] ? f.texts[it.id] : it.text; };
+  function formDef(s) { const v = version(s), f = activeForm(s); return { i: s.id, v, n: s.name, in: (f && f.instr) || s.instr, l: (f && f.labels && f.labels.length === s.scale.labels.length) ? f.labels : s.scale.labels, b: isBin(s) ? 1 : 0, d: s.demo, m: meth(s), q: kept(s).map(i => formText(s, i, f)) }; }
   const scaleCode = s => 'SC1.' + b64e(JSON.stringify(formDef(s)));
   function parseScaleCode(c) { c = c.trim(); if (!c.startsWith('SC1.')) throw new Error('الكود لا يبدأ بـ SC1. تأكد أنك نسخت كود المقياس كاملًا.'); const d = JSON.parse(b64d(c.slice(4))); if (!d.q || !d.l || !d.i) throw new Error('كود المقياس غير مكتمل.'); if (d.q.length > 200 || d.l.length > 7) throw new Error('كود غير صالح.'); return d; }
   function responseCode(def, vals, demo) { const p = { i: def.i, v: def.v, r: vals.join(''), g: demo.g || '', a: demo.a || '', t: Date.now() }; p.c = hash(p.i + p.v + p.r); return 'RS1.' + b64e(JSON.stringify(p)); }
   function parseResponseCode(c) { c = c.trim(); if (!c.startsWith('RS1.')) return null; try { const p = JSON.parse(b64d(c.slice(4))); if (hash(p.i + p.v + p.r) !== p.c) return { error: 'تالف' }; return p; } catch (e) { return { error: 'تالف' }; } }
-  function addResponse(s, ver, values, extra) { const ids = (s.versions || {})[ver]; if (!ids) return 'version'; if (values.length !== ids.length) return 'length'; const vals = {}; ids.forEach((id, j) => vals[id] = values[j]); s.responses.push(Object.assign({ id: uid('r'), ts: Date.now(), vals }, extra)); return 'ok'; }
+  function addResponse(s, ver, values, extra) { const ids = (s.versions || {})[ver]; if (!ids) return 'version'; if (values.length !== ids.length) return 'length'; const vals = {}; ids.forEach((id, j) => vals[id] = values[j]); s.responses.push(Object.assign({ id: uid('r'), ts: Date.now(), vals, form: (s.vform || {})[ver] || 'base' }, extra)); return 'ok'; }
 
   /* ---- form renderer (shared by kiosk, preview, respond) ---- */
   function formHTML(def, opts = {}) {
@@ -1463,11 +1590,73 @@ const BUILD = (() => {
         `<div class="kpis"><div class="tile ${bad ? 'bad' : 'good'}"><small>ملاحظات جوهرية</small><b>${bad}</b></div><div class="tile"><small>عبارات بها تنبيهات</small><b>${warn}</b></div><div class="tile"><small>إجمالي العبارات</small><b>${k.length}</b></div></div>` +
         tableHTML(['البعد', 'العبارات', 'السالبة', 'توازن الاتجاه'], bal) +
         `<div class="stack" style="gap:0">${k.map(it => itemRow(s, it, { showOk: true })).join('')}</div>` +
-        `<details class="steps"><summary>قواعد الصياغة</summary><ul class="small"><li>فكرة واحدة في كل عبارة، ولغة مناسبة للفئة.</li><li>تجنب النفي المزدوج والعبارات العامة.</li><li>عبارة تقريرية بضمير المتكلم، لا سؤال.</li><li>تجنب الإيحاء بالإجابة المرغوبة اجتماعيًا.</li><li>عبارات سالبة محسوبة (نحو الربع إلى الثلث) لضبط الموافقة المنهجية، مع فحص أدائها لاحقًا.</li></ul></details>`;
+        `<details class="steps"><summary>قواعد الصياغة</summary><ul class="small"><li>فكرة واحدة في كل عبارة، ولغة مناسبة للفئة.</li><li>تجنب النفي المزدوج والعبارات العامة.</li><li>عبارة تقريرية بضمير المتكلم، لا سؤال.</li><li>تجنب الإيحاء بالإجابة المرغوبة اجتماعيًا.</li><li>عبارات سالبة محسوبة (نحو الربع إلى الثلث) لضبط الموافقة المنهجية، مع فحص أدائها لاحقًا.</li></ul></details><section class="card stack aud-box" id="audBox"></section>`;
       bindItems(b, s, persist, draw);
+      audPanel($('#audBox', b), s, persist);
     };
     draw();
   };
+  /* ---- audience versions panel ---- */
+  function audPanel(el, s, persist) {
+    if (!el || typeof AUD === 'undefined') return;
+    s.forms = s.forms || []; let cur = s._editForm && s.forms.find(f => f.id === s._editForm) || null;
+    const k = kept(s), lo = isBin(s) ? 0 : 1;
+    const draw = () => {
+      const pickList = `<div class="row" style="flex-wrap:wrap;gap:6px"><span class="chip ${!cur ? 'blue' : ''}">الأصلية</span>${s.forms.map(f => `<button class="chip ${cur && cur.id === f.id ? 'lime' : ''}" data-fe="${f.id}">${esc(f.label)}</button>`).join('')}</div>`;
+      let body = '';
+      if (!cur) {
+        body = `<div class="grid2">${AUD.selectorsHTML({ p: 'teen', r: 'ammiya' }, 'au')}<div id="auTips"></div></div><div class="row"><button class="btn sm" id="auNew">${ic('plus')} أنشئ نسخة لهذه الفئة</button></div>`;
+      } else {
+        const p = AUD.prof(cur.p), sameN = (cur.labels || []).length === s.scale.labels.length;
+        body = `<div class="row"><b class="grow">${esc(cur.label)}</b><button class="btn sm lime" id="auAI" hidden>${ic('bolt')} حسّن الصياغة بحساب Claude</button><button class="btn sm ghost" id="auCp">${ic('copy')} انسخ طلب التكييف</button><button class="btn sm danger" id="auDel">${ic('trash')} احذف النسخة</button><button class="btn sm ghost" id="auBack">رجوع</button></div>
+          ${AUD.tipsHTML(cur.p)}
+          ${p.neg === false && k.some(i => i.dir < 0) ? '<div class="notice warn small"><b>تنبيه لهذه الفئة</b>في المقياس عبارات سالبة، وهذه الفئة يصعب عليها النفي. الحل الآمن: استبدلها بعبارات مثبتة <b>في كل النسخ</b> (بما فيها الأصلية) مع تعديل اتجاه التصحيح، حتى تبقى النسخ متكافئة.</div>' : ''}
+          ${p.pts.indexOf(s.scale.labels.length) < 0 ? `<div class="notice warn small"><b>عدد نقاط التدريج</b>المناسب لهذه الفئة ${p.pts.join(' أو ')} نقاط، والمقياس ${s.scale.labels.length}. لا يمكن تغيير عدد النقاط داخل نسخة (يكسر المقارنة)؛ إن احتجت ذلك فابنِ مقياسًا مستقلًا لهذه الفئة بمعايير خاصة.</div>` : ''}
+          <div class="tw"><table><thead><tr><th>#</th><th>العبارة الأصلية</th><th>صياغة هذه النسخة</th><th>فحص السلامة</th></tr></thead><tbody>${k.map((it, n) => { const w = AUD.check(it.text, cur.texts[it.id] || '', cur.p, cur.r); return `<tr><td class="num">${n + 1}</td><td class="small">${esc(it.text)}</td><td><input type="text" data-at="${it.id}" value="${esc(cur.texts[it.id] || '')}" aria-label="صياغة العبارة ${n + 1}"></td><td>${w.length ? w.map(x => `<span class="chip ${x[0]}">${x[1]}</span>`).join(' ') : '<span class="chip good">متكافئة شكليًا</span>'}</td></tr>`; }).join('')}</tbody></table></div>
+          <div class="field"><span class="fl">بدائل الاستجابة لهذه النسخة (نفس العدد والترتيب)</span><div class="grid3">${(sameN ? cur.labels : s.scale.labels).map((l, i) => `<input type="text" data-al="${i}" value="${esc(l)}" aria-label="البديل ${i + 1}">`).join('')}</div></div>
+          <div class="field"><label class="fl" for="auIn">تعليمات هذه النسخة</label><textarea id="auIn">${esc(cur.instr || s.instr)}</textarea></div>`;
+      }
+      el.innerHTML = `<div class="row"><h4 class="grow" style="margin:0">${ic('user')} نسخ حسب الفئة العمرية ولغة الصياغة</h4><span class="chip">${s.forms.length} نسخة</span></div>
+        <p class="small muted" style="margin:0">اكتب نسخة من العبارات تناسب جيلًا معينًا (ألفا، Z، الألفية، X، كبار السن) بالفصحى أو الفصحى الميسرة أو العامية. يتغير <b>اللفظ</b> فقط؛ ويبقى المعنى، واتجاه العبارة، والإطار الزمني، وعدد نقاط التدريج ثابتة. وبعد جمع البيانات يقارن المعالج النسخ بالأداء التفاضلي للعبارات ليتأكد أنها تقيس السمة نفسها.</p>${pickList}${body}`;
+      $$('[data-fe]', el).forEach(x => x.onclick = () => { cur = s.forms.find(f => f.id === x.dataset.fe); s._editForm = cur.id; draw(); });
+      const tipsBox = $('#auTips', el), pSel = $('#auP', el); if (tipsBox && pSel) { const upd = () => tipsBox.innerHTML = AUD.tipsHTML(pSel.value); pSel.onchange = upd; upd(); }
+      const nw = $('#auNew', el); if (nw) nw.onclick = () => {
+        const p = $('#auP', el).value, r = $('#auR', el).value, P = AUD.prof(p), R0 = AUD.REGISTERS.find(x => x.id === r);
+        const f = { id: uid('f'), p, r, label: P.t.split(' ')[0] + ' · ' + R0.t, texts: {}, labels: AUD.labels(s.scale.labels, p, r), instr: AUD.instructions(p, r) || s.instr };
+        k.forEach(it => f.texts[it.id] = AUD.adapt(it.text, p, r).text);
+        s.forms.push(f); cur = f; s._editForm = f.id; persist(); draw(); toast('أُنشئت النسخة بتحويل آلي أولي؛ راجع كل عبارة');
+      };
+      if (!cur) return;
+      $$('[data-at]', el).forEach(x => x.onchange = () => { cur.texts[x.dataset.at] = x.value.trim(); persist(); draw(); });
+      $$('[data-al]', el).forEach(x => x.onchange = () => { if ((cur.labels || []).length !== s.scale.labels.length) cur.labels = s.scale.labels.slice(); cur.labels[+x.dataset.al] = x.value.trim() || s.scale.labels[+x.dataset.al]; persist(); });
+      $('#auIn', el).onchange = e => { cur.instr = e.target.value.trim(); persist(); };
+      $('#auBack', el).onclick = () => { cur = null; s._editForm = null; draw(); };
+      $('#auDel', el).onclick = () => confirmBox('ستُحذف النسخة (الاستجابات المسجلة بها تبقى موسومة باسمها).', 'حذف النسخة', () => { s.forms = s.forms.filter(f => f !== cur); if (s.activeForm === cur.id) s.activeForm = null; cur = null; s._editForm = null; persist(); draw(); });
+      const items = k.map(it => ({ id: it.id, text: it.text }));
+      $('#auCp', el).onclick = () => copyText(AUD.prompt(items, cur.p, cur.r, s.construct || s.name)).then(() => toast('نُسخ الطلب؛ الصقه في Claude ثم انقل الصياغات إلى الجدول'));
+      if (typeof AI !== 'undefined') AI.available().then(ok => { const g = $('#auAI', el); if (!ok || !g) return; g.hidden = false; g.onclick = async () => {
+        g.disabled = true; g.textContent = 'Claude يكيّف الصياغة…';
+        try { const sm = await window.claude.use('sample'); const r = await sm.json(AUD.prompt(items, cur.p, cur.r, s.construct || s.name)); (r.items || []).forEach(x => { if (cur.texts[x.id] !== undefined && x.text) cur.texts[x.id] = String(x.text).slice(0, 300); }); persist(); draw(); toast('راجع فحص السلامة لكل عبارة'); }
+        catch (e) { toast((AI.ERR || {})[e && e.code] || 'تعذر التكييف الآن'); g.disabled = false; }
+      }; });
+    };
+    draw();
+  }
+  function versionsCompare(s, A) {
+    if (typeof AUD === 'undefined' || !A.rows || !A.meta) return '';
+    const groups = {}; A.meta.forEach((m, i) => { const f = m.form || 'base'; (groups[f] = groups[f] || []).push(A.rows[i]); });
+    const keys = Object.keys(groups).filter(k2 => groups[k2].length >= 10); if (keys.length < 2) return Object.keys(groups).length > 1 ? '<div class="notice small"><b>مقارنة النسخ</b>تحتاج 10 استجابات على الأقل لكل نسخة لبدء فحص تكافؤ النسخ.</div>' : '';
+    const name = k2 => k2 === 'base' ? 'الأصلية' : ((s.forms || []).find(f => f.id === k2) || { label: 'نسخة محذوفة' }).label;
+    const ref = keys.indexOf('base') >= 0 ? 'base' : keys.sort((a, c) => groups[c].length - groups[a].length)[0];
+    const lo = isBin(s) ? 0 : 1, hi = isBin(s) ? 1 : pts(s), nI = A.items.length;
+    const sum = keys.map(k2 => { const st = PSY.itemStats(groups[k2]); return [esc(name(k2)), N(groups[k2].length, 0), N(st.alpha, 3), N(PSY.mean(groups[k2].map(r => PSY.sum(r))))]; });
+    let h = `<section class="stack"><h4 style="margin:0">${ic('shield')} تكافؤ النسخ: هل تقيس السمة نفسها؟</h4>${tableHTML(['النسخة', 'ن', 'ألفا', 'متوسط الدرجة الكلية'], sum)}`;
+    keys.filter(k2 => k2 !== ref).forEach(k2 => {
+      const d = AUD.stdDIF(groups[ref], groups[k2], nI, lo, hi);
+      h += `<p class="small" style="margin:0"><b>${esc(name(k2))}</b> مقارنة بـ <b>${esc(name(ref))}</b> (مؤشر التوحيد لدورانز وكوليك، بعد مطابقة المستجيبين على الدرجة الكلية):</p>` + tableHTML(['#', 'العبارة', 'الفرق المعياري STD', 'الحكم'], A.items.map((it, j) => ({ cls: d[j].level === 'flag' ? 'flag' : '', cells: [N(s.items.indexOf(it) + 1, 0), esc(formText(s, it, (s.forms || []).find(f => f.id === k2) || null)), N(d[j].std), d[j].level === 'ok' ? '<span class="chip good">متكافئة</span>' : d[j].level === 'review' ? '<span class="chip warn">تُراجع</span>' : d[j].level === 'flag' ? '<span class="chip bad">تحيز في الصياغة</span>' : '—'] })));
+    });
+    return h + '<p class="small muted">الفرق المعياري أقل من 10% من مدى التدريج = متكافئة؛ 10–20% = تُراجع؛ أكثر من 20% = الصياغة غيّرت ما تقيسه العبارة فتُعدّل. هذا فحص أولي؛ للتأكيد النهائي استخدم التحليل العاملي التوكيدي متعدد المجموعات (التكافؤ القياسي) في برنامج AMOS بموقع الإحصاء.</p></section>';
+  }
   function methodPicker(s) {
     const m = METHODS[meth(s)], k = kept(s).length || s.target, r = m.n(k);
     return `<div class="field"><span class="fl">طريقة البناء (مرتبة من الأقدم إلى الأحدث)</span><div class="seg" style="flex-wrap:wrap">${MORDER.map(x => `<button data-me="${x}" aria-pressed="${meth(s) === x}">${METHODS[x].t} <span class="small muted num">${METHODS[x].yr}</span></button>`).join('')}</div>
@@ -1522,6 +1711,7 @@ const BUILD = (() => {
     const A = analyze(s), r = s.responses.filter(x => !x.pilot);
     const live = window.ACCT && ACCT.forms && ACCT.forms.available();
     b.innerHTML = intro(9, 'اجمع الاستجابات بالطريقة المناسبة لك، وتُضاف كلها إلى المقياس نفسه ويُحدّث التحليل فورًا.') +
+      ((s.forms || []).length ? `<div class="row small"><label for="actF"><b>النسخة المستخدمة في الجمع:</b></label><select id="actF"><option value="">الأصلية</option>${s.forms.map(f => `<option value="${f.id}" ${s.activeForm === f.id ? 'selected' : ''}>${esc(f.label)}</option>`).join('')}</select><span class="muted">كل استجابة تُوسم بنسختها، ثم تُقارن النسخ تلقائيًا.</span></div>` : '') +
       `<div class="kpis"><div class="tile hl"><small>استجابات صالحة للتحليل</small><b>${A.n}</b></div><div class="tile"><small>كل الاستجابات</small><b>${r.length}</b></div><div class="tile"><small>آخر استجابة</small><b style="font-size:15px">${r.length ? new Date(Math.max(...r.map(x => x.ts))).toLocaleString('ar-EG', { dateStyle: 'short', timeStyle: 'short' }) : '—'}</b></div></div>
       <div class="grid2">
         <button class="linkcard" id="cK"><span class="ic">${ic('play')}</span><span><b>جمع مباشر على هذا الجهاز</b><span>سلّم الجهاز للمستجيبين واحدًا تلو الآخر (في قاعة أو معمل)؛ يعود النموذج فارغًا بعد كل إرسال.</span></span></button>
@@ -1531,9 +1721,10 @@ const BUILD = (() => {
       </div>
       <div id="colPanel"></div>
       <div class="row small"><button class="btn sm ghost" id="simGo">${ic('bolt')} ولّد عينة افتراضية للتدريب</button>${r.some(x => x.sim) ? `<button class="btn sm ghost" id="simDel">حذف البيانات الافتراضية (${r.filter(x => x.sim).length})</button>` : ''}<span class="muted">للتدرب على التحليل قبل جمع بيانات حقيقية؛ احذفها قبل التحليل النهائي.</span></div>
-      ${A.total ? itemTable(s, A) : `<div class="notice">التحليل يبدأ عند وصول 3 استجابات مكتملة على الأقل (ويُنصح بـ 30 فأكثر).</div>`}
+      ${A.total ? itemTable(s, A) + versionsCompare(s, A) : `<div class="notice">التحليل يبدأ عند وصول 3 استجابات مكتملة على الأقل (ويُنصح بـ 30 فأكثر).</div>`}
       ${r.length ? `<details class="steps"><summary>إدارة الاستجابات (${r.length})</summary><div class="row" style="margin-top:8px"><button class="btn sm ghost" id="csvOut">${ic('download')} تصدير CSV</button><button class="btn sm danger" id="delAll">${ic('trash')} حذف كل الاستجابات</button></div></details>` : ''}`;
     $('#cK', b).onclick = () => kiosk(s, false);
+    const af = $('#actF', b); if (af) af.onchange = () => { s.activeForm = af.value || null; persist(); toast('ستُجمع الاستجابات القادمة بنسخة: ' + af.options[af.selectedIndex].text); };
     $('#simGo', b).onclick = () => { if (!kept(s).length) return toast('أضف عبارات أولًا'); const n = Math.min(300, Math.max(30, METHODS[meth(s)].n(kept(s).length)[0])); simulate(s, n); persist(); rerender(); toast(`وُلدت ${n} استجابة افتراضية`); };
     const sd0 = $('#simDel', b); if (sd0) sd0.onclick = () => { s.responses = s.responses.filter(x => !x.sim); persist(); rerender(); };
     $('#cC', b).onclick = () => codesPanel(s, $('#colPanel', b));
@@ -1733,7 +1924,8 @@ const METHODS=[
  {id:"cat",t:"الاختبار التكيفي المحوسب",en:"Computerized Adaptive Testing (CAT)",yr:1980,era:"حديثة",d:"بنك بنود معايَر بنظرية الاستجابة للمفردة؛ يختار الحاسوب البند التالي حسب إجابات الفرد، فيقيس بدقة بعدد بنود أقل. يتوقف عند وصول الخطأ المعياري لحد معين (مثلًا 0.30).",resp:["لا تنطبق أبدًا","تنطبق نادرًا","تنطبق أحيانًا","تنطبق دائمًا"],n:k=>[500,"500 فرد على الأقل لمعايرة بنك البنود"]},
  {id:"aig",t:"توليد البنود بالذكاء الاصطناعي",en:"AI-assisted Automatic Item Generation",yr:2020,era:"الأحدث",d:"تُستخدم النماذج اللغوية لتوليد بنود كثيرة من تعريف السمة، ثم يراجعها الخبراء ويحكمونها، وتُفحص إحصائيًا (التحليل العاملي، راش). يوفر الوقت لكنه لا يغني عن التحكيم والتجريب.",resp:["موافق بشدة","موافق","محايد","غير موافق","غير موافق بشدة"],n:k=>[Math.max(200,10*k),"مثل ليكرت: 10 أفراد لكل بند وبحد أدنى 200، بعد التحكيم"]}
 ];
-const B={m:null,res:null};
+const B={m:null,res:null,aud:null};
+const respOf=m=>B.aud&&typeof AUD!=="undefined"&&m.resp&&m.resp.length?AUD.labels(m.resp,B.aud.p,B.aud.r):m.resp;
 const q=c=>`«${c}»`;
 function tplItems(m,c,dims,k){
  const pos=[`أشعر بـ${q(c)} في كثير من المواقف اليومية.`,`يلاحظ المحيطون بي ${q(c)} في تصرفاتي.`,`أفكر في الأمور المرتبطة بـ${q(c)} أكثر من غيري.`,`يظهر ${q(c)} لدي بوضوح عند التعامل مع الآخرين.`,`يصعب عليّ التحكم في ${q(c)} عندما أكون تحت ضغط.`,`يؤثر ${q(c)} في أدائي الدراسي أو المهني.`,`أشعر بـ${q(c)} عند مواجهة مواقف جديدة.`,`أتصرف بطريقة تعكس ${q(c)} حتى في المواقف البسيطة.`,`تتكرر لدي مواقف يظهر فيها ${q(c)}.`,`أجد نفسي مدفوعًا بـ${q(c)} في قراراتي.`,`يستمر ${q(c)} معي لفترات طويلة.`,`أتذكر مواقف كثيرة شعرت فيها بـ${q(c)}.`];
@@ -1760,7 +1952,7 @@ function labBuild(){
   view.innerHTML=labHead("البناء السريع للمقياس")+`<div class="panel"><div class="row" style="justify-content:space-between"><span class="chip">${m.t} · ${m.yr}</span><button class="btn sm ghost" id="chg">تغيير الطريقة</button></div><p class="muted">${m.d}</p>
   <h3>2) بيانات المقياس</h3><div class="g2"><div><label class="fl" for="bC">السمة أو المفهوم المراد قياسه</label><input type="text" id="bC" value="${esc(B.c||"القلق الاجتماعي")}"></div><div><label class="fl" for="bP">الفئة المستهدفة</label><input type="text" id="bP" value="${esc(B.p||"طلاب الجامعة")}"></div></div>
   <div class="g2"><div><label class="fl" for="bK">عدد البنود (الأسئلة)</label><input type="number" id="bK" min="3" max="60" value="${B.k||12}"></div><div><label class="fl" for="bN">حجم العينة المخطط</label><input type="number" id="bN" min="10" max="2000" value="${B.n||200}"></div></div>
-  <label class="fl" for="bD">الأبعاد (افصل بينها بفاصلة — اختياري)</label><input type="text" id="bD" value="${esc(B.d!=null?B.d:"المعرفي، الوجداني، السلوكي")}"><div id="bRec"></div>
+  <label class="fl" for="bD">الأبعاد (افصل بينها بفاصلة — اختياري)</label><input type="text" id="bD" value="${esc(B.d!=null?B.d:"المعرفي، الوجداني، السلوكي")}">${typeof AUD!=="undefined"?`<details class="aud-q" ${B.aud?"open":""}><summary><b>الفئة العمرية ولغة الصياغة</b> <span class="muted">(${B.aud?esc(AUD.prof(B.aud.p).t)+" · "+esc((AUD.REGISTERS.find(x=>x.id===B.aud.r)||{}).t||""):"اختياري: الافتراضي فصحى للشباب"})</span></summary>${AUD.selectorsHTML(B.aud||{p:"youth",r:"fusha"},"qa")}<div id="qaTips"></div><p class="muted" style="font-size:13.5px;margin:4px 0 0">تتغير ألفاظ العبارات والبدائل فقط؛ المعنى واتجاه العبارة وعدد البدائل ثابتة حتى لا يختل القياس. وللمقارنة بين نسخ لفئات مختلفة ابنِ نسخًا من المقياس نفسه في المعالج الكامل (خطوة جودة الصياغة) ليفحص تكافؤها تلقائيًا.</p></details>`:""}<div id="bRec"></div>
   <div class="row" style="margin-top:12px"><button class="btn" id="bTpl">ابنِ الأسئلة (قوالب جاهزة)</button><button class="btn gold" id="bAI" hidden>ابنِ الأسئلة بالذكاء الاصطناعي</button></div><div id="bExt"></div></div><div id="bOut"></div>`;
   $("#chg").onclick=()=>{B.m=null;step()};
   const vals=()=>{B.c=$("#bC").value.trim()||"السمة";B.p=$("#bP").value.trim();B.k=Math.max(3,Math.min(60,+$("#bK").value||12));B.n=Math.max(10,Math.min(2000,+$("#bN").value||100));B.d=$("#bD").value;return{c:B.c,p:B.p,k:B.k,n:B.n,dims:B.d.split(/[،,]/).map(s=>s.trim()).filter(Boolean)}};
@@ -1769,8 +1961,8 @@ function labBuild(){
 أعد JSON فقط بهذا الشكل:
 {"instructions":"تعليمات للمفحوص","items":[{"text":"...","dim":"...","reverse":false,"value":null,"options":[],"key":""}],"notes":"ملاحظات للباحث عن التحكيم والتحليل"}`};
   const rec=()=>{const v=vals();const r=m.n(v.k);$("#bRec").innerHTML=`<div class="verdict ${v.n>=r[0]?"ok":"mid"}">العينة المقترحة لهذه الطريقة: ${r[1]} ← الحد الأدنى المقترح ≈ ${r[0]}. عينتك (${v.n}) ${v.n>=r[0]?"كافية ✔":"أقل من المقترح"}.</div>`;aiExternal(aiPrompt(),$("#bExt"))};
-  ["bC","bP","bK","bN","bD"].forEach(i=>$("#"+i).oninput=rec);rec();
-  $("#bTpl").onclick=()=>{const v=vals();B.res={instructions:"",items:tplItems(m.id,v.c,v.dims,v.k),notes:"",src:"tpl"};show()};
+  ["bC","bP","bK","bN","bD"].forEach(i=>$("#"+i).oninput=rec);if($("#qaP")){const au=()=>{B.aud={p:$("#qaP").value,r:$("#qaR").value};$("#qaTips").innerHTML=AUD.tipsHTML(B.aud.p);B.res=null;const o=$("#bOut");if(o)o.innerHTML=""};$("#qaP").onchange=au;$("#qaR").onchange=au;$("#qaTips").innerHTML=AUD.tipsHTML((B.aud||{p:"youth"}).p)}rec();
+  $("#bTpl").onclick=()=>{const v=vals();const au=B.aud;let its=tplItems(m.id,v.c,v.dims,v.k);if(au&&typeof AUD!=="undefined"&&(au.r!=="fusha"))its=its.map(it=>Object.assign({},it,{text:AUD.adapt(it.text,au.p,au.r).text,options:(it.options||[]).map(o=>AUD.adapt(o,au.p,au.r).text)}));B.res={instructions:au&&typeof AUD!=="undefined"?(AUD.instructions(au.p,au.r)||""):"",items:its,notes:au&&typeof AUD!=="undefined"?"مُكيّف لفئة: "+AUD.prof(au.p).t+" — راجع كل عبارة، فالتحويل الآلي مسودة.":"",src:"tpl"};show()};
   aiGet().then(s=>{const btn=$("#bAI");if(!s||!btn)return;btn.hidden=false;btn.onclick=async()=>{btn.disabled=true;const old=btn.textContent;btn.textContent="جارٍ البناء… (قد يستغرق دقيقة)";
    try{const r=await s.json(aiPrompt(),{cache:false});if(!r||!Array.isArray(r.items)||!r.items.length)throw{code:"invalid_json"};B.res={instructions:String(r.instructions||""),items:r.items.map(x=>({text:String(x.text||""),dim:String(x.dim||""),reverse:!!x.reverse,value:x.value==null||x.value===""?null:+x.value,options:Array.isArray(x.options)?x.options.map(String):[],key:String(x.key||"")})).filter(x=>x.text),notes:String(r.notes||""),src:"ai"};show()}
    catch(e){toast(AI_ERR[e&&e.code]||"تعذر البناء الآن، استخدم القوالب الجاهزة أو انسخ الطلب لـ Claude.")}
@@ -1778,7 +1970,7 @@ function labBuild(){
   if(B.res)show();
  };
  function show(){const m=B.m,r=B.res,o=$("#bOut");if(!o)return;const v={c:B.c,n:B.n};
-  const resp=m.resp;const its=r.items;
+  const resp=respOf(m);const its=r.items;
   let h=`<div class="panel"><div class="row" style="justify-content:space-between"><h3 style="margin:0">3) مقياس ${esc(v.c)}</h3><span class="chip ${r.src==="ai"?"gold":""}">${r.src==="ai"?"مولّد بالذكاء الاصطناعي":"قوالب جاهزة — مسودة للتعديل"}</span></div>
   <p><b>التعليمات:</b> ${esc(r.instructions||defInstr(m))}</p>`;
   its.forEach((it,i)=>{h+=`<div class="qitem"><b>${i+1}.</b> ${esc(it.text)} ${it.reverse?'<span class="rev">(معكوس)</span>':""}<div class="muted" style="font-size:13.5px">${it.dim?"البعد: "+esc(it.dim):""}${it.value!=null&&isFinite(it.value)?` · ${m.id==="thurstone"?"القيمة المقترحة":m.id==="guttman"?"الترتيب":"الصعوبة (logit)"}: ${it.value}`:""}${it.level?" · "+it.level:""}</div>${it.options&&it.options.length?`<div class="sc">${it.options.map((op,j)=>`<span>${"أبجدهوز"[j]||j+1}) ${esc(op)}</span>`).join("")}</div>${it.key?`<div class="muted" style="font-size:13.5px">المفتاح: ${esc(it.key)}</div>`:""}`:resp.length?`<div class="sc">${resp.map(x=>`<span>${x}</span>`).join("")}</div>`:""}</div>`});
@@ -1804,7 +1996,7 @@ async function unpackQ(s){const k=s[0],u=b64d(s.slice(1));if(k==="j")return JSON
 const hashStr=s=>{let h=5381;for(let i=0;i<s.length;i++)h=((h<<5)+h+s.charCodeAt(i))>>>0;return h.toString(36)};
 function buildQ(){const m=B.m,r=B.res,dirs={likert:"d",aig:"d",thurstone:"b",guttman:"b",osgood:"a",rasch:"a",cat:"a",sjt:"o",forced:"o"};
  const nm=$("#shName")?$("#shName").checked:true,dm=$$("#shDemo input:checked").map(i=>i.value);
- const Q={v:1,t:"مقياس "+(B.c||""),ins:r.instructions||defInstr(m),sc:m.resp,s:dirs[m.id]||"a",m:m.id,nm,dm,items:r.items.map(it=>{const o={x:it.text};if(it.dim)o.g=it.dim;if(m.id==="thurstone"&&it.value!=null)o.v=it.value;if(it.options&&it.options.length)o.o=it.options;if(it.reverse)o.r=1;return o})};
+ const Q={v:1,t:"مقياس "+(B.c||""),ins:r.instructions||defInstr(m),sc:respOf(m),s:dirs[m.id]||"a",m:m.id,nm,dm,items:r.items.map(it=>{const o={x:it.text};if(it.dim)o.g=it.dim;if(m.id==="thurstone"&&it.value!=null)o.v=it.value;if(it.options&&it.options.length)o.o=it.options;if(it.reverse)o.r=1;return o})};
  Q.id=hashStr(JSON.stringify([Q.t,Q.sc,Q.items]));const g=gsCfg();if(g&&$("#shGS")&&$("#shGS").checked)Q.ep=g.url;return Q}
 /* --- Google Sheets as the responses server (Apps Script web app) --- */
 const GSKEY="scaleslab-gs";
@@ -2338,6 +2530,131 @@ const BANK = (() => {
     });
   }
   return { count: () => build().length };
+})();
+
+/* ===== Neuro lab: TRIBE v2 (Meta FAIR, 2026) used where it is defensible for scale construction.
+   TRIBE v2 predicts an average subject's fMRI response (fsaverage5 cortical mesh) to video, audio or text. It does not
+   read anyone's mind and cannot run in a browser (GPU + gated LLaMA 3.2 text encoder; licence CC BY-NC 4.0).
+   Use here: an exploratory "predicted neural coherence" check — do items written for the same dimension evoke more
+   similar predicted cortical profiles than items from different dimensions? The site exports the items with a Python
+   script; the researcher runs it on a GPU and imports the per-region CSV; all analysis below runs in the browser. ===== */
+const NEURO = (() => {
+  let data = null, srcScale = null;
+  const pearson = (a, b) => { const n = a.length; let ma = 0, mb = 0; for (let i = 0; i < n; i++) { ma += a[i]; mb += b[i]; } ma /= n; mb /= n; let sab = 0, sa = 0, sb = 0; for (let i = 0; i < n; i++) { const x = a[i] - ma, y = b[i] - mb; sab += x * y; sa += x * x; sb += y * y; } return sa && sb ? sab / Math.sqrt(sa * sb) : 0; };
+  function script(items) {
+    return `# -*- coding: utf-8 -*-
+# Running TRIBE v2 on scale items — Psychological Scales Lab
+# Requirements: a GPU with 24 GB or more (a Colab T4 is not enough), acceptance of the LLaMA 3.2 licence on Hugging Face,
+# and tribev2 installed from https://github.com/facebookresearch/tribev2  (licence CC BY-NC 4.0: non-commercial use only).
+# Check the function names against the repository README; this script follows the documented flow:
+# TribeModel.from_pretrained -> get_events_dataframe -> predict  (predictions: timesteps x vertices on fsaverage5).
+# Language: the text encoder does not officially support Arabic. For each item, fill in "text_en" (an accurate translation)
+# and set USE_ENGLISH = True, or compare both runs.
+import json, os, tempfile
+import numpy as np, pandas as pd
+from nilearn import datasets
+from tribev2 import TribeModel  # adjust if the README uses a different import path
+
+USE_ENGLISH = False
+ITEMS = json.loads(r'''${JSON.stringify(items, null, 1)}''')
+
+model = TribeModel.from_pretrained("facebook/tribev2")
+atlas = datasets.fetch_atlas_surf_destrieux()          # fsaverage5: 10242 vertices per hemisphere
+names = [n.decode() if isinstance(n, bytes) else str(n) for n in atlas["labels"]]
+lab = np.concatenate([atlas["map_left"], np.asarray(atlas["map_right"]) + 1000])
+
+rows = []
+for it in ITEMS:
+    text = (it.get("text_en") or it["text"]) if USE_ENGLISH else it["text"]
+    with tempfile.NamedTemporaryFile("w", suffix=".txt", delete=False, encoding="utf-8") as f:
+        f.write(text); path = f.name
+    events = model.get_events_dataframe(text_path=path)
+    preds, segments = model.predict(events=events)
+    v = np.asarray(preds).mean(axis=0)                  # average predicted response over time
+    row = {"item_id": it["id"], "dim": it["dim"]}
+    for code in np.unique(lab):
+        nm = names[code % 1000]
+        if nm in ("Unknown", "Medial_wall"):
+            continue
+        row[("R_" if code >= 1000 else "L_") + nm] = float(v[lab == code].mean())
+    rows.append(row); os.unlink(path)
+    print("done:", it["id"])
+
+pd.DataFrame(rows).to_csv("tribe_items_regions.csv", index=False, encoding="utf-8")
+print("Upload tribe_items_regions.csv to the Neuro lab on the site")
+`;
+  }
+  function parseCSV(txt) {
+    const lines = txt.replace(/\r/g, '').split('\n').filter(l => l.trim()); if (lines.length < 3) throw new Error('الملف قصير');
+    const head = lines[0].split(',').map(x => x.trim()); const iI = head.indexOf('item_id'), iD = head.indexOf('dim');
+    if (iI < 0 || iD < 0) throw new Error('يلزم عمودا item_id و dim');
+    const regs = head.map((h, i) => i).filter(i => i !== iI && i !== iD); if (regs.length < 5) throw new Error('عدد المناطق أقل من 5');
+    const items = lines.slice(1).map(l => { const c = l.split(','); return { id: c[iI], dim: c[iD], v: regs.map(i => +c[i]) }; }).filter(x => x.v.every(isFinite));
+    if (items.length < 4) throw new Error('عدد العبارات أقل من 4');
+    return { items, regions: regs.map(i => head[i]) };
+  }
+  function simulate() { // illustrative only: dimension-specific profiles + item noise
+    const R = 148, dims = ['التأجيل السلوكي', 'إدارة الوقت', 'القلق والتجنب'], base = dims.map(() => Array.from({ length: R }, () => (Math.random() - 0.5) * 2)), shared = Array.from({ length: R }, () => (Math.random() - 0.5) * 2);
+    const items = []; dims.forEach((d, k) => { for (let i = 0; i < 4; i++) items.push({ id: 'sim' + k + i, dim: d, v: base[k].map((x, r) => 0.55 * x + 0.6 * shared[r] + (Math.random() - 0.5) * (i === 3 && k === 1 ? 2.4 : 0.9)) }); });
+    return { items, regions: Array.from({ length: R }, (_, i) => 'region_' + (i + 1)), sim: true };
+  }
+  function analyse(D) {
+    const it = D.items, n = it.length, S = it.map(a => it.map(b => pearson(a.v, b.v)));
+    const coh = lab => { let w = 0, nw = 0, bt = 0, nb = 0; for (let i = 0; i < n; i++) for (let j = i + 1; j < n; j++) { if (lab[i] === lab[j]) { w += S[i][j]; nw++; } else { bt += S[i][j]; nb++; } } return { w: nw ? w / nw : NaN, b: nb ? bt / nb : NaN }; };
+    const labs = it.map(x => x.dim), obs = coh(labs), nci = obs.w - obs.b;
+    let ge = 0; const P = 2000; for (let p = 0; p < P; p++) { const sh = labs.slice().sort(() => Math.random() - 0.5), c = coh(sh); if (c.w - c.b >= nci) ge++; }
+    const dims = [...new Set(labs)];
+    const centroid = d => { const m = it.filter(x => x.dim === d); return m[0].v.map((_, r) => m.reduce((s, x) => s + x.v[r], 0) / m.length); };
+    const C = Object.fromEntries(dims.map(d => [d, centroid(d)]));
+    const fit = it.map(x => { const own = (() => { const m = it.filter(y => y.dim === x.dim && y !== x); if (!m.length) return NaN; const c = x.v.map((_, r) => m.reduce((s, y) => s + y.v[r], 0) / m.length); return pearson(x.v, c); })(); const other = dims.filter(d => d !== x.dim).map(d => [d, pearson(x.v, C[d])]).sort((a, b) => b[1] - a[1])[0] || ['', NaN]; return { own, other }; });
+    const perDim = dims.map(d => { const idx = labs.map((l, i) => l === d ? i : -1).filter(i => i >= 0); let s = 0, c = 0; idx.forEach((i, a) => idx.slice(a + 1).forEach(j => { s += S[i][j]; c++; })); return [d, idx.length, c ? s / c : NaN]; });
+    return { S, obs, nci, p: (ge + 1) / (P + 1), fit, perDim, dims };
+  }
+  function mantel(S, E) { // correlation between two similarity matrices, permutation p
+    const n = S.length, iu = []; for (let i = 0; i < n; i++) for (let j = i + 1; j < n; j++) iu.push([i, j]);
+    const r0 = pearson(iu.map(([i, j]) => S[i][j]), iu.map(([i, j]) => E[i][j])); let ge = 0; const P = 2000;
+    for (let p = 0; p < P; p++) { const pi = Array.from({ length: n }, (_, i) => i).sort(() => Math.random() - 0.5); if (pearson(iu.map(([i, j]) => S[pi[i]][pi[j]]), iu.map(([i, j]) => E[i][j])) >= r0) ge++; }
+    return { r: r0, p: (ge + 1) / (P + 1) };
+  }
+  function heat(S, labels) {
+    const n = S.length, c = Math.max(10, Math.min(28, Math.floor(420 / n)));
+    const col = v => { const t = Math.max(-1, Math.min(1, v)); return t >= 0 ? `rgba(91,63,209,${0.12 + 0.85 * t})` : `rgba(242,100,60,${0.12 + 0.85 * -t})`; };
+    let g = ''; for (let i = 0; i < n; i++) for (let j = 0; j < n; j++) g += `<rect x="${j * c}" y="${i * c}" width="${c - 1}" height="${c - 1}" fill="${col(S[i][j])}"><title>${esc(labels[i])} × ${esc(labels[j])}: ${fmt(S[i][j])}</title></rect>`;
+    return `<svg viewBox="0 0 ${n * c} ${n * c}" style="width:min(100%,${n * c}px);height:auto" role="img" aria-label="مصفوفة تشابه الأنماط العصبية المتوقعة بين العبارات">${g}</svg>`;
+  }
+  function results(el) {
+    const A = analyse(data), it = data.items, dimOf = id => (it.find(x => x.id === id) || {}).dim;
+    const label = x => { if (srcScale) { const s = SCALES.get(srcScale), item = s && s.items.find(i => i.id === x.id); if (item) return (s.items.indexOf(item) + 1) + '. ' + item.text; } return x.id; };
+    let emp = '';
+    if (srcScale && !data.sim && typeof BUILD !== 'undefined') { const s = SCALES.get(srcScale), An = s && BUILD.analyze(s); if (An && An.rows && An.rows.length >= 20) { const idx = it.map(x => An.items.findIndex(i => i.id === x.id)); if (idx.every(i => i >= 0)) { const cols = idx.map(j => An.rows.map(r => r[j])), E = cols.map(a => cols.map(b => pearson(a, b))), m = mantel(A.S, E); emp = `<div class="notice small"><b>مقارنة بالبيانات الفعلية</b>الارتباط بين مصفوفة التشابه العصبي المتوقع ومصفوفة الارتباط الفعلية بين العبارات (اختبار مانتل): r = ${fmt(m.r)}، p = ${fmtp(m.p)}. ${m.p < 0.05 ? 'العبارات المتشابهة في نمطها العصبي المتوقع ترتبط أكثر في استجابات المفحوصين.' : 'لم يظهر تطابق دال بين التنبؤ العصبي والبيانات الفعلية.'}</div>`; } } }
+    el.innerHTML = `${data.sim ? '<div class="notice warn small"><b>بيانات محاكاة للتدريب</b>هذه الأرقام مولّدة لتجربة التحليل، وليست مخرجات TRIBE v2.</div>' : ''}
+      <div class="kpis"><div class="tile hl"><small>مؤشر التماسك العصبي المتوقع</small><b>${fmt(A.nci, 3)}</b></div><div class="tile"><small>التشابه داخل الأبعاد</small><b>${fmt(A.obs.w, 3)}</b></div><div class="tile"><small>التشابه بين الأبعاد</small><b>${fmt(A.obs.b, 3)}</b></div><div class="tile ${A.p < 0.05 ? 'good' : ''}"><small>اختبار التباديل (2000)</small><b>${fmtp(A.p)}</b></div></div>
+      <div class="verdict ${A.p < 0.05 ? 'good' : 'warn'}">${A.p < 0.05 ? 'عبارات البعد الواحد تُحدث أنماطًا عصبية متوقعة أكثر تشابهًا من عبارات الأبعاد الأخرى (دال).' : 'لا يميز التنبؤ العصبي بين الأبعاد تمييزًا دالًا؛ هذا لا ينفي صدق المقياس، لكنه لا يدعمه من هذه الزاوية.'}</div>
+      ${emp}
+      <div class="grid2"><section class="stack"><h4 style="margin:0">مصفوفة التشابه بين العبارات</h4>${heat(A.S, it.map(label))}<p class="small muted">بنفسجي = تشابه موجب، برتقالي = سالب. العبارات مرتبة حسب البعد.</p></section>
+      <section class="stack"><h4 style="margin:0">التماسك داخل كل بعد</h4>${tableHTML(['البعد', 'العبارات', 'متوسط التشابه'], A.perDim.map(d => [esc(d[0]), N(d[1], 0), N(d[2], 3)]))}</section></div>
+      <h4 style="margin:0">ملاءمة كل عبارة لبعدها</h4>${tableHTML(['العبارة', 'البعد المقصود', 'التشابه مع بعدها', 'أقرب بعد آخر', 'التشابه معه', 'الحكم'], it.map((x, i) => { const f = A.fit[i], bad = isFinite(f.own) && f.other[1] > f.own; return { cls: bad ? 'flag' : '', cells: [esc(label(x)), esc(x.dim), N(f.own, 3), esc(f.other[0]), N(f.other[1], 3), bad ? '<span class="chip warn">أقرب لبعد آخر — راجع صياغتها</span>' : '<span class="chip good">منسجمة</span>'] }; }))}
+      <p class="small muted">التفسير الآمن: هذا مؤشر <b>استكشافي</b> مبني على تنبؤ لمخ «متوسط»، وليس قياسًا لأدمغة المفحوصين ولا دليل صدق مستقلًا. استخدمه لاكتشاف عبارات تستحق المراجعة، ثم احسم بالتحليل العاملي والتحكيم.</p>`;
+  }
+  VIEWS.neuro = el => {
+    const L = (typeof SCALES !== 'undefined' ? SCALES.list() : []).filter(s => (s.items || []).filter(i => i.keep !== false).length >= 4);
+    el.innerHTML = `<div class="section-title"><h2>المختبر العصبي · TRIBE v2</h2><span class="chip">ناشئ · استكشافي</span></div>
+      <section class="card stack"><h3 style="margin:0">ما هو TRIBE v2؟</h3>
+        <p style="margin:0">نموذج أساس أطلقه فريق Meta FAIR في مارس 2026، يتنبأ باستجابة الرنين المغناطيسي الوظيفي (fMRI) على سطح القشرة المخية لمخ «متوسط» عند مشاهدة فيديو أو سماع صوت أو قراءة نص. دُرّب على أكثر من 1000 ساعة من تسجيلات fMRI لـ 720 شخصًا.</p>
+        ${tableHTML(['يستطيع', 'لا يستطيع'], [['التنبؤ بالنمط المتوقع لنشاط القشرة لمثير معين', 'قراءة أفكار شخص أو مشاعره'], ['مقارنة مثيرات أو عبارات افتراضيًا قبل التجربة', 'الحلول محل تجربة على بشر'], ['اقتراح فرضيات عن معالجة اللغة والانفعال', 'تشخيص اضطراب أو قياس سمة لدى فرد']])}
+        <p class="small muted" style="margin:0">الرخصة CC BY-NC 4.0 (استخدام بحثي وتعليمي غير تجاري). يتطلب بطاقة رسومية قوية (24 جيجابايت فأكثر) وقبول رخصة نموذج LLaMA 3.2، لذلك لا يعمل داخل المتصفح. ومُشفّر النص لا يدعم العربية رسميًا، فقارن النتائج بترجمة إنجليزية دقيقة للعبارات.</p></section>
+      <section class="card stack"><h3 style="margin:0">${ic('download')} الخطوة 1: صدّر عبارات مقياسك وشغّل النموذج</h3>
+        <p class="small muted" style="margin:0">الفكرة: لو كانت عبارات البعد الواحد تقيس شيئًا واحدًا، فالمتوقع أن تُحدث أنماطًا عصبية متوقعة أكثر تشابهًا من عبارات الأبعاد الأخرى.</p>
+        ${L.length ? `<div class="row"><select id="nScale" aria-label="المقياس">${L.map(s => `<option value="${s.id}">${esc(s.name)} (${s.items.filter(i => i.keep !== false).length} عبارة)</option>`).join('')}</select><button class="btn sm" id="nPy">${ic('download')} سكربت Python + العبارات</button><button class="btn sm ghost" id="nJs">ملف العبارات JSON</button></div>` : '<p class="muted small" style="margin:0">ابنِ مقياسًا فيه 4 عبارات على الأقل في «ابنِ مقياسك» أولًا.</p>'}
+        <ol class="small" style="margin:0"><li>شغّل السكربت على جهاز ببطاقة رسومية (خادم الجامعة، أو Colab بكرت A100 أو L4).</li><li>يُنتج ملف <code>tribe_items_regions.csv</code>: لكل عبارة متوسط النشاط المتوقع في 148 منطقة قشرية (أطلس Destrieux).</li><li>ارفع الملف في الخطوة 2.</li></ol></section>
+      <section class="card stack"><h3 style="margin:0">${ic('upload')} الخطوة 2: حلّل النتائج</h3>
+        <div class="row"><input type="file" id="nCsv" accept=".csv,text/csv"><button class="btn sm ghost" id="nSim">جرّب ببيانات محاكاة</button></div><div id="nOut"></div></section>`;
+    const sel = $('#nScale', el), items = () => { const s = SCALES.get(sel.value); return s.items.filter(i => i.keep !== false).map(i => ({ id: i.id, dim: (s.dims.find(d => d.id === i.dim) || {}).name || '', text: i.text, text_en: '' })); };
+    if (sel) { $('#nPy', el).onclick = () => downloadFile('tribe_items.py', script(items()), 'text/x-python;charset=utf-8'); $('#nJs', el).onclick = () => downloadFile('tribe_items.json', JSON.stringify(items(), null, 1), 'application/json'); }
+    $('#nCsv', el).onchange = e => { const f = e.target.files[0]; if (!f) return; const rd = new FileReader(); rd.onload = () => { try { data = parseCSV(rd.result); srcScale = sel ? sel.value : null; results($('#nOut', el)); } catch (err) { $('#nOut', el).innerHTML = `<div class="notice bad small">${esc(err.message)}</div>`; } }; rd.readAsText(f); };
+    $('#nSim', el).onclick = () => { data = simulate(); srcScale = null; results($('#nOut', el)); };
+  };
+  return {};
 })();
 
 /* ===== Motion layer «رحلة الباحث»: motion that explains the content rather than decorating it.
