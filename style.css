@@ -451,3 +451,10 @@ canvas.confetti{position:fixed;inset:0;width:100vw;height:100vh;pointer-events:n
 .linkcard,.hx-stats>div,.tile{transform-style:preserve-3d;position:relative}
 @media (hover:hover){.linkcard::after,.hx-stats>div::after,.tile::after{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;background:radial-gradient(220px circle at var(--mx,50%) var(--my,50%),rgba(255,255,255,.18),transparent 60%);opacity:0;transition:opacity .25s}.linkcard:hover::after,.hx-stats>div:hover::after,.tile:hover::after{opacity:1}
 .linkcard:hover{transform:none}}
+
+/* audience versions */
+.aud-sel{display:flex;flex-direction:column;gap:4px}.aud-sel select{width:100%}
+.aud-tips{margin:4px 0;padding-inline-start:1.2em;font-size:13.5px;color:var(--muted)}
+.aud-box table input{width:100%;min-width:180px}
+.qb .aud-q{border:1px dashed var(--line);border-radius:12px;padding:8px 12px;margin-top:8px}.qb .aud-q summary{cursor:pointer}
+.qb .aud-q select{width:100%;margin-bottom:6px}
