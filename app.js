@@ -408,8 +408,8 @@ ENV.web = !ENV.claude;
 
 /* ---------- shell & router ---------- */
 const NAV = [
-  ['home', 'الرئيسية', 'home'], ['learn', 'الدروس', 'book'], ['labs', 'المعامل', 'flask'], ['build', 'ابنِ مقياسك', 'build'], ['exam', 'أسئلة موضوعية', 'check'], ['bank', 'بنك الأسئلة', 'cards'],
-  ['formulas', 'المعادلات', 'sigma'], ['practice', 'التدريب', 'cards'], ['neuro', 'المختبر العصبي', 'flask'], ['respond', 'أجب عن مقياس', 'form'], ['me', 'إنجازاتي', 'trophy'], ['account', 'حسابي', 'user']
+  ['home', 'الرئيسية', 'home'], ['know', 'اعرف نفسك', 'heart'], ['learn', 'الدروس', 'book'], ['labs', 'المعامل', 'flask'], ['build', 'ابنِ مقياسك', 'build'], ['exam', 'أسئلة موضوعية', 'check'], ['bank', 'بنك الأسئلة', 'cards'],
+  ['formulas', 'المعادلات', 'sigma'], ['practice', 'التدريب', 'cards'], ['neuro', 'المختبر العصبي', 'flask'], ['respond', 'أجب عن مقياس', 'form'], ['schedules', 'جداول التعزيز', 'trophy'], ['me', 'إنجازاتي', 'trophy'], ['account', 'حسابي', 'user'], ['admin', 'لوحة المسؤول', 'shield']
 ];
 const LOGO_SVG = `<svg viewBox="0 0 40 40" aria-hidden="true"><defs><linearGradient id="lgS" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7c5cff"/><stop offset="1" stop-color="#1f1452"/></linearGradient></defs><rect width="40" height="40" rx="11" fill="url(#lgS)"/><rect x="8.5" y="7" width="23" height="27" rx="3.4" fill="#fff"/><rect x="14.5" y="5" width="11" height="4.2" rx="1.6" fill="#bef264"/><circle cx="27" cy="13.5" r="2.3" fill="#65a30d" stroke="#65a30d" stroke-width="1.3"/><path d="M25.9 13.5 l.8 .8 1.5-1.6" stroke="#fff" stroke-width="1" fill="none" stroke-linecap="round" stroke-linejoin="round"/><rect x="12" y="12.4" width="11" height="2.2" rx="1.1" fill="#b9b0e8"/><circle cx="27" cy="20.1" r="2.3" fill="#65a30d" stroke="#65a30d" stroke-width="1.3"/><path d="M25.9 20.1 l.8 .8 1.5-1.6" stroke="#fff" stroke-width="1" fill="none" stroke-linecap="round" stroke-linejoin="round"/><rect x="15" y="19.0" width="8" height="2.2" rx="1.1" fill="#b9b0e8"/><circle cx="27" cy="26.7" r="2.3" fill="#fff" stroke="#7c5cff" stroke-width="1.3"/><rect x="13" y="25.599999999999998" width="10" height="2.2" rx="1.1" fill="#b9b0e8"/></svg>`;
 const GUEST_SVG = `<svg viewBox="0 0 24 24" aria-hidden="true" fill="none"><circle cx="12" cy="9" r="3.6" fill="currentColor"/><path d="M5.2 19.2c1.3-3.1 3.9-4.7 6.8-4.7s5.5 1.6 6.8 4.7" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>`;
@@ -420,7 +420,7 @@ function shell() {
   $('#app').innerHTML = `
   <aside class="rail" aria-label="التنقل">
     <a class="brand" href="#home"><span class="logo">${LOGO_SVG}</span><span>مختبر المقاييس النفسية<small>تعلّم · احسب · ابنِ مقياسك</small></span></a>
-    <nav>${NAV.slice(0, 8).map(n => `<button data-go="${n[0]}">${ic(n[2])}${n[1]}</button>`).join('')}<div class="navsep">أدوات أخرى</div>${NAV.slice(8).map(n => `<button data-go="${n[0]}">${ic(n[2])}${n[1]}</button>`).join('')}</nav>
+    <nav>${NAV.slice(0, 9).map(n => `<button data-go="${n[0]}">${ic(n[2])}${n[1]}</button>`).join('')}<div class="navsep">أدوات أخرى</div>${NAV.slice(9).map(n => `<button data-go="${n[0]}">${ic(n[2])}${n[1]}</button>`).join('')}</nav>
     <div class="me" id="railMe"></div>
   </aside>
   <div class="col">
@@ -3587,7 +3587,7 @@ var ADMIN = (function () {
     css(); el.innerHTML = '<div class="ad"><h2 style="margin:0">لوحة المسؤول</h2><div id="adB"><p class="muted">جارٍ التحميل…</p></div></div>';
     var B = el.querySelector('#adB');
     if (!(window.ACCT && ACCT.fs)) { B.innerHTML = '<section class="ad-card"><p style="margin:0">لوحة المسؤول بتشتغل على نسخة GitHub من الموقع (بحسابات Firebase)، مش جوه Claude.</p></section>'; return; }
-    if (!fsOK()) { B.innerHTML = '<section class="ad-card"><p style="margin:0">سجّل دخولك الأول من «حسابي»، وبعدين ارجع للصفحة دي.</p></section>'; return; }
+    if (!fsOK()) { B.innerHTML = '<section class="ad-card"><p style="margin:0">سجّل دخولك الأول من «حسابي» بنفس الإيميل اللي هتعمله مسؤول، وبعدين ارجع للصفحة دي. اللوحة بتشتغل على نسخة GitHub من الموقع: ' + (/github\.io$/.test(location.hostname) ? '' : '<a href="https://mo-psych-stats-lab.github.io/' + (document.title.indexOf('الإحصاء') >= 0 ? 'psych-stats-lab' : 'psych-scales-lab') + '/#admin" target="_blank" rel="noopener">افتحها من هنا</a>') + '</p></section>'; return; }
     var uid = ACCT.fs.uid(), adm = null, err = '';
     try { adm = await ACCT.fs.get('admins/' + uid); } catch (e) { err = /permission/i.test(e.message || '') ? 'قواعد قاعدة البيانات القديمة لسه شغالة: انشر ملف firestore.rules الجديد (الخطوة 1).' : (e.message || ''); }
     if (!adm) { B.innerHTML = setupCard(uid, err); var cp = B.querySelector('#adCp'); if (cp) cp.onclick = function () { (navigator.clipboard ? navigator.clipboard.writeText(uid) : Promise.reject()).then(function () { say('اتنسخ'); }, function () { say('انسخه يدويًا'); }); }; return; }
@@ -4069,7 +4069,7 @@ const AI = (() => {
     const u = st.user;
     el.innerHTML = `<div class="section-title"><h2>حسابي</h2></div>
       <div class="grid2"><section class="card stack"><div class="row"><span class="avatar">${typeof avatarInner === 'function' ? avatarInner(st.name || u.email) : h((st.name || u.email || '؟')[0])}</span><div class="grow"><b>${h(st.name || 'باحث')}</b><div class="small muted ltr" style="text-align:right">${h(u.email || '')}</div></div><span class="chip amber">${h(rk)}</span></div>
-        ${st.verified ? '<div class="notice good small">بريدك مؤكد. تقدمك يُحفظ في حسابك تلقائيًا.</div>' : '<div class="notice warn small"><b>أكّد بريدك الإلكتروني</b>افتح الرسالة التي أرسلناها واضغط اللينك. <b>لو مش لاقيها، بص في مجلد الرسائل غير المرغوب فيها (Spam)</b> واضغط «ليست رسالة غير مرغوب فيها»، علشان الرسائل الجاية توصل الوارد. استخدم آخر رسالة بس. التأكيد مطلوب للظهور في لوحة المتصدرين ونشر النماذج.<div class="row" style="margin-top:6px"><button class="btn sm ghost" id="aVer">إعادة إرسال الرسالة</button><button class="btn sm ghost" id="aRel">تحققت، حدّث الحالة</button></div></div>'}
+        ${st.verified ? '<div class="notice good small">بريدك مؤكد. تقدمك يُحفظ في حسابك تلقائيًا.</div>' : '<div class="notice warn small"><b>أكّد بريدك الإلكتروني</b>افتح الرسالة التي أرسلناها واضغط اللينك. <b>لو مش لاقيها، بص في مجلد الرسائل غير المرغوب فيها (Spam)</b> واضغط «ليست رسالة غير مرغوب فيها»، علشان الرسائل الجاية توصل الوارد. استخدم آخر رسالة بس. التأكيد مطلوب للظهور في لوحة المتصدرين ونشر النماذج.<div class="row" style="margin-top:6px"><button class="btn sm ghost" id="aVer">إعادة إرسال الرسالة</button><button class="btn sm ghost" id="aRel">تحققت، حدّث الحالة</button></div></div>'}<div class="row" style="margin-top:8px"><a class="btn sm ghost" href="#admin" style="text-decoration:none">لوحة المسؤول</a><span class="muted small">للمسؤول فقط</span></div>
         <div class="field"><label class="fl" for="aNm">الاسم الظاهر</label><div class="row"><input type="text" id="aNm" maxlength="40" value="${h(st.name)}" class="grow"><button class="btn sm ghost" id="aNmS">حفظ</button></div></div>
         <label class="row small"><input type="checkbox" id="aLb" ${st.lbOptIn ? 'checked' : ''}> اعرض اسمي في لوحة المتصدرين</label>
         <div class="row"><button class="btn ghost sm" id="aOut">تسجيل الخروج</button><button class="btn sm danger" id="aDel">حذف الحساب</button></div></section>
