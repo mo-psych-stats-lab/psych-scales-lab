@@ -80,8 +80,28 @@ service cloud.firestore {
       }
     }
 
-    // ---- admins: created by hand in the console; a user may only check his own entry ----
-    match /admins/{uid} { allow read: if isUser(uid); allow write: if false; }
+    // ---- admins: the site owner (email set at deploy time, never committed) or anyone holding an invite ----
+    function ownerEmail() { return '__OWNER_EMAIL__'; }
+    match /admins/{uid} {
+      allow read: if isUser(uid) || isAdmin();
+      allow create: if isUser(uid) && verified()
+        && (request.auth.token.email == ownerEmail() || exists(/databases/$(database)/documents/invites/$(request.auth.token.email)))
+        && request.resource.data.keys().hasOnly(['role', 'email', 'name', 'added'])
+        && request.resource.data.email == request.auth.token.email
+        && isStr(request.resource.data.name, 60) && request.resource.data.role == 'admin'
+        && request.resource.data.added == request.time;
+      allow delete: if isAdmin();
+      allow update: if false;
+    }
+    // ---- admin invitations, one document per invited email (lower case) ----
+    match /invites/{em} {
+      allow read: if isAdmin() || (signedIn() && request.auth.token.email == em);
+      allow create: if isAdmin() && em == em.lower() && em.matches('^[^@\\s]+@[^@\\s]+$')
+        && request.resource.data.keys().hasOnly(['by', 'created'])
+        && request.resource.data.by == request.auth.uid && request.resource.data.created == request.time;
+      allow delete: if isAdmin() || (signedIn() && request.auth.token.email == em);
+      allow update: if false;
+    }
 
     // ---- know-yourself results shared by name with the site admin (explicit consent) ----
     match /know/{uid} {
