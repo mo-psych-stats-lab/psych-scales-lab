@@ -2046,9 +2046,9 @@ const BUILD = (() => {
       </div>
       <div id="colPanel"></div>
       <div class="row small"><button class="btn sm ghost" id="simGo">${ic('bolt')} ولّد عينة افتراضية للتدريب</button>${r.some(x => x.sim) ? `<button class="btn sm ghost" id="simDel">حذف البيانات الافتراضية (${r.filter(x => x.sim).length})</button>` : ''}<span class="muted">للتدرب على التحليل قبل جمع بيانات حقيقية؛ احذفها قبل التحليل النهائي.</span></div>
-      ${A.total ? itemTable(s, A) + versionsCompare(s, A) : `<div class="notice">التحليل يبدأ عند وصول 3 استجابات مكتملة على الأقل (ويُنصح بـ 30 فأكثر).</div>`}
+      ${A.total ? itemTable(s, A) + versionsCompare(s, A) + (typeof THESIS !== 'undefined' ? THESIS.panel(s, A) : '') : `<div class="notice">التحليل يبدأ عند وصول 3 استجابات مكتملة على الأقل (ويُنصح بـ 30 فأكثر).</div>`}
       ${r.length ? `<details class="steps"><summary>إدارة الاستجابات (${r.length})</summary><div class="row" style="margin-top:8px"><button class="btn sm ghost" id="csvOut">${ic('download')} تصدير CSV</button><button class="btn sm danger" id="delAll">${ic('trash')} حذف كل الاستجابات</button></div></details>` : ''}`;
-    $('#cK', b).onclick = () => kiosk(s, false);
+    $('#cK', b).onclick = () => kiosk(s, false); if (typeof THESIS !== 'undefined' && A.total) THESIS.bind(b, s, A);
     const af = $('#actF', b); if (af) af.onchange = () => { s.activeForm = af.value || null; persist(); toast('ستُجمع الاستجابات القادمة بنسخة: ' + af.options[af.selectedIndex].text); };
     $('#simGo', b).onclick = () => { if (!kept(s).length) return toast('أضف عبارات أولًا'); const n = Math.min(300, Math.max(30, METHODS[meth(s)].n(kept(s).length)[0])); simulate(s, n); persist(); rerender(); toast(`وُلدت ${n} استجابة افتراضية`); };
     const sd0 = $('#simDel', b); if (sd0) sd0.onclick = () => { s.responses = s.responses.filter(x => !x.sim); persist(); rerender(); };
@@ -3442,6 +3442,108 @@ var REWARD = (function () {
   return { onAnswer: onAnswer, isDue: isDue, dueCount: dueCount, inReview: inReview, collectionHTML: collectionHTML, labMount: labMount };
 })();
 
+/* ===== Thesis tools for a collected scale (Scales Lab, builder step 9).
+   1) Careless responding: long-string, intra-individual response variability (IRV), Mahalanobis D² (Meade & Craig, 2012;
+      Curran, 2016), and the effect of excluding flagged cases on reliability.
+   2) Total omega from a one-factor solution (McDonald, 1999) next to alpha.
+   3) Norms: percentile ranks and normalised T scores for every observed raw score.
+   4) Redundant items: high zero-order and partial correlations together (a simplified screen inspired by Unique Variable
+      Analysis, Christensen, Garrido & Golino, 2023).
+   5) Short form by ant colony optimisation (Leite, Huang & Marcoulides, 2008): maximises reliability, the correlation with
+      the full score and facet coverage at the same time.
+   6) An Arabic, APA-style Word report of the psychometric results. ===== */
+var THESIS = (function () {
+  var f = function (x, d) { return x == null || !isFinite(x) ? '—' : (+x).toFixed(d == null ? 2 : d); };
+  var H = function (s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); };
+  function alphaOf(rows) { try { return PSY.itemStats(rows).alpha; } catch (e) { return NaN; } }
+  function sub(rows, idx) { return rows.map(function (r) { return idx.map(function (j) { return r[j]; }); }); }
+  /* ---------- 1) careless responding ---------- */
+  function careless(rows) {
+    var n = rows.length, k = rows[0].length, R = PSY.corrMatrix(rows), means = [], sds = [];
+    for (var j = 0; j < k; j++) { var c = PSY.col(rows, j); means.push(PSY.mean(c)); sds.push(PSY.sd(c) || 1); }
+    var Ri = null; try { Ri = PSY.inverse(R); } catch (e) { }
+    var out = rows.map(function (r, i) {
+      var ls = 1, run = 1; for (var j = 1; j < k; j++) { if (r[j] === r[j - 1]) { run++; ls = Math.max(ls, run); } else run = 1; }
+      var irv = PSY.sd(r), d2 = NaN;
+      if (Ri && n > k + 2) { var z = r.map(function (v, j) { return (v - means[j]) / sds[j]; }); d2 = 0; for (var a = 0; a < k; a++) for (var b = 0; b < k; b++) d2 += z[a] * Ri[a][b] * z[b]; }
+      var p = isFinite(d2) ? PSY.chiP(d2, k) : NaN;
+      var why = []; if (ls >= Math.max(6, Math.ceil(k * 0.8))) why.push('سلسلة إجابات متطابقة (' + ls + ')'); if (irv === 0) why.push('تباين صفري'); if (p < 0.001) why.push('مسافة ماهالانوبس متطرفة');
+      return { i: i, ls: ls, irv: irv, d2: d2, p: p, why: why };
+    });
+    var bad = out.filter(function (x) { return x.why.length; }), keep = rows.filter(function (_, i) { return !out[i].why.length; });
+    return { all: out, bad: bad, aBefore: alphaOf(rows), aAfter: keep.length > k ? alphaOf(keep) : NaN, nAfter: keep.length };
+  }
+  /* ---------- 2) omega total ---------- */
+  function omegaTotal(rows) { try { if (rows[0].length < 3 || rows.length <= rows[0].length) return null; var e = PSY.efa(rows, 1); return PSY.omega(e.loadings.map(function (l) { return Math.abs(l[0]); })); } catch (e) { return null; } }
+  /* ---------- 3) norms ---------- */
+  function norms(tot) {
+    var n = tot.length, s = tot.slice().sort(function (a, b) { return a - b; }), vals = Array.from(new Set(s));
+    var inv = function (p) { var a = [-39.69683028665376, 220.9460984245205, -275.9285104469687, 138.357751867269, -30.66479806614716, 2.506628277459239], b = [-54.47609879822406, 161.5858368580409, -155.6989798598866, 66.80131188771972, -13.28068155288572], c = [-0.007784894002430293, -0.3223964580411365, -2.400758277161838, -2.549732539343734, 4.374664141464968, 2.938163982698783], d = [0.007784695709041462, 0.3224671290700398, 2.445134137142996, 3.754408661907416], q, r; if (p < 0.02425) { q = Math.sqrt(-2 * Math.log(p)); return (((((c[0] * q + c[1]) * q + c[2]) * q + c[3]) * q + c[4]) * q + c[5]) / ((((d[0] * q + d[1]) * q + d[2]) * q + d[3]) * q + 1); } if (p > 1 - 0.02425) { q = Math.sqrt(-2 * Math.log(1 - p)); return -(((((c[0] * q + c[1]) * q + c[2]) * q + c[3]) * q + c[4]) * q + c[5]) / ((((d[0] * q + d[1]) * q + d[2]) * q + d[3]) * q + 1); } q = p - 0.5; r = q * q; return (((((a[0] * r + a[1]) * r + a[2]) * r + a[3]) * r + a[4]) * r + a[5]) * q / (((((b[0] * r + b[1]) * r + b[2]) * r + b[3]) * r + b[4]) * r + 1); };
+    return vals.map(function (v) { var below = s.filter(function (x) { return x < v; }).length, eq = s.filter(function (x) { return x === v; }).length, pr = (below + eq / 2) / n; return { raw: v, pr: pr * 100, T: 50 + 10 * inv(Math.min(0.999, Math.max(0.001, pr))), n: eq }; });
+  }
+  /* ---------- 4) redundancy ---------- */
+  function redundancy(rows, items) {
+    var k = rows[0].length, R = PSY.corrMatrix(rows), P = null, out = []; try { P = PSY.inverse(R); } catch (e) { }
+    for (var a = 0; a < k; a++) for (var b = a + 1; b < k; b++) { var r = R[a][b], pr = P ? -P[a][b] / Math.sqrt(P[a][a] * P[b][b]) : NaN; if (r >= 0.6 && (pr >= 0.4 || !isFinite(pr)) || r >= 0.8) out.push({ a: a, b: b, r: r, pr: pr }); }
+    return out.sort(function (x, y) { return y.r - x.r; });
+  }
+  /* ---------- 5) short form by ant colony optimisation ---------- */
+  function shortForm(rows, items, K) {
+    var k = rows[0].length; K = Math.max(3, Math.min(k - 1, K)); var full = PSY.rowSums(rows), tau = items.map(function () { return 1; }), dims = items.map(function (it) { return it.dim || '_'; }), D = Array.from(new Set(dims));
+    function score(idx) { var S = sub(rows, idx), a = alphaOf(S), r = PSY.pearson(PSY.rowSums(S), full), cov = D.filter(function (d) { return idx.some(function (j) { return dims[j] === d; }); }).length / D.length; if (!isFinite(a)) return -1; return 0.45 * a + 0.4 * r + 0.15 * cov; }
+    var best = null, bestS = -Infinity, ANTS = 24, IT = 50;
+    for (var it = 0; it < IT; it++) {
+      var gen = [];
+      for (var an = 0; an < ANTS; an++) { var pool = tau.map(function (t, j) { return [j, t]; }), pick = []; while (pick.length < K) { var tot = pool.reduce(function (s, x) { return s + x[1]; }, 0), r = Math.random() * tot, acc = 0, q = 0; for (; q < pool.length; q++) { acc += pool[q][1]; if (acc >= r) break; } q = Math.min(q, pool.length - 1); pick.push(pool[q][0]); pool.splice(q, 1); } pick.sort(function (a, b) { return a - b; }); var sc = score(pick); gen.push([pick, sc]); if (sc > bestS) { bestS = sc; best = pick; } }
+      gen.sort(function (a, b) { return b[1] - a[1]; }); tau = tau.map(function (t) { return Math.max(0.05, t * 0.85); }); gen.slice(0, 4).forEach(function (g) { g[0].forEach(function (j) { tau[j] += g[1]; }); });
+    }
+    var S = sub(rows, best); return { idx: best, alpha: alphaOf(S), r: PSY.pearson(PSY.rowSums(S), full), aFull: alphaOf(rows), K: K };
+  }
+  /* ---------- UI ---------- */
+  function panel(s, A) {
+    if (!A || !A.rows || A.rows.length < 10 || A.items.length < 3) return '<details class="steps"><summary>أدوات الرسالة</summary><p class="muted small">تحتاج 10 استجابات مكتملة و3 عبارات على الأقل.</p></details>';
+    return '<details class="steps" id="thBox"><summary>أدوات الرسالة: الاستجابات المتهاونة، وأوميجا، والمعايير، والتكرار، والصورة المختصرة، وتقرير Word</summary><div id="thOut" class="stack" style="margin-top:10px"><p class="muted small">افتح القسم لحساب النتائج.</p></div></details>';
+  }
+  function compute(s, A) {
+    var rows = A.rows, items = A.items, k = items.length, C = careless(rows), om = omegaTotal(rows), tot = PSY.rowSums(rows), NR = norms(tot), RD = redundancy(rows, items), SF = shortForm(rows, items, Math.ceil(k / 2));
+    return { C: C, om: om, NR: NR, RD: RD, SF: SF, n: rows.length, k: k };
+  }
+  function html(s, A, X) {
+    var items = A.items, t = function (i) { return (i + 1) + '. ' + H(items[i].text || items[i].t || ''); };
+    var h = '<h4 style="margin:0">1) الاستجابات العشوائية والمتهاونة</h4>' +
+      (X.C.bad.length ? tableHTML(['المستجيب', 'أطول سلسلة متطابقة', 'التباين الفردي', 'D² (p)', 'السبب'], X.C.bad.slice(0, 40).map(function (b) { return [String(b.i + 1), String(b.ls), f(b.irv), f(b.d2, 1) + ' (' + (b.p < 0.001 ? '<.001' : f(b.p, 3)) + ')', H(b.why.join('، '))]; })) : '<div class="notice good small">لا توجد استجابات مشتبه بها وفق المؤشرات الثلاثة.</div>') +
+      '<p class="small" style="margin:0">ألفا قبل الاستبعاد = ' + f(X.C.aBefore, 3) + ' (ن = ' + X.n + ')، وبعد استبعاد ' + X.C.bad.length + ' حالة = ' + f(X.C.aAfter, 3) + ' (ن = ' + X.C.nAfter + '). لا تحذف آليًا: راجع كل حالة، واذكر المعيار في الرسالة.</p>' +
+      '<h4 style="margin:0">2) أوميجا الكلي</h4><p class="small" style="margin:0">ω = ' + f(X.om ? X.om.omega : NaN, 3) + ' مقابل α = ' + f(X.C.aBefore, 3) + '. أوميجا لا تفترض تساوي التشبعات (التكافؤ التاوي) كما تفترضها ألفا، ولذلك يوصى بتقريرهما معًا (McDonald, 1999؛ Dunn et al., 2014).</p>' +
+      '<h4 style="margin:0">3) جدول المعايير (الدرجة الكلية)</h4>' + tableHTML(['الدرجة الخام', 'عدد الأفراد', 'الرتبة المئينية', 'الدرجة التائية المعدلة'], X.NR.map(function (r) { return [f(r.raw, 0), String(r.n), f(r.pr, 1), f(r.T, 0)]; })) + '<p class="muted small" style="margin:0">معايير مؤقتة من عينتك فقط. المعايير الحقيقية تحتاج عينة ممثلة وكبيرة (عادة 500 فأكثر) ومقسمة حسب السن والنوع.</p>' +
+      '<h4 style="margin:0">4) عبارات قد تكون مكررة</h4>' + (X.RD.length ? tableHTML(['العبارة الأولى', 'العبارة الثانية', 'r', 'r الجزئي'], X.RD.slice(0, 15).map(function (d) { return [t(d.a), t(d.b), f(d.r, 2), f(d.pr, 2)]; })) + '<p class="muted small" style="margin:0">ارتباط مرتفع مع ارتباط جزئي مرتفع يعني غالبًا أن العبارتين تقولان الشيء نفسه بصياغتين، فيرتفع الثبات بشكل زائف. احتفظ بالأوضح منهما.</p>' : '<div class="notice good small">لا توجد أزواج عبارات مكررة واضحة.</div>') +
+      '<h4 style="margin:0">5) الصورة المختصرة (خوارزمية مستعمرة النمل)</h4><p class="small" style="margin:0">أفضل ' + X.SF.K + ' عبارات: ' + X.SF.idx.map(function (j) { return j + 1; }).join('، ') + '. ألفا المختصرة = ' + f(X.SF.alpha, 3) + ' (الكاملة ' + f(X.SF.aFull, 3) + ')، والارتباط بالدرجة الكاملة r = ' + f(X.SF.r, 3) + '.</p><p class="muted small" style="margin:0">الخوارزمية بتوازن الثبات والارتباط بالصورة الكاملة وتغطية الأبعاد. لازم تتأكد من الصورة المختصرة على عينة مستقلة، لأن اختيارها من نفس البيانات بيرفع النتايج بشكل متفائل.</p>' +
+      '<div class="row"><button class="btn sm" id="thDoc">' + ic('download') + ' تقرير الخصائص السيكومترية (Word)</button><button class="btn sm ghost" id="thRe">أعد الحساب</button></div>';
+    return h;
+  }
+  function report(s, A, X) {
+    var items = A.items, st = PSY.itemStats(A.rows);
+    var rows = items.map(function (it, j) { return '<tr><td>' + (j + 1) + '</td><td>' + H(it.text || '') + '</td><td>' + f(st.im ? st.im[j] : NaN) + '</td><td>' + f(st.isd ? st.isd[j] : NaN) + '</td><td>' + f(st.rit ? st.rit[j] : NaN) + '</td><td>' + f(st.aid ? st.aid[j] : NaN, 3) + '</td></tr>'; }).join('');
+    var dims = (A.dims || []).filter(function (d) { return d.st; }).map(function (d) { return '<tr><td>' + H(d.d.name) + '</td><td>' + d.n + '</td><td>' + f(d.st.alpha, 3) + '</td><td>' + f(d.omega ? d.omega.omega : NaN, 3) + '</td></tr>'; }).join('');
+    var doc = '<html dir="rtl" lang="ar"><head><meta charset="utf-8"><title>الخصائص السيكومترية</title><style>body{font-family:"Simplified Arabic","Traditional Arabic",Arial;font-size:14pt;line-height:1.8}h1{font-size:18pt;text-align:center}h2{font-size:15pt}table{border-collapse:collapse;width:100%;margin:8pt 0}td,th{border:1px solid #000;padding:4pt;font-size:12pt}caption{font-weight:bold;text-align:right;padding:4pt 0}</style></head><body>' +
+      '<h1>الخصائص السيكومترية لمقياس «' + H(s.name || 'المقياس') + '»</h1>' +
+      '<h2>أولًا: العينة</h2><p>طُبق المقياس على عينة استطلاعية قوامها (' + A.n + ') مستجيبًا. وفُحصت الاستجابات العشوائية والمتهاونة بثلاثة مؤشرات: أطول سلسلة إجابات متطابقة، والتباين الفردي في الاستجابة، ومسافة ماهالانوبس (Meade & Craig, 2012)، فتبيّن وجود (' + X.C.bad.length + ') حالة مشتبه بها.</p>' +
+      '<h2>ثانيًا: وصف المقياس</h2><p>يتكون المقياس في صورته الحالية من (' + items.length + ') عبارة' + ((s.dims || []).length ? ' موزعة على (' + s.dims.length + ') أبعاد هي: ' + s.dims.map(function (d) { return H(d.name); }).join('، ') : '') + '.</p>' +
+      '<h2>ثالثًا: الاتساق الداخلي وتحليل العبارات</h2><table><caption>جدول (1): المتوسطات والانحرافات المعيارية ومعاملات ارتباط العبارة بالدرجة الكلية المصححة وألفا عند حذف العبارة</caption><tr><th>م</th><th>العبارة</th><th>م</th><th>ع</th><th>ر المصحح</th><th>α عند الحذف</th></tr>' + rows + '</table>' +
+      '<h2>رابعًا: الثبات</h2><p>بلغ معامل ألفا كرونباخ للمقياس الكلي (' + f(X.C.aBefore, 3) + ')، ومعامل أوميجا ماكدونالد (' + f(X.om ? X.om.omega : NaN, 3) + ')' + (A.split ? '، ومعامل التجزئة النصفية بمعادلة سبيرمان–براون (' + f(A.split.sb, 3) + ')' : '') + '. ويُعد أوميجا أدق من ألفا لأنه لا يفترض تساوي تشبعات العبارات (Dunn, Baguley & Brunsden, 2014).</p>' + (dims ? '<table><caption>جدول (2): ثبات الأبعاد</caption><tr><th>البعد</th><th>العبارات</th><th>α</th><th>ω</th></tr>' + dims + '</table>' : '') +
+      '<h2>خامسًا: الصورة المختصرة</h2><p>باستخدام خوارزمية مستعمرة النمل (Leite et al., 2008) اختيرت (' + X.SF.K + ') عبارات هي: ' + X.SF.idx.map(function (j) { return j + 1; }).join('، ') + '، وبلغ ثباتها (' + f(X.SF.alpha, 3) + ') وارتباطها بالصورة الكاملة (' + f(X.SF.r, 3) + '). وتحتاج إلى تأكيد على عينة مستقلة.</p>' +
+      '<h2>سادسًا: المعايير المؤقتة</h2><table><caption>جدول (3): الدرجات الخام والرتب المئينية والدرجات التائية المعدلة</caption><tr><th>الدرجة الخام</th><th>الرتبة المئينية</th><th>الدرجة التائية</th></tr>' + X.NR.map(function (r) { return '<tr><td>' + f(r.raw, 0) + '</td><td>' + f(r.pr, 1) + '</td><td>' + f(r.T, 0) + '</td></tr>'; }).join('') + '</table>' +
+      '<p style="font-size:11pt">ملاحظة: أُعدّ هذا التقرير آليًا في مختبر المقاييس النفسية كمسودة، ويجب مراجعة الأرقام والصياغة، واستكمال أدلة الصدق (التحليل العاملي التوكيدي، والصدق التقاربي والتمييزي) قبل اعتماده في الرسالة.</p>' +
+      '<h2>المراجع</h2><p dir="ltr" style="text-align:left;font-size:11pt">Dunn, T. J., Baguley, T., & Brunsden, V. (2014). From alpha to omega. British Journal of Psychology, 105(3), 399–412.<br>Leite, W. L., Huang, I.-C., & Marcoulides, G. A. (2008). Item selection for the development of short forms of scales using an ant colony optimization algorithm. Multivariate Behavioral Research, 43(3), 411–431.<br>McDonald, R. P. (1999). Test theory: A unified treatment. Erlbaum.<br>Meade, A. W., & Craig, S. B. (2012). Identifying careless responses in survey data. Psychological Methods, 17(3), 437–455.</p></body></html>';
+    downloadFile('psychometric-report.doc', doc, 'application/msword');
+  }
+  function bind(el, s, A) {
+    var box = el.querySelector('#thBox'); if (!box) return; var X = null;
+    var run = function () { var o = el.querySelector('#thOut'); o.innerHTML = '<p class="muted small">جارٍ الحساب…</p>'; setTimeout(function () { try { X = compute(s, A); o.innerHTML = html(s, A, X); o.querySelector('#thDoc').onclick = function () { report(s, A, X); }; o.querySelector('#thRe').onclick = run; } catch (e) { o.innerHTML = '<div class="notice bad small">تعذر الحساب: ' + H(e.message) + '</div>'; } }, 30); };
+    box.addEventListener('toggle', function () { if (box.open && !X) run(); });
+  }
+  return { panel: panel, bind: bind, careless: careless, norms: norms, redundancy: redundancy, shortForm: shortForm, omegaTotal: omegaTotal };
+})();
+
 /* ===== Motion layer «رحلة الباحث»: motion that explains the content rather than decorating it.
    - Hero: a live questionnaire — Likert answers get picked one by one while n grows and the α gauge fills.
    - Headline: masked word reveal (SplitText mask). Page changes: violet wipe + clip-path reveals.
@@ -3676,6 +3778,23 @@ const AI = (() => {
 
   /* ---------- loading the vendored SDK (same-origin files, pinned 10.12.2) ---------- */
   function loadScript(src) { return new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.async = false; s.onload = res; s.onerror = () => rej(new Error('load ' + src)); document.head.appendChild(s); }); }
+
+  /* ---------- email action links (verify email / reset password) handled inside the site ----------
+     Works when the Firebase email templates use this site as the custom action URL, and also as the continue URL. */
+  const acs = () => ({ url: location.origin + location.pathname + '#account' });
+  async function sendVer(user) { try { await user.sendEmailVerification(acs()); } catch (e) { if (/continue-uri|unauthorized-domain/.test(e && e.code || '')) await user.sendEmailVerification(); else throw e; } }
+  async function sendReset(auth, em) { try { await auth.sendPasswordResetEmail(em, acs()); } catch (e) { if (/continue-uri|unauthorized-domain/.test(e && e.code || '')) await auth.sendPasswordResetEmail(em); else throw e; } }
+  function actionBox(html) { const d = document.createElement('div'); d.setAttribute('role', 'dialog'); d.style.cssText = 'position:fixed;inset:0;z-index:9999;display:grid;place-items:center;background:rgba(0,0,0,.45);padding:16px'; d.innerHTML = '<div style="background:var(--surface,#fff);color:var(--ink,#111);border-radius:14px;padding:18px;max-width:420px;width:100%;display:flex;flex-direction:column;gap:10px;font:inherit">' + html + '</div>'; document.body.appendChild(d); return d; }
+  async function handleAction(auth) {
+    const q = new URLSearchParams(location.search), mode = q.get('mode'), code = q.get('oobCode'); if (!mode || !code) return;
+    const clean = () => { try { history.replaceState(null, '', location.pathname + '#account'); } catch (e) { } };
+    const bad = e => { const c = (e && e.code) || ''; return /expired|invalid-action-code/.test(c) ? 'اللينك ده انتهى أو اتستخدم قبل كده. لو طلبت أكتر من رسالة، استخدم آخر رسالة بس، أو اطلب رسالة جديدة من «حسابي».' : 'حصل خطأ: ' + (c || (e && e.message) || ''); };
+    try {
+      if (mode === 'verifyEmail') { await auth.applyActionCode(code); clean(); await new Promise(r => { const un = auth.onAuthStateChanged(u => { un(); r(u); }); }); if (auth.currentUser) { await auth.currentUser.reload(); await auth.currentUser.getIdToken(true); st.verified = !!auth.currentUser.emailVerified; changed(); } const d = actionBox('<h3 style="margin:0">تم تأكيد بريدك ✓</h3><p style="margin:0">حسابك مفعّل دلوقتي. لو مش داخل، سجّل دخولك من «حسابي».</p><button style="padding:8px 14px;border-radius:9px;border:0;cursor:pointer">تمام</button>'); d.querySelector('button').onclick = () => d.remove(); }
+      else if (mode === 'resetPassword') { const em = await auth.verifyPasswordResetCode(code); const d = actionBox('<h3 style="margin:0">كلمة مرور جديدة</h3><p style="margin:0" dir="ltr">' + String(em).replace(/[<>&"]/g, '') + '</p><label for="rpw">كلمة المرور الجديدة (8 أحرف على الأقل)</label><input id="rpw" type="password" autocomplete="new-password" style="padding:8px;border-radius:8px;border:1px solid #ccc"><div id="rpm" style="font-size:14px"></div><button style="padding:8px 14px;border-radius:9px;border:0;cursor:pointer">احفظ</button>'); d.querySelector('button').onclick = async () => { const pw = d.querySelector('#rpw').value; if (pw.length < 8) { d.querySelector('#rpm').textContent = 'كلمة المرور لازم تكون 8 أحرف على الأقل'; return; } try { await auth.confirmPasswordReset(code, pw); clean(); d.querySelector('div').innerHTML = '<h3 style="margin:0">اتغيرت كلمة المرور ✓</h3><p style="margin:0">سجّل دخولك دلوقتي بكلمة المرور الجديدة من «حسابي».</p>'; setTimeout(() => d.remove(), 4000); } catch (e) { d.querySelector('#rpm').textContent = bad(e); } }; }
+      else if (mode === 'recoverEmail') { await auth.checkActionCode(code); await auth.applyActionCode(code); clean(); const d = actionBox('<h3 style="margin:0">رجع بريدك القديم ✓</h3><p style="margin:0">يُفضّل تغيّر كلمة المرور دلوقتي من «حسابي».</p><button style="padding:8px 14px;border-radius:9px;border:0;cursor:pointer">تمام</button>'); d.querySelector('button').onclick = () => d.remove(); }
+    } catch (e) { clean(); const d = actionBox('<h3 style="margin:0">مقدرناش نكمّل</h3><p style="margin:0">' + bad(e) + '</p><button style="padding:8px 14px;border-radius:9px;border:0;cursor:pointer">تمام</button>'); d.querySelector('button').onclick = () => d.remove(); }
+  }
   async function initFirebase() {
     const base = (window.FIREBASE_SDK_BASE || 'vendor/firebase-10.12.2/');
     await loadScript(base + 'firebase-app-compat.js'); await loadScript(base + 'firebase-auth-compat.js'); await loadScript(base + 'firebase-firestore-compat.js');
@@ -3683,6 +3802,7 @@ const AI = (() => {
     if (window.FIREBASE_APPCHECK_SITE_KEY) { try { await loadScript(base + 'firebase-app-check-compat.js'); firebase.appCheck().activate(new firebase.appCheck.ReCaptchaV3Provider(window.FIREBASE_APPCHECK_SITE_KEY), true); } catch (e) { } }
     st.fb = firebase; st.db = firebase.firestore();
     firebase.auth().useDeviceLanguage();
+    handleAction(firebase.auth());
     firebase.auth().onAuthStateChanged(async u => {
       st.user = u; st.verified = !!(u && u.emailVerified); st.name = u ? (u.displayName || '') : '';
       st.ready = true;
@@ -3846,7 +3966,7 @@ const AI = (() => {
         $$('[data-am]', el).forEach(b => b.onclick = () => { mode = b.dataset.am; draw(); });
         const pw = $('#aPw', el), bar = $('#pwBar', el); if (bar) pw.oninput = () => { const k = pwStrength(pw.value); bar.style.width = k * 25 + '%'; bar.style.background = k >= 3 ? 'var(--good)' : k === 2 ? 'var(--amber)' : 'var(--bad)'; $('#pwTxt', el).textContent = ['ضعيفة جدًا', 'ضعيفة', 'متوسطة', 'جيدة', 'قوية'][k]; };
         const err = m => { const e = $('#aErr', el); e.hidden = false; e.textContent = m; };
-        const rs = $('#aReset', el); if (rs) rs.onclick = async () => { const em = $('#aEmail', el).value.trim(); if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(em)) return err('اكتب بريدك الإلكتروني أولًا.'); try { await st.fb.auth().sendPasswordResetEmail(em); } catch (e) { } toast('إن كان البريد مسجلًا فستصلك رسالة لاستعادة كلمة المرور'); };
+        const rs = $('#aReset', el); if (rs) rs.onclick = async () => { const em = $('#aEmail', el).value.trim(); if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(em)) return err('اكتب بريدك الإلكتروني أولًا.'); try { await sendReset(st.fb.auth(), em); } catch (e) { } toast('إن كان البريد مسجلًا فستصلك رسالة لاستعادة كلمة المرور'); };
         $('#aForm', el).onsubmit = async e => {
           e.preventDefault(); if (Date.now() < st.lockUntil) return err('محاولات كثيرة؛ انتظر ' + Math.ceil((st.lockUntil - Date.now()) / 1000) + ' ثانية.');
           const em = $('#aEmail', el).value.trim(), p = $('#aPw', el).value;
@@ -3860,8 +3980,8 @@ const AI = (() => {
               if (p !== $('#aPw2', el).value) { btn.disabled = false; return err('كلمتا المرور غير متطابقتين.'); }
               const cr = await st.fb.auth().createUserWithEmailAndPassword(em, p);
               await cr.user.updateProfile({ displayName: nm }); st.name = nm;
-              try { await cr.user.sendEmailVerification(); } catch (x) { }
-              toast('أُنشئ حسابك. أرسلنا رسالة تأكيد إلى بريدك');
+              try { await sendVer(cr.user); } catch (x) { }
+              toast('أُنشئ حسابك. أرسلنا رسالة تأكيد لبريدك، ولو مش في الوارد بص في الـ Spam');
             } else { await st.fb.auth().signInWithEmailAndPassword(em, p); st.failures = 0; toast('مرحبًا بعودتك'); }
           } catch (x) { st.failures++; if (st.failures >= 5) { st.lockUntil = Date.now() + 30000 * Math.min(4, st.failures - 4); } btn.disabled = false; err(errMsg(x)); }
         };
@@ -3871,12 +3991,12 @@ const AI = (() => {
     const u = st.user;
     el.innerHTML = `<div class="section-title"><h2>حسابي</h2></div>
       <div class="grid2"><section class="card stack"><div class="row"><span class="avatar">${typeof avatarInner === 'function' ? avatarInner(st.name || u.email) : h((st.name || u.email || '؟')[0])}</span><div class="grow"><b>${h(st.name || 'باحث')}</b><div class="small muted ltr" style="text-align:right">${h(u.email || '')}</div></div><span class="chip amber">${h(rk)}</span></div>
-        ${st.verified ? '<div class="notice good small">بريدك مؤكد. تقدمك يُحفظ في حسابك تلقائيًا.</div>' : '<div class="notice warn small"><b>أكّد بريدك الإلكتروني</b>افتح الرسالة التي أرسلناها ثم أعد تحميل الصفحة. التأكيد مطلوب للظهور في لوحة المتصدرين ونشر النماذج.<div class="row" style="margin-top:6px"><button class="btn sm ghost" id="aVer">إعادة إرسال الرسالة</button><button class="btn sm ghost" id="aRel">تحققت، حدّث الحالة</button></div></div>'}
+        ${st.verified ? '<div class="notice good small">بريدك مؤكد. تقدمك يُحفظ في حسابك تلقائيًا.</div>' : '<div class="notice warn small"><b>أكّد بريدك الإلكتروني</b>افتح الرسالة التي أرسلناها واضغط اللينك. <b>لو مش لاقيها، بص في مجلد الرسائل غير المرغوب فيها (Spam)</b> واضغط «ليست رسالة غير مرغوب فيها»، علشان الرسائل الجاية توصل الوارد. استخدم آخر رسالة بس. التأكيد مطلوب للظهور في لوحة المتصدرين ونشر النماذج.<div class="row" style="margin-top:6px"><button class="btn sm ghost" id="aVer">إعادة إرسال الرسالة</button><button class="btn sm ghost" id="aRel">تحققت، حدّث الحالة</button></div></div>'}
         <div class="field"><label class="fl" for="aNm">الاسم الظاهر</label><div class="row"><input type="text" id="aNm" maxlength="40" value="${h(st.name)}" class="grow"><button class="btn sm ghost" id="aNmS">حفظ</button></div></div>
         <label class="row small"><input type="checkbox" id="aLb" ${st.lbOptIn ? 'checked' : ''}> اعرض اسمي في لوحة المتصدرين</label>
         <div class="row"><button class="btn ghost sm" id="aOut">تسجيل الخروج</button><button class="btn sm danger" id="aDel">حذف الحساب</button></div></section>
         <section class="card stack"><h3>${ic('trophy')} لوحة المتصدرين</h3><div class="seg"><button data-lb="week" aria-pressed="true">آخر 7 أيام</button><button data-lb="total" aria-pressed="false">الكل</button></div><div id="lbList"><p class="muted small">جارٍ التحميل…</p></div></section></div>`;
-    const v = $('#aVer', el); if (v) v.onclick = async () => { try { await u.sendEmailVerification(); toast('أُرسلت رسالة التأكيد'); } catch (e) { toast(errMsg(e)); } };
+    const v = $('#aVer', el); if (v) v.onclick = async () => { try { await sendVer(u); toast('أُرسلت رسالة تأكيد جديدة. استخدم آخر رسالة بس، لأن الرسائل القديمة بتبطل'); } catch (e) { toast(errMsg(e)); } };
     const r = $('#aRel', el); if (r) r.onclick = async () => { await u.reload(); st.verified = st.fb.auth().currentUser.emailVerified; if (st.verified) { await st.fb.auth().currentUser.getIdToken(true); await pushState(getS(), true); } changed(); };
     $('#aNmS', el).onclick = async () => { const nm = $('#aNm', el).value.replace(/[<>]/g, '').trim().slice(0, 40); if (nm.length < 2) return toast('اسم قصير جدًا'); try { await u.updateProfile({ displayName: nm }); st.name = nm; await pushState(getS(), true); toast('حُفظ الاسم'); changed(); } catch (e) { toast(errMsg(e)); } };
     $('#aLb', el).onchange = async e => { st.lbOptIn = e.target.checked; try { await userRef().set({ prefs: { lb: st.lbOptIn }, updated: st.fb.firestore.FieldValue.serverTimestamp() }, { merge: true }); if (!st.lbOptIn) await st.db.collection('leaderboard').doc(u.uid).delete(); else await pushState(getS(), true); toast(st.lbOptIn ? 'اسمك ظاهر في اللوحة' : 'أُخفي اسمك من اللوحة'); loadLb('week'); } catch (x) { toast(errMsg(x)); } };
