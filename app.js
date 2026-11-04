@@ -4008,6 +4008,19 @@ const AI = (() => {
   function pwStrength(p) { let s = 0; if (p.length >= 8) s++; if (p.length >= 12) s++; if (/[a-z]/i.test(p) && /\d/.test(p)) s++; if (/[^A-Za-z0-9]/.test(p)) s++; return s; }
 
   /* ---------- account page ---------- */
+
+  /* ---------- real-name rule, Google sign-in, and verification by pasting the email link ---------- */
+  const realName = nm => { const w = String(nm || '').trim().split(/\s+/); return nm.length <= 40 && w.length >= 2 && w.every(x => /^[A-Za-zء-ي٠-٩کگی'-]{2,}$/.test(x)) && !/\d/.test(nm); };
+  const NAME_ERR = 'اكتب اسمك الحقيقي بالكامل (الاسم الأول واسم الأب على الأقل) بالحروف بس، من غير أرقام أو رموز.';
+  function loadGsi() { return new Promise((res, rej) => { if (window.google && google.accounts && google.accounts.id) return res(); const s = document.createElement('script'); s.src = 'https://accounts.google.com/gsi/client'; s.async = true; s.onload = res; s.onerror = () => rej(new Error('gsi')); document.head.appendChild(s); }); }
+  async function googleButton(box, onErr) {
+    if (!box || st.mode !== 'firebase') return;
+    const cid = window.GOOGLE_CLIENT_ID;
+    if (cid) { try { await loadGsi(); google.accounts.id.initialize({ client_id: cid, callback: async r => { try { await st.fb.auth().signInWithCredential(firebase.auth.GoogleAuthProvider.credential(r.credential)); toast('أهلًا بيك'); } catch (e) { onErr(errMsg(e)); } } }); box.innerHTML = ''; google.accounts.id.renderButton(box, { theme: 'outline', size: 'large', text: 'continue_with', locale: 'ar', width: 280 }); return; } catch (e) { } }
+    box.innerHTML = '<button class="btn ghost" type="button" style="width:100%"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#4285F4" d="M22.5 12.3c0-.8-.1-1.5-.2-2.3H12v4.3h5.9a5 5 0 0 1-2.2 3.3v2.7h3.5c2.1-1.9 3.3-4.7 3.3-8z"/><path fill="#34A853" d="M12 23c3 0 5.5-1 7.3-2.7l-3.5-2.7c-1 .7-2.3 1.1-3.8 1.1-2.9 0-5.4-2-6.3-4.6H2.1v2.8A11 11 0 0 0 12 23z"/><path fill="#FBBC05" d="M5.7 14.1a6.6 6.6 0 0 1 0-4.2V7.1H2.1a11 11 0 0 0 0 9.8z"/><path fill="#EA4335" d="M12 5.4c1.6 0 3.1.6 4.2 1.7l3.1-3.1A11 11 0 0 0 2.1 7.1l3.6 2.8C6.6 7.3 9.1 5.4 12 5.4z"/></svg> متابعة بحساب Google</button>';
+    box.querySelector('button').onclick = async () => { try { await st.fb.auth().signInWithPopup(new firebase.auth.GoogleAuthProvider()); toast('أهلًا بيك'); } catch (e) { const c = (e && e.code) || ''; onErr(/operation-not-allowed/.test(c) ? 'الدخول بحساب Google لسه مش مفعّل في إعدادات Firebase.' : /popup-closed|cancelled-popup/.test(c) ? 'اتقفلت نافذة Google قبل ما تكمّل.' : /network|internal/.test(c) ? 'نافذة Google مقدرتش تفتح على الشبكة دي. جرّب شبكة تانية، أو سجّل بالإيميل.' : errMsg(e)); } };
+  }
+  async function verifyFromLink(link) { const m = String(link).match(/oobCode(?:=|%3D)([A-Za-z0-9_-]+)/); if (!m) throw new Error('nolink'); await st.fb.auth().applyActionCode(m[1]); const u = st.fb.auth().currentUser; if (u) { await u.reload(); await u.getIdToken(true); st.verified = !!u.emailVerified; } }
   function renderPanel(el) {
     const s = getS(), rk = typeof rankOf === 'function' ? rankOf(s.xp).name : '';
     const perks = `<ul class="stack small" style="list-style:none;padding:0;margin:0;gap:6px">
@@ -4031,8 +4044,8 @@ const AI = (() => {
       const draw = () => {
         el.innerHTML = `<div class="section-title"><h2>حسابي</h2><span class="chip">اختياري</span></div>
         <div class="grid2"><section class="card stack"><div class="seg" role="tablist"><button data-am="up" aria-pressed="${mode === 'up'}">إنشاء حساب</button><button data-am="in" aria-pressed="${mode === 'in'}">تسجيل الدخول</button></div>
-          <form id="aForm" class="stack" novalidate>
-            ${mode === 'up' ? `<div class="field"><label class="fl" for="aName">الاسم الذي يظهر للآخرين</label><input type="text" id="aName" maxlength="40" autocomplete="nickname" required></div>` : ''}
+          <div id="aG"></div><div class="row small muted" style="justify-content:center">أو بالإيميل وكلمة مرور</div><form id="aForm" class="stack" novalidate>
+            ${mode === 'up' ? `<div class="field"><label class="fl" for="aName">اسمك الحقيقي بالكامل (ثنائي أو ثلاثي)</label><input type="text" id="aName" maxlength="40" autocomplete="name" required placeholder="مثال: محمد أحمد عثمان"></div>` : ''}
             <div class="field"><label class="fl" for="aEmail">البريد الإلكتروني</label><input type="email" id="aEmail" autocomplete="email" required inputmode="email"></div>
             <div class="field"><label class="fl" for="aPw">كلمة المرور</label><input type="password" id="aPw" autocomplete="${mode === 'up' ? 'new-password' : 'current-password'}" minlength="8" required>${mode === 'up' ? '<div class="pbar" style="margin-top:6px"><i id="pwBar" style="width:0"></i></div><small class="muted" id="pwTxt">8 أحرف على الأقل، وحروف وأرقام.</small>' : ''}</div>
             ${mode === 'up' ? '<div class="field"><label class="fl" for="aPw2">تأكيد كلمة المرور</label><input type="password" id="aPw2" autocomplete="new-password" required></div>' : ''}
@@ -4044,6 +4057,7 @@ const AI = (() => {
         $$('[data-am]', el).forEach(b => b.onclick = () => { mode = b.dataset.am; draw(); });
         const pw = $('#aPw', el), bar = $('#pwBar', el); if (bar) pw.oninput = () => { const k = pwStrength(pw.value); bar.style.width = k * 25 + '%'; bar.style.background = k >= 3 ? 'var(--good)' : k === 2 ? 'var(--amber)' : 'var(--bad)'; $('#pwTxt', el).textContent = ['ضعيفة جدًا', 'ضعيفة', 'متوسطة', 'جيدة', 'قوية'][k]; };
         const err = m => { const e = $('#aErr', el); e.hidden = false; e.textContent = m; };
+        googleButton($('#aG', el), err);
         const rs = $('#aReset', el); if (rs) rs.onclick = async () => { const em = $('#aEmail', el).value.trim(); if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(em)) return err('اكتب بريدك الإلكتروني أولًا.'); try { await sendReset(st.fb.auth(), em); } catch (e) { } toast('إن كان البريد مسجلًا فستصلك رسالة لاستعادة كلمة المرور'); };
         $('#aForm', el).onsubmit = async e => {
           e.preventDefault(); if (Date.now() < st.lockUntil) return err('محاولات كثيرة؛ انتظر ' + Math.ceil((st.lockUntil - Date.now()) / 1000) + ' ثانية.');
@@ -4053,7 +4067,7 @@ const AI = (() => {
           try {
             if (mode === 'up') {
               const nm = $('#aName', el).value.replace(/[<>]/g, '').trim().slice(0, 40);
-              if (nm.length < 2) { btn.disabled = false; return err('اكتب اسمًا من حرفين على الأقل.'); }
+              if (!realName(nm)) { btn.disabled = false; return err(NAME_ERR); }
               if (p.length < 8 || !(/[a-z؀-ۿ]/i.test(p) && /\d/.test(p))) { btn.disabled = false; return err('كلمة المرور: 8 أحرف على الأقل وتحتوي حروفًا وأرقامًا.'); }
               if (p !== $('#aPw2', el).value) { btn.disabled = false; return err('كلمتا المرور غير متطابقتين.'); }
               const cr = await st.fb.auth().createUserWithEmailAndPassword(em, p);
@@ -4069,14 +4083,15 @@ const AI = (() => {
     const u = st.user;
     el.innerHTML = `<div class="section-title"><h2>حسابي</h2></div>
       <div class="grid2"><section class="card stack"><div class="row"><span class="avatar">${typeof avatarInner === 'function' ? avatarInner(st.name || u.email) : h((st.name || u.email || '؟')[0])}</span><div class="grow"><b>${h(st.name || 'باحث')}</b><div class="small muted ltr" style="text-align:right">${h(u.email || '')}</div></div><span class="chip amber">${h(rk)}</span></div>
-        ${st.verified ? '<div class="notice good small">بريدك مؤكد. تقدمك يُحفظ في حسابك تلقائيًا.</div>' : '<div class="notice warn small"><b>أكّد بريدك الإلكتروني</b>افتح الرسالة التي أرسلناها واضغط اللينك. <b>لو مش لاقيها، بص في مجلد الرسائل غير المرغوب فيها (Spam)</b> واضغط «ليست رسالة غير مرغوب فيها»، علشان الرسائل الجاية توصل الوارد. استخدم آخر رسالة بس. التأكيد مطلوب للظهور في لوحة المتصدرين ونشر النماذج.<div class="row" style="margin-top:6px"><button class="btn sm ghost" id="aVer">إعادة إرسال الرسالة</button><button class="btn sm ghost" id="aRel">تحققت، حدّث الحالة</button></div></div>'}<div class="row" style="margin-top:8px"><a class="btn sm ghost" href="#admin" style="text-decoration:none">لوحة المسؤول</a><span class="muted small">للمسؤول فقط</span></div>
-        <div class="field"><label class="fl" for="aNm">الاسم الظاهر</label><div class="row"><input type="text" id="aNm" maxlength="40" value="${h(st.name)}" class="grow"><button class="btn sm ghost" id="aNmS">حفظ</button></div></div>
+        ${st.verified ? '<div class="notice good small">بريدك مؤكد. تقدمك يُحفظ في حسابك تلقائيًا.</div>' : '<div class="notice warn small"><b>أكّد بريدك الإلكتروني</b>افتح الرسالة التي أرسلناها واضغط اللينك. <b>لو مش لاقيها، بص في مجلد الرسائل غير المرغوب فيها (Spam)</b> واضغط «ليست رسالة غير مرغوب فيها»، علشان الرسائل الجاية توصل الوارد. استخدم آخر رسالة بس. التأكيد مطلوب للظهور في لوحة المتصدرين ونشر النماذج.<div class="row" style="margin-top:6px"><button class="btn sm ghost" id="aVer">إعادة إرسال الرسالة</button><button class="btn sm ghost" id="aRel">تحققت، حدّث الحالة</button></div><details style="margin-top:8px"><summary><b>اللينك بيفتح صفحة خطأ؟</b></summary><p style="margin:6px 0">انسخ اللينك من الإيميل (اضغط عليه ضغطة طويلة ثم «نسخ الرابط»)، والصقه هنا، والموقع هيأكّد بريدك من غير ما يفتح صفحة Firebase.</p><div class="row"><input type="text" id="aLink" dir="ltr" class="grow" placeholder="https://...oobCode=..."><button class="btn sm" id="aLinkGo">أكّد</button></div></details></div>'}<div class="row" style="margin-top:8px"><a class="btn sm ghost" href="#admin" style="text-decoration:none">لوحة المسؤول</a><span class="muted small">للمسؤول فقط</span></div>
+        ${realName(st.name || '') ? '' : '<div class="notice warn small"><b>اكتب اسمك الحقيقي بالكامل</b>مطلوب علشان مسؤول الموقع يقدر يتابعك ويساعدك.</div>'}<div class="field"><label class="fl" for="aNm">اسمك الحقيقي بالكامل</label><div class="row"><input type="text" id="aNm" maxlength="40" value="${h(st.name)}" class="grow"><button class="btn sm ghost" id="aNmS">حفظ</button></div></div>
         <label class="row small"><input type="checkbox" id="aLb" ${st.lbOptIn ? 'checked' : ''}> اعرض اسمي في لوحة المتصدرين</label>
         <div class="row"><button class="btn ghost sm" id="aOut">تسجيل الخروج</button><button class="btn sm danger" id="aDel">حذف الحساب</button></div></section>
         <section class="card stack"><h3>${ic('trophy')} لوحة المتصدرين</h3><div class="seg"><button data-lb="week" aria-pressed="true">آخر 7 أيام</button><button data-lb="total" aria-pressed="false">الكل</button></div><div id="lbList"><p class="muted small">جارٍ التحميل…</p></div></section></div>`;
     const v = $('#aVer', el); if (v) v.onclick = async () => { try { await sendVer(u); toast('أُرسلت رسالة تأكيد جديدة. استخدم آخر رسالة بس، لأن الرسائل القديمة بتبطل'); } catch (e) { toast(errMsg(e)); } };
+    const lg = $('#aLinkGo', el); if (lg) lg.onclick = async () => { try { await verifyFromLink($('#aLink', el).value); if (st.verified) await pushState(getS(), true); toast(st.verified ? 'تم تأكيد بريدك ✓' : 'اتأكد، حدّث الصفحة'); changed(); } catch (e) { toast(e && e.message === 'nolink' ? 'ده مش لينك التأكيد. انسخ اللينك اللي في الإيميل كله.' : /expired|invalid-action-code/.test((e && e.code) || '') ? 'اللينك ده قديم أو اتستخدم قبل كده. اطلب رسالة جديدة واستخدم آخر واحدة.' : errMsg(e)); } };
     const r = $('#aRel', el); if (r) r.onclick = async () => { await u.reload(); st.verified = st.fb.auth().currentUser.emailVerified; if (st.verified) { await st.fb.auth().currentUser.getIdToken(true); await pushState(getS(), true); } changed(); };
-    $('#aNmS', el).onclick = async () => { const nm = $('#aNm', el).value.replace(/[<>]/g, '').trim().slice(0, 40); if (nm.length < 2) return toast('اسم قصير جدًا'); try { await u.updateProfile({ displayName: nm }); st.name = nm; await pushState(getS(), true); toast('حُفظ الاسم'); changed(); } catch (e) { toast(errMsg(e)); } };
+    $('#aNmS', el).onclick = async () => { const nm = $('#aNm', el).value.replace(/[<>]/g, '').trim().slice(0, 40); if (!realName(nm)) return toast(NAME_ERR); try { await u.updateProfile({ displayName: nm }); st.name = nm; await pushState(getS(), true); toast('حُفظ الاسم'); changed(); } catch (e) { toast(errMsg(e)); } };
     $('#aLb', el).onchange = async e => { st.lbOptIn = e.target.checked; try { await userRef().set({ prefs: { lb: st.lbOptIn }, updated: st.fb.firestore.FieldValue.serverTimestamp() }, { merge: true }); if (!st.lbOptIn) await st.db.collection('leaderboard').doc(u.uid).delete(); else await pushState(getS(), true); toast(st.lbOptIn ? 'اسمك ظاهر في اللوحة' : 'أُخفي اسمك من اللوحة'); loadLb('week'); } catch (x) { toast(errMsg(x)); } };
     $('#aOut', el).onclick = () => st.fb.auth().signOut();
     $('#aDel', el).onclick = () => (typeof confirmBox === 'function' ? confirmBox : (m, y, f) => f())('سيُحذف حسابك وبياناتك المحفوظة على الخادم نهائيًا (تبقى نسخة على هذا الجهاز).', 'حذف الحساب', async () => {

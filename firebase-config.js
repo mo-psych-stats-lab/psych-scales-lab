@@ -22,3 +22,7 @@ window.FIREBASE_CONFIG = {
 };
 /* Optional: App Check with reCAPTCHA v3 to block abusive scripts (see SETUP-FIREBASE.md, step 6). */
 window.FIREBASE_APPCHECK_SITE_KEY = null;
+
+/* Optional: Google sign-in through Google Identity Services, so the login never opens the firebaseapp.com page.
+   Paste the "Web client" ID from Google Cloud Console > APIs & Services > Credentials (it is public, not a secret). */
+// window.GOOGLE_CLIENT_ID = "1234567890-xxxxxxxx.apps.googleusercontent.com";
