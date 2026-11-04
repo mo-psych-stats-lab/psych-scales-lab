@@ -118,6 +118,21 @@ service cloud.firestore {
         && throttled();
     }
 
+    // ---- tests-library results shared by name with the admin (same consent as know) ----
+    match /tests/{uid} {
+      allow read: if isUser(uid) || isAdmin();
+      allow delete: if isUser(uid) || isAdmin();
+      allow create, update: if isUser(uid)
+        && request.resource.data.keys().hasOnly(['name', 'email', 'consent', 'results', 'done', 'updated'])
+        && request.resource.data.consent == true
+        && isStr(request.resource.data.name, 60)
+        && request.resource.data.email == request.auth.token.email
+        && isStr(request.resource.data.results, 60000)
+        && isInt(request.resource.data.done, 40)
+        && request.resource.data.updated == request.time
+        && throttled();
+    }
+
     // ---- stage gates set by the admin: 'global' for everyone, or one document per student ----
     match /gates/{gid} {
       allow read: if signedIn() && (gid == 'global' || gid == request.auth.uid || isAdmin());
