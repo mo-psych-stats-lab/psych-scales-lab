@@ -10,6 +10,8 @@ service cloud.firestore {
     function isStr(v, max) { return v is string && v.size() <= max; }
     function isInt(v, max) { return v is int && v >= 0 && v <= max; }
     // write throttle: a document may change at most once every 2 seconds
+    // admin = a document admins/{uid} created by hand in the Firebase console (no email or secret in this file)
+    function isAdmin() { return signedIn() && exists(/databases/$(database)/documents/admins/$(request.auth.uid)); }
     function throttled() { return resource == null || !('updated' in resource.data) || request.time > resource.data.updated + duration.value(2, 's'); }
 
     // ---- per-user progress (one document per account; only its owner can read or write it) ----
@@ -76,6 +78,37 @@ service cloud.firestore {
         allow read, delete: if isUser(get(/databases/$(database)/documents/forms/$(fid)).data.owner);
         allow update: if false;
       }
+    }
+
+    // ---- admins: created by hand in the console; a user may only check his own entry ----
+    match /admins/{uid} { allow read: if isUser(uid); allow write: if false; }
+
+    // ---- know-yourself results shared by name with the site admin (explicit consent) ----
+    match /know/{uid} {
+      allow read: if isUser(uid) || isAdmin();
+      allow delete: if isUser(uid) || isAdmin();
+      allow create, update: if isUser(uid)
+        && request.resource.data.keys().hasOnly(['name', 'email', 'consent', 'results', 'done', 'updated'])
+        && request.resource.data.consent == true
+        && isStr(request.resource.data.name, 60)
+        && request.resource.data.email == request.auth.token.email
+        && isStr(request.resource.data.results, 60000)
+        && isInt(request.resource.data.done, 20)
+        && request.resource.data.updated == request.time
+        && throttled();
+    }
+
+    // ---- stage gates set by the admin: 'global' for everyone, or one document per student ----
+    match /gates/{gid} {
+      allow read: if signedIn() && (gid == 'global' || gid == request.auth.uid || isAdmin());
+      allow delete: if isAdmin();
+      allow create, update: if isAdmin()
+        && request.resource.data.keys().hasOnly(['mode', 'upto', 'hold', 'released', 'note', 'updated'])
+        && request.resource.data.mode in ['inherit', 'seq', 'open', 'locked', 'upto']
+        && isInt(request.resource.data.upto, 20)
+        && request.resource.data.hold is bool && request.resource.data.released is bool
+        && isStr(request.resource.data.note, 300)
+        && request.resource.data.updated == request.time;
     }
 
     // everything else is closed
