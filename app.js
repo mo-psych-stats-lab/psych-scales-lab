@@ -3585,12 +3585,14 @@ var ADMIN = (function () {
   }
   var VIS = 'body:not(.is-admin) [data-go="admin"],body:not(.is-admin) [data-m="admin"],body:not(.is-admin) a[href="#admin"],body:not(.is-admin) button[onclick="go(\'admin\')"]{display:none!important}';
   (function () { var s = document.createElement('style'); s.textContent = VIS; document.head.appendChild(s); })();
-  var known = null;
+  var known = null, lastWhy = '';
   async function ensureAdmin(tryCreate) {
     if (!fsOK()) return null; var uid = ACCT.fs.uid();
     try { var d = await ACCT.fs.get('admins/' + uid); if (d) { mark(true); return d; } } catch (e) { }
-    if (!tryCreate || !ACCT.fs.verified()) { mark(false); return null; }
-    try { var em = (ACCT.fs.email() || '').toLowerCase(), doc = { role: 'admin', email: em, name: (ACCT.fs.name() || '').slice(0, 60), added: '__ts__' }; await ACCT.fs.put('admins/' + uid, doc); try { await ACCT.fs.del('invites/' + em); } catch (e) { } mark(true); say('بقيت مسؤول ✓'); return doc; } catch (e) { mark(false); return null; }
+    if (!tryCreate) { mark(false); return null; }
+    try { if (ACCT.fs.refresh) await ACCT.fs.refresh(); } catch (e) { }
+    lastWhy = ''; if (!ACCT.fs.verified()) { lastWhy = 'unverified'; mark(false); return null; }
+    try { var em = (ACCT.fs.email() || '').toLowerCase(), doc = { role: 'admin', email: em, name: (ACCT.fs.name() || '').slice(0, 60), added: '__ts__' }; await ACCT.fs.put('admins/' + uid, doc); try { await ACCT.fs.del('invites/' + em); } catch (e) { } mark(true); say('بقيت مسؤول ✓'); return doc; } catch (e) { lastWhy = /permission/i.test((e && (e.code || e.message)) || '') ? 'perm' : 'other:' + ((e && (e.code || e.message)) || ''); mark(false); return null; }
   }
   function mark(v) { known = v; document.body.classList.toggle('is-admin', !!v); }
   (function poll(n) { if (fsOK()) { var u = ACCT.fs.uid(); if (u !== poll.u) { poll.u = u; ensureAdmin(false); } } else if (known) mark(false); setTimeout(function () { poll(n + 1); }, n < 20 ? 1500 : 5000); })(0);
@@ -3605,7 +3607,8 @@ var ADMIN = (function () {
     if (!(window.ACCT && ACCT.fs)) { B.innerHTML = '<section class="ad-card"><p style="margin:0">لوحة المسؤول بتشتغل على نسخة GitHub من الموقع (بحسابات Firebase)، مش جوه Claude.</p></section>'; return; }
     if (!fsOK()) { B.innerHTML = '<section class="ad-card"><p style="margin:0">سجّل دخولك الأول من «حسابي» بنفس الإيميل اللي هتعمله مسؤول، وبعدين ارجع للصفحة دي. اللوحة بتشتغل على نسخة GitHub من الموقع: ' + (/github\.io$/.test(location.hostname) ? '' : '<a href="https://mo-psych-stats-lab.github.io/' + (document.title.indexOf('الإحصاء') >= 0 ? 'psych-stats-lab' : 'psych-scales-lab') + '/#admin" target="_blank" rel="noopener">افتحها من هنا</a>') + '</p></section>'; return; }
     var uid = ACCT.fs.uid(), adm = await ensureAdmin(true), err = '';
-    if (!adm) { B.innerHTML = '<section class="ad-card"><h3>الصفحة دي للمسؤول بس</h3><p style="margin:0">حسابك مش مسؤول. لو اتبعتت لك دعوة، اتأكد إنك داخل بنفس الإيميل اللي اتبعتت له الدعوة وإن إيميلك مؤكد، وبعدين حدّث الصفحة.</p></section>'; return; }
+    if (!adm) { var why = lastWhy === 'unverified' ? 'إيميلك لسه مش مؤكد. أكّده من «حسابي» (ولو اللينك بيفتح صفحة خطأ استخدم خانة «اللينك بيفتح صفحة خطأ؟»)، وبعدين ارجع هنا ودوس «حاول تاني».' : lastWhy === 'perm' ? 'قاعدة البيانات رفضت: إما إن ملف القواعد الجديد (اللي فيه إيميلك) لسه متنشرش في Firestore ← Rules ← Publish في مشروع الموقع ده، أو إنك داخل بإيميل غير الإيميل المسؤول، أو مفيش دعوة لإيميلك.' : lastWhy ? 'خطأ: ' + E(lastWhy.replace(/^other:/, '')) : 'حسابك مش مسؤول.';
+      B.innerHTML = '<section class="ad-card"><h3>الصفحة دي للمسؤول بس</h3><p style="margin:0">' + why + '</p><div class="ad-tw"><table style="min-width:0"><tr><th>داخل بإيميل</th><td style="direction:ltr;unicode-bidi:isolate">' + E(ACCT.fs.email()) + '</td></tr><tr><th>الإيميل مؤكد؟</th><td>' + (ACCT.fs.verified() ? 'أيوه ✓' : 'لأ ✗') + '</td></tr><tr><th>المشروع</th><td style="direction:ltr;unicode-bidi:isolate">' + E((window.FIREBASE_CONFIG || {}).projectId || '') + '</td></tr></table></div><div><button class="ad-btn" id="adTry">حاول تاني</button></div></section>'; B.querySelector('#adTry').onclick = function () { render(el); }; return; }
     var admins = [], invites = []; try { admins = await ACCT.fs.list('admins'); } catch (e) { } try { invites = await ACCT.fs.list('invites'); } catch (e) { }
     var know = [], gates = [], global = null;
     try { know = await ACCT.fs.list('know'); } catch (e) { err = 'تعذر قراءة النتائج: ' + (e.message || ''); }
@@ -4142,6 +4145,7 @@ const AI = (() => {
       set: async (p, data) => st.db.doc(p).set(Object.assign({}, data, { updated: firebase.firestore.FieldValue.serverTimestamp() })),
       list: async c => (await st.db.collection(c).get()).docs.map(d => Object.assign({ id: d.id }, d.data())),
       del: async p => st.db.doc(p).delete(),
+      refresh: async () => { if (!st.user) return false; try { await st.user.reload(); } catch (e) { } const u = st.fb.auth().currentUser; if (u) { await u.getIdToken(true); st.verified = !!u.emailVerified; } return st.verified; },
       put: async (p, data) => { const d = {}; Object.keys(data).forEach(k => { d[k] = data[k] === '__ts__' ? firebase.firestore.FieldValue.serverTimestamp() : data[k]; }); return st.db.doc(p).set(d); }
     },
     init() {
