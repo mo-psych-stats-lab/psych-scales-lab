@@ -409,12 +409,13 @@ ENV.web = !ENV.claude;
 /* ---------- shell & router ---------- */
 const NAV = [
   ['home', 'الرئيسية', 'home'], ['know', 'اعرف نفسك', 'heart'], ['tests', 'مكتبة الاختبارات', 'check'], ['learn', 'الدروس', 'book'], ['labs', 'المعامل', 'flask'], ['build', 'ابنِ مقياسك', 'build'], ['exam', 'أسئلة موضوعية', 'check'], ['bank', 'بنك الأسئلة', 'cards'],
-  ['formulas', 'المعادلات', 'sigma'], ['practice', 'التدريب', 'cards'], ['neuro', 'المختبر العصبي', 'flask'], ['respond', 'أجب عن مقياس', 'form'], ['schedules', 'جداول التعزيز', 'trophy'], ['me', 'إنجازاتي', 'trophy'], ['account', 'حسابي', 'user'], ['admin', 'لوحة المسؤول', 'shield']
+  ['formulas', 'المعادلات', 'sigma'], ['laws', 'القوانين الإحصائية', 'sigma'], ['practice', 'التدريب', 'cards'], ['neuro', 'المختبر العصبي', 'flask'], ['respond', 'أجب عن مقياس', 'form'], ['schedules', 'جداول التعزيز', 'trophy'], ['me', 'إنجازاتي', 'trophy'], ['account', 'حسابي', 'user'], ['admin', 'لوحة المسؤول', 'shield']
 ];
 const LOGO_SVG = `<svg viewBox="0 0 40 40" aria-hidden="true"><defs><linearGradient id="lgS" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7c5cff"/><stop offset="1" stop-color="#1f1452"/></linearGradient></defs><rect width="40" height="40" rx="11" fill="url(#lgS)"/><rect x="8.5" y="7" width="23" height="27" rx="3.4" fill="#fff"/><rect x="14.5" y="5" width="11" height="4.2" rx="1.6" fill="#bef264"/><circle cx="27" cy="13.5" r="2.3" fill="#65a30d" stroke="#65a30d" stroke-width="1.3"/><path d="M25.9 13.5 l.8 .8 1.5-1.6" stroke="#fff" stroke-width="1" fill="none" stroke-linecap="round" stroke-linejoin="round"/><rect x="12" y="12.4" width="11" height="2.2" rx="1.1" fill="#b9b0e8"/><circle cx="27" cy="20.1" r="2.3" fill="#65a30d" stroke="#65a30d" stroke-width="1.3"/><path d="M25.9 20.1 l.8 .8 1.5-1.6" stroke="#fff" stroke-width="1" fill="none" stroke-linecap="round" stroke-linejoin="round"/><rect x="15" y="19.0" width="8" height="2.2" rx="1.1" fill="#b9b0e8"/><circle cx="27" cy="26.7" r="2.3" fill="#fff" stroke="#7c5cff" stroke-width="1.3"/><rect x="13" y="25.599999999999998" width="10" height="2.2" rx="1.1" fill="#b9b0e8"/></svg>`;
 const GUEST_SVG = `<svg viewBox="0 0 24 24" aria-hidden="true" fill="none"><circle cx="12" cy="9" r="3.6" fill="currentColor"/><path d="M5.2 19.2c1.3-3.1 3.9-4.7 6.8-4.7s5.5 1.6 6.8 4.7" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>`;
 const avatarInner = nm => nm && nm.trim() ? esc(nm.trim()[0]) : GUEST_SVG;
 const VIEWS = {};
+VIEWS.laws = el => { el.style.setProperty('--lw-accent', 'var(--violet)'); if (window.LAWS) LAWS.render(el); else el.textContent = 'تعذر تحميل صفحة القوانين. حدّث الصفحة.'; };
 let current = 'home';
 function shell() {
   $('#app').innerHTML = `
@@ -440,7 +441,7 @@ function shell() {
   $('#bAcct').onclick = () => go('account');
 }
 function moreSheet() {
-  modal(`<h3>المزيد</h3><div class="stack">${[['bank', 'بنك الأسئلة', 'cards', 'كل أسئلة المادة: بحث وتصفية واختبار سريع'], ['schedules', 'جداول التعزيز وكروت العلماء', 'trophy', 'جرّب FR وVR وFI وVI وشوف السجل التراكمي، وكروتك'], ['tests', 'مكتبة الاختبارات', 'check', 'شخصية، وتقدير ذات، وضغوط، وصمود، ووحدة، وانتباه، وذكاء: مصفوفات ومتسلسلات وتدوير ذهني'], ['know', 'اعرف نفسك', 'heart', 'رحلة بشكل لعبة: المزاج والذاكرة والتركيز والحالة النفسية وحياتك الرقمية'], ['neuro', 'المختبر العصبي (TRIBE v2)', 'flask', 'تماسك عبارات مقياسك وفق التنبؤ العصبي — استكشافي'], ['exam', 'أسئلة موضوعية', 'check', 'صح وخطأ، واختيار من متعدد، وامتحان تجريبي ونموذج محلول'], ['formulas', 'المعادلات', 'sigma', 'كل معادلات الصدق والثبات بأمثلة'], ['practice', 'التدريب', 'cards', 'بطاقات ومطابقة ومسائل حسابية'], ['respond', 'أجب عن مقياس', 'form', 'استخدم كود المقياس الذي أرسله الباحث'], ['me', 'إنجازاتي', 'trophy', 'النقاط والأوسمة والإعدادات'], ['account', 'حسابي', 'user', 'تسجيل الدخول وحفظ التقدم'], ['admin', 'لوحة المسؤول', 'shield', 'للمسؤول فقط: فتح وقفل المراحل ومتابعة النتائج']].map(n => `<button class="linkcard" data-m="${n[0]}"><span class="ic">${ic(n[2])}</span><span><b>${n[1]}</b><span>${n[3]}</span></span></button>`).join('')}</div><div class="row" style="margin-top:12px"><button class="btn ghost" data-close>إغلاق</button></div>`,
+  modal(`<h3>المزيد</h3><div class="stack">${[['bank', 'بنك الأسئلة', 'cards', 'كل أسئلة المادة: بحث وتصفية واختبار سريع'], ['schedules', 'جداول التعزيز وكروت العلماء', 'trophy', 'جرّب FR وVR وFI وVI وشوف السجل التراكمي، وكروتك'], ['tests', 'مكتبة الاختبارات', 'check', 'شخصية، وتقدير ذات، وضغوط، وصمود، ووحدة، وانتباه، وذكاء: مصفوفات ومتسلسلات وتدوير ذهني'], ['know', 'اعرف نفسك', 'heart', 'رحلة بشكل لعبة: المزاج والذاكرة والتركيز والحالة النفسية وحياتك الرقمية'], ['neuro', 'المختبر العصبي (TRIBE v2)', 'flask', 'تماسك عبارات مقياسك وفق التنبؤ العصبي — استكشافي'], ['exam', 'أسئلة موضوعية', 'check', 'صح وخطأ، واختيار من متعدد، وامتحان تجريبي ونموذج محلول'], ['formulas', 'المعادلات', 'sigma', 'كل معادلات الصدق والثبات بأمثلة'], ['laws', 'القوانين الإحصائية', 'sigma', '65 قانونًا من القديم للحديث: من الوسط وت وتحليل التباين إلى SEM وبايز، بمسائل محلولة'], ['practice', 'التدريب', 'cards', 'بطاقات ومطابقة ومسائل حسابية'], ['respond', 'أجب عن مقياس', 'form', 'استخدم كود المقياس الذي أرسله الباحث'], ['me', 'إنجازاتي', 'trophy', 'النقاط والأوسمة والإعدادات'], ['account', 'حسابي', 'user', 'تسجيل الدخول وحفظ التقدم'], ['admin', 'لوحة المسؤول', 'shield', 'للمسؤول فقط: فتح وقفل المراحل ومتابعة النتائج']].map(n => `<button class="linkcard" data-m="${n[0]}"><span class="ic">${ic(n[2])}</span><span><b>${n[1]}</b><span>${n[3]}</span></span></button>`).join('')}</div><div class="row" style="margin-top:12px"><button class="btn ghost" data-close>إغلاق</button></div>`,
     (bg, close) => $$('[data-m]', bg).forEach(b => b.onclick = () => { close(); go(b.dataset.m); }));
 }
 function go(v) { if (v === 'labs' && typeof LABS !== 'undefined') LABS.clear(); if (v === 'learn' && typeof LEARN !== 'undefined') LEARN.clearOpen(); if (v === 'exam' && typeof EXAM !== 'undefined') EXAM.clear(); if (location.hash !== '#' + v) location.hash = v; else route(); }
@@ -451,7 +452,7 @@ function route() {
   const m = h.match(/^form-([A-Za-z0-9]+)$/); if (m) { h = 'respond'; arg = m[1]; } const tk = h.match(/^take\/([A-Za-z0-9_-]+)$/); if (tk) { h = 'take'; arg = tk[1]; }
   if (!VIEWS[h]) h = 'home';
   current = h;
-  $$('[data-go]').forEach(b => b.setAttribute('aria-current', b.dataset.go === h || (b.dataset.go === 'more' && ['qbuild', 'take', 'bank', 'know', 'tests', 'schedules', 'admin', 'neuro', 'exam', 'formulas', 'practice', 'respond', 'me', 'account'].includes(h)) ? 'page' : 'false'));
+  $$('[data-go]').forEach(b => b.setAttribute('aria-current', b.dataset.go === h || (b.dataset.go === 'more' && ['qbuild', 'take', 'bank', 'know', 'tests', 'schedules', 'admin', 'neuro', 'exam', 'formulas', 'laws', 'practice', 'respond', 'me', 'account'].includes(h)) ? 'page' : 'false'));
   const v = $('#view'); v.innerHTML = '<div class="container" id="vc"></div>';
   if (typeof MOTION !== 'undefined') MOTION.scrollTop();
   VIEWS[h]($('#vc'), arg);
@@ -542,6 +543,7 @@ VIEWS.home = el => {
     ${[['labs', 'flask', 'المعامل الحسابية', 'ألفا، KR‑20، التجزئة النصفية، كابا، صدق المحتوى، تحليل الفقرات', '--primary', '--primary-soft'],
       ['build', 'build', 'ابنِ مقياسك', 'معالج من 12 خطوة، جمع البيانات مباشرة، وتحليل فوري', '--good', '--good-soft'],
       ['formulas', 'sigma', 'المعادلات', 'كل المعادلات برموزها ومتى تُستخدم وأمثلة محلولة', '--violet', '--violet-soft'],
+      ['laws', 'sigma', 'القوانين الإحصائية', '65 قانونًا من القديم للحديث بمسائل محلولة وتدريب', '--primary', '--primary-soft'],
       ['practice', 'cards', 'التدريب', 'بطاقات مراجعة، ومطابقة، ومسائل حسابية مولدة', '--amber', '--amber-soft'],
       ['bank', 'cards', 'بنك الأسئلة', 'أكثر من 200 سؤال بإجاباتها: صح وخطأ، واختيار، ومسائل، ومقالي', '--lime', '--lime-soft'],
       ['exam', 'check', 'أسئلة موضوعية والامتحان', 'صح وخطأ واختيار من متعدد بنمط امتحان القسم، ونموذج محلول', '--bad', '--bad-soft']]
