@@ -4450,3 +4450,4 @@ route();
   const gs = document.createElement('script'); gs.async = true; gs.dataset.goatcounter = 'https://mo-psych-stats-lab.goatcounter.com/count'; gs.src = 'https://gc.zgo.at/count.js'; gs.referrerPolicy = 'no-referrer'; gs.onload = hit;
   document.head.appendChild(gs); window.addEventListener('hashchange', hit);
 })();
+if ('serviceWorker' in navigator && location.protocol === 'https:') addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
