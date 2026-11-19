@@ -415,7 +415,15 @@ const LOGO_SVG = `<svg viewBox="0 0 40 40" aria-hidden="true"><defs><linearGradi
 const GUEST_SVG = `<svg viewBox="0 0 24 24" aria-hidden="true" fill="none"><circle cx="12" cy="9" r="3.6" fill="currentColor"/><path d="M5.2 19.2c1.3-3.1 3.9-4.7 6.8-4.7s5.5 1.6 6.8 4.7" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>`;
 const avatarInner = nm => nm && nm.trim() ? esc(nm.trim()[0]) : GUEST_SVG;
 const VIEWS = {};
-VIEWS.laws = el => { el.style.setProperty('--lw-accent', 'var(--violet)'); if (window.LAWS) LAWS.render(el); else el.textContent = 'تعذر تحميل صفحة القوانين. حدّث الصفحة.'; };
+VIEWS.laws = el => {
+  el.style.setProperty('--lw-accent', 'var(--violet)');
+  const run = () => { if (el.isConnected) LAWS.render(el); };
+  if (window.LAWS) return run();
+  el.innerHTML = '<p class="muted">جارٍ تحميل القوانين…</p>';
+  const sc = document.createElement('script'); sc.src = 'laws.js?v=20261119a';
+  sc.onload = run; sc.onerror = () => { el.textContent = 'تعذر تحميل صفحة القوانين. تحقق من الاتصال وحدّث الصفحة.'; };
+  document.head.appendChild(sc);
+};
 let current = 'home';
 function shell() {
   $('#app').innerHTML = `
@@ -449,7 +457,7 @@ function route() {
   tick();
   let h = (location.hash || '#home').slice(1);
   let arg = null;
-  const m = h.match(/^form-([A-Za-z0-9]+)$/); if (m) { h = 'respond'; arg = m[1]; } const tk = h.match(/^take\/([A-Za-z0-9_-]+)$/); if (tk) { h = 'take'; arg = tk[1]; }
+  const m = h.match(/^form-([A-Za-z0-9]+)$/); if (m) { h = 'respond'; arg = m[1]; } const tk = h.match(/^take\/([A-Za-z0-9_-]+)$/); if (tk) { h = 'take'; arg = tk[1]; } if (/^laws\/\d+$/.test(h)) h = 'laws';
   if (!VIEWS[h]) h = 'home';
   current = h;
   $$('[data-go]').forEach(b => b.setAttribute('aria-current', b.dataset.go === h || (b.dataset.go === 'more' && ['qbuild', 'take', 'bank', 'know', 'tests', 'schedules', 'admin', 'neuro', 'exam', 'formulas', 'laws', 'practice', 'respond', 'me', 'account'].includes(h)) ? 'page' : 'false'));
