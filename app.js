@@ -417,10 +417,10 @@ const avatarInner = nm => nm && nm.trim() ? esc(nm.trim()[0]) : GUEST_SVG;
 const VIEWS = {};
 VIEWS.laws = el => {
   el.style.setProperty('--lw-accent', 'var(--violet)');
-  const run = () => { if (el.isConnected) LAWS.render(el); };
+  const run = () => { if (el.isConnected) LAWS.render(el, { era: 5 }); };
   if (window.LAWS) return run();
   el.innerHTML = '<p class="muted">جارٍ تحميل القوانين…</p>';
-  const sc = document.createElement('script'); sc.src = 'laws.js?v=20261119a';
+  const sc = document.createElement('script'); sc.src = 'laws.js?v=cca56bd5';
   sc.onload = run; sc.onerror = () => { el.textContent = 'تعذر تحميل صفحة القوانين. تحقق من الاتصال وحدّث الصفحة.'; };
   document.head.appendChild(sc);
 };
@@ -457,7 +457,7 @@ function route() {
   tick();
   let h = (location.hash || '#home').slice(1);
   let arg = null;
-  const m = h.match(/^form-([A-Za-z0-9]+)$/); if (m) { h = 'respond'; arg = m[1]; } const tk = h.match(/^take\/([A-Za-z0-9_-]+)$/); if (tk) { h = 'take'; arg = tk[1]; } if (/^laws\/\d+$/.test(h)) h = 'laws';
+  const m = h.match(/^form-([A-Za-z0-9]+)$/); if (m) { h = 'respond'; arg = m[1]; } const tk = h.match(/^take\/([A-Za-z0-9_-]+)$/); if (tk) { h = 'take'; arg = tk[1]; } if (/^laws\/\w+$/.test(h)) h = 'laws';
   if (!VIEWS[h]) h = 'home';
   current = h;
   $$('[data-go]').forEach(b => b.setAttribute('aria-current', b.dataset.go === h || (b.dataset.go === 'more' && ['qbuild', 'take', 'bank', 'know', 'tests', 'schedules', 'admin', 'neuro', 'exam', 'formulas', 'laws', 'practice', 'respond', 'me', 'account'].includes(h)) ? 'page' : 'false'));
@@ -1151,10 +1151,11 @@ const LABS = (() => {
   ];
   VIEWS.formulas = el => {
     const cats = [...new Set(FX.map(f => f[0]))];
-    el.innerHTML = `<div class="section-title"><h2>المعادلات</h2><span class="muted small">كل معادلة مع رموزها ومتى تُستخدم، وزر لتجربتها في المعمل</span></div>` +
+    el.innerHTML = `<div class="section-title"><h2>المعادلات</h2><span class="muted small">كل معادلة مع رموزها ومتى تُستخدم، وزر لتجربتها في المعمل</span></div><button class="linkcard" data-golaws style="width:100%;margin-bottom:14px;--c:var(--violet);--s:var(--violet-soft)"><span class="ic">${ic('sigma')}</span><span><b>الجديد: 75 قانونًا تفاعليًا</b><span>15 معادلة لبناء المقاييس (ثرستون، ليكرت، جتمان، كابا، مانتل-هانزل، ICC، الخطأ المعياري للقياس، AVE وHTMT، مؤشر صدق المحتوى…) و60 قانونًا إحصائيًا، لكل منها حاسبة بأرقامك</span></span></button>` +
       cats.map(c => `<section class="stack"><h3 style="font-size:18px">${esc(c)}</h3><div class="grid2">${FX.filter(f => f[0] === c).map(f => `<article class="card formula-card"><div class="row"><b class="grow" style="font-family:var(--f-display)">${esc(f[1])}</b><span class="chip ltr">${esc(f[2])}</span></div><div class="fbox">${f[3]}</div>${f[4].length ? `<dl class="sym">${f[4].map(s => `<dt>${s[0]}</dt><dd>${esc(s[1])}</dd>`).join('')}</dl>` : ''}<p class="small muted" style="margin:0">${esc(f[5])}</p><div><button class="btn sm soft" data-try="${f[6]}">${ic('flask')} جرّب في المعمل</button></div></article>`).join('')}</div></section>`).join('') +
       `<section class="card"><h3>${ic('shield')} تفسير قيم الثبات</h3>${tableHTML(['القيمة', 'التفسير'], [['≥ 0.90', 'ممتاز، مناسب للقرارات الفردية'], ['0.80 – 0.89', 'جيد'], ['0.70 – 0.79', 'مقبول للأغراض البحثية'], ['< 0.70', 'ضعيف؛ يُراجع المقياس']])}<p class="small muted">محكات اصطلاحية؛ ولكابا: 0.41–0.60 متوسط، 0.61–0.80 جيد، > 0.80 شبه تام (لانديس وكوخ، 1977).</p></section>`;
     $$('[data-try]', el).forEach(b => b.onclick = () => open(b.dataset.try));
+    const gl = $('[data-golaws]', el); if (gl) gl.onclick = () => go('laws');
   };
 
   return { list, open, clear: () => { openId = null; } };
