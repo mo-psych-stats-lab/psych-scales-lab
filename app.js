@@ -3900,6 +3900,7 @@ var ADMIN = (function () {
         '<p class="muted" style="margin:0;font-size:13px">النتايج دي فرز مش تشخيص. التنبيه معناه «يستاهل تتواصل معاه»، ولو فيه خطر واضح اتبع بروتوكول الأزمة مع المشرف المرخّص.</p></section>';
       var gM = B.querySelector('#gM'), uL = B.querySelector('#gUL'), sh = function () { uL.style.display = gM.value === 'upto' ? '' : 'none'; }; gM.onchange = sh; sh();
       B.querySelector('#gS').onclick = async function () { var d = { mode: gM.value, upto: +B.querySelector('#gU').value, hold: B.querySelector('#gH').checked, released: false, note: B.querySelector('#gN').value.slice(0, 300) }; try { await ACCT.fs.set('gates/global', d); global = Object.assign({ id: 'global' }, d); say('اتحفظ للكل'); } catch (e) { say('تعذر الحفظ: ' + (e.message || '')); } };
+      var anBox = document.createElement('div'); B.prepend(anBox); (function loadAn() { if (window.ADMIN_AN) return ADMIN_AN.render(anBox, ACCT.fs); var sc = document.createElement('script'); sc.src = 'analytics.js?v=9d52f030'; sc.onload = function () { ADMIN_AN.render(anBox, ACCT.fs); }; sc.onerror = function () { anBox.innerHTML = '<p class="muted">تعذر تحميل التحليلات.</p>'; }; document.head.appendChild(sc); })();
       B.querySelector('#invGo').onclick = async function () { var em = B.querySelector('#invE').value.trim().toLowerCase(); if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(em)) return say('اكتب إيميل صحيح'); try { await ACCT.fs.put('invites/' + em, { by: uid, created: '__ts__' }); invites.push({ id: em }); say('اتسجلت الدعوة. ابعت له لينك اللوحة'); draw(); } catch (e) { say('تعذر إرسال الدعوة: ' + (e.message || '')); } };
       B.querySelectorAll('[data-rminv]').forEach(function (b) { b.onclick = async function () { try { await ACCT.fs.del('invites/' + b.dataset.rminv); invites = invites.filter(function (v) { return v.id !== b.dataset.rminv; }); draw(); } catch (e) { say('تعذر الإلغاء'); } }; });
       B.querySelectorAll('[data-rmadm]').forEach(function (b) { b.onclick = async function () { if (b.dataset.sure !== '1') { b.dataset.sure = '1'; b.textContent = 'متأكد؟ دوس تاني'; return; } try { await ACCT.fs.del('admins/' + b.dataset.rmadm); admins = admins.filter(function (v) { return v.id !== b.dataset.rmadm; }); draw(); } catch (e) { say('تعذر'); } }; });
@@ -4190,6 +4191,7 @@ const AI = (() => {
     try {
       const snap = await userRef().get(); const d = snap.exists ? snap.data() : {};
       if (d.prefs && typeof d.prefs.lb === 'boolean') st.lbOptIn = d.prefs.lb;
+      st.days = d.days && typeof d.days === 'object' ? d.days : {};
       const remote = d[APP] && d[APP].state ? safeParse(d[APP].state) : null, local = getS();
       if (remote && (remote.xp || 0) > (local.xp || 0)) { setS(Object.assign({}, local, remote, { fs: local.fs, theme: local.theme })); }
       await pushState(getS(), true);
@@ -4208,7 +4210,10 @@ const AI = (() => {
     const json = JSON.stringify(s); if (json.length > 400000) return;
     const ts = st.fb.firestore.FieldValue.serverTimestamp();
     try {
-      await userRef().set({ name: (st.name || '').slice(0, 40), [APP]: { state: json, xp: s.xp | 0 }, updated: ts }, { merge: true });
+      const dk = (x => x.getFullYear() + '-' + String(x.getMonth() + 1).padStart(2, '0') + '-' + String(x.getDate()).padStart(2, '0'))(new Date()), days = {}, cut = Date.now() - 60 * 864e5;
+      st.days = st.days || {}; st.days[dk] = Math.min(10000, (st.days[dk] | 0) + 1);
+      Object.keys(st.days).forEach(k => { if (new Date(k).getTime() < cut) { days[k] = st.fb.firestore.FieldValue.delete(); delete st.days[k]; } else days[k] = st.days[k]; });
+      await userRef().set({ name: (st.name || '').slice(0, 40), email: (st.user.email || '').slice(0, 120), days, [APP]: { state: json, xp: s.xp | 0 }, updated: ts }, { merge: true });
       if (st.lbOptIn && st.verified) {
         const lbRef = st.db.collection('leaderboard').doc(st.user.uid), cur = await lbRef.get(), c = cur.exists ? cur.data() : {};
         const xpMine = Math.max(0, Math.min(1e6, s.xp | 0)), wMine = Math.max(0, Math.min(1e6, week7(s) | 0));
@@ -4383,6 +4388,7 @@ const AI = (() => {
         ${st.verified ? '<div class="notice good small">بريدك مؤكد. تقدمك يُحفظ في حسابك تلقائيًا.</div>' : '<div class="notice warn small"><b>أكّد بريدك الإلكتروني</b>افتح الرسالة التي أرسلناها واضغط اللينك. <b>لو مش لاقيها، بص في مجلد الرسائل غير المرغوب فيها (Spam)</b> واضغط «ليست رسالة غير مرغوب فيها»، علشان الرسائل الجاية توصل الوارد. استخدم آخر رسالة بس. التأكيد مطلوب للظهور في لوحة المتصدرين ونشر النماذج.<div class="row" style="margin-top:6px"><button class="btn sm ghost" id="aVer">إعادة إرسال الرسالة</button><button class="btn sm ghost" id="aRel">تحققت، حدّث الحالة</button></div><details style="margin-top:8px"><summary><b>اللينك بيفتح صفحة خطأ؟</b></summary><p style="margin:6px 0">انسخ اللينك من الإيميل (اضغط عليه ضغطة طويلة ثم «نسخ الرابط»)، والصقه هنا، والموقع هيأكّد بريدك من غير ما يفتح صفحة Firebase.</p><div class="row"><input type="text" id="aLink" dir="ltr" class="grow" placeholder="https://...oobCode=..."><button class="btn sm" id="aLinkGo">أكّد</button></div></details></div>'}<div class="row" style="margin-top:8px"><a class="btn sm ghost" href="#admin" style="text-decoration:none">لوحة المسؤول</a><span class="muted small">للمسؤول فقط</span></div>
         ${realName(st.name || '') ? '' : '<div class="notice warn small"><b>اكتب اسمك الحقيقي بالكامل</b>مطلوب علشان مسؤول الموقع يقدر يتابعك ويساعدك.</div>'}<div class="field"><label class="fl" for="aNm">اسمك الحقيقي بالكامل</label><div class="row"><input type="text" id="aNm" maxlength="40" value="${h(st.name)}" class="grow"><button class="btn sm ghost" id="aNmS">حفظ</button></div></div>
         <label class="row small"><input type="checkbox" id="aLb" ${st.lbOptIn ? 'checked' : ''}> اعرض اسمي في لوحة المتصدرين</label>
+        <p class="small muted" style="margin:0">مسؤول الموقع (المحاضر) يرى تقدمك الدراسي: الدروس والتدريب والنقاط وأيام دخولك، علشان يتابع الدفعة ويساعد المتأخر. أما نتائج «اعرف نفسك» والاختبارات النفسية فلا تظهر له إلا لو وافقت على مشاركتها.</p>
         <div class="row"><button class="btn ghost sm" id="aOut">تسجيل الخروج</button><button class="btn sm danger" id="aDel">حذف الحساب</button></div></section>
         <section class="card stack"><h3>${ic('trophy')} لوحة المتصدرين</h3><div class="seg"><button data-lb="week" aria-pressed="true">آخر 7 أيام</button><button data-lb="total" aria-pressed="false">الكل</button></div><div id="lbList"><p class="muted small">جارٍ التحميل…</p></div></section></div>`;
     const v = $('#aVer', el); if (v) v.onclick = async () => { try { await sendVer(u); toast('أُرسلت رسالة تأكيد جديدة. استخدم آخر رسالة بس، لأن الرسائل القديمة بتبطل'); } catch (e) { toast(errMsg(e)); } };
