@@ -1,0 +1,16 @@
+# Keeps the published branch (gh-pages) identical to main, so every push to main goes live.
+name: Publish main to gh-pages
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - run: git push --force origin HEAD:refs/heads/gh-pages
