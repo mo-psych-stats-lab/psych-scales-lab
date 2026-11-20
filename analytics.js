@@ -43,9 +43,12 @@
   }
   async function visitors() {
     var base = 'https://mo-psych-stats-lab.goatcounter.com', site = app() === 'stats' ? '/psych-stats-lab/' : '/psych-scales-lab/';
-    async function get(p) { var r = await fetch(base + '/counter/' + encodeURIComponent(p) + '.json', { referrerPolicy: 'no-referrer' }); if (!r.ok) throw 0; return (await r.json()).count; }
-    try { var t = await get('TOTAL'), s = await get(site).catch(function () { return '—'; }); return '<p>الزيارات منذ بداية العد: <b>' + E(t) + '</b> للموقعين معًا، منها <b>' + E(s) + '</b> للصفحة الرئيسية لهذا الموقع.</p>'; }
-    catch (e) { return '<p class="muted">تعذر قراءة العدد من GoatCounter. لعرضه هنا: ادخل لوحة GoatCounter ← Settings ← فعّل «Allow adding visitor counts on your website». أو افتح اللوحة نفسها من الرابط تحت.</p>'; }
+    async function get(p) { var r = await fetch(base + '/counter/' + encodeURIComponent(p) + '.json'); if (!r.ok) throw 0; return (await r.json()).count; }
+    var t = null, s = null;
+    try { t = await get('TOTAL'); } catch (e) { }
+    try { s = await get(site); } catch (e) { }
+    if (t == null && s == null) return '<p class="muted" style="margin:0">العدد غير متاح هنا الآن.</p>';
+    return '<div class="an-k">' + (t != null ? '<div><small>زيارات الموقعين</small><b>' + E(t) + '</b></div>' : '') + (s != null ? '<div><small>الصفحة الرئيسية لهذا الموقع</small><b>' + E(s) + '</b></div>' : '') + '</div>';
   }
   function csv(R, A) {
     var head = ['الاسم', 'الإيميل', 'آخر نشاط', A === 'stats' ? 'الدروس المكتملة' : 'الأقسام المقروءة', 'الدقة %', 'الأسئلة المجابة', 'النقاط', A === 'stats' ? 'الامتحانات' : 'اختبارات الوحدات', 'أفضل نتيجة %', 'المعامل المستخدمة', 'أيام النشاط (30 يومًا)'];
@@ -72,7 +75,7 @@
       '<h4 style="margin:6px 0 0">الطلاب النشطون يوميًا (آخر 30 يومًا)</h4>' + barsDaily(R) +
       '<h4 style="margin:6px 0 0">' + (A === 'stats' ? 'نسبة من أكملوا كل درس' : 'نسبة من بدأوا كل وحدة') + '</h4>' + lessonBars(R, A) +
       '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap"><h4 style="margin:6px 0 0">كل الطلاب</h4><button type="button" class="ad-btn" id="anCsv">تنزيل Excel (CSV)</button></div><div class="an-tw" id="anT"></div>' +
-      '<h4 style="margin:6px 0 0">زوار الموقع (بدون تسجيل)</h4><div id="anV"><p class="muted">جارٍ القراءة…</p></div><p style="margin:0"><a href="https://mo-psych-stats-lab.goatcounter.com" target="_blank" rel="noopener">افتح لوحة GoatCounter الكاملة</a>: الصفحات والدول والأجهزة والمتصفحات ومصادر الزيارات يومًا بيوم.</p>';
+      '<div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap"><h4 style="margin:6px 0 0">الزوار</h4><a href="https://mo-psych-stats-lab.goatcounter.com" target="_blank" rel="noopener">التفاصيل ↗</a></div><div id="anV"><p class="muted" style="margin:0">…</p></div>';
     var COLS = [['name', 'الاسم'], ['email', 'الإيميل'], ['last', 'آخر نشاط'], ['prog', A === 'stats' ? 'دروس' : 'أقسام'], ['acc', 'الدقة'], ['answered', 'أسئلة'], ['xp', 'نقاط'], ['exams', A === 'stats' ? 'امتحانات' : 'اختبارات'], ['best', 'أفضل %'], ['labs', 'معامل'], ['act30', 'أيام نشاط']];
     function table() {
       var S = R.slice().sort(function (a, b) { var x = a[sortK], y = b[sortK]; if (x instanceof Date) x = x.getTime(); if (y instanceof Date) y = y.getTime(); if (x == null) x = -1; if (y == null) y = -1; return (x > y ? 1 : x < y ? -1 : 0) * dir; });
