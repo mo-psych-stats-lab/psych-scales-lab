@@ -1891,19 +1891,19 @@ const BUILD = (() => {
     const draw = () => {
       b.innerHTML = intro(4, 'اكتب عبارات أكثر من المطلوب (من مصادر استنباطية واستقرائية)، وحدد لكل عبارة بعدها واتجاهها: (+) موجبة، (−) سالبة تُعكس درجتها عند التصحيح.') +
         s.dims.map(d => { const its = s.items.filter(i => i.dim === d.id), need = Math.round(s.target * (+d.w || 0) / 100 * s.mult); return `<div class="stack" style="gap:4px"><div class="row"><b class="grow">${esc(d.name)}</b><span class="chip ${its.length >= need ? 'good' : 'warn'}">${its.length}/${need}</span></div>${its.map(it => itemRow(s, it)).join('')}<div class="row"><input type="text" placeholder="اكتب عبارة جديدة لهذا البعد ثم اضغط إضافة" data-new="${d.id}" class="grow" aria-label="عبارة جديدة في ${esc(d.name)}"><button class="btn sm" data-add="${d.id}">${ic('plus')} إضافة</button></div></div>`; }).join('<hr style="border:none;border-top:1px solid var(--line)">') +
-        `<div class="row"><span class="chip">${METHODS[meth(s)].t}</span><button class="btn sm soft" id="tplGo">${ic('bolt')} مسودة من قوالب جاهزة</button><button class="btn sm lime" id="aiGen" hidden>${ic('bolt')} ولّد العبارات بحسابك في Claude</button><button class="btn sm ghost" id="aiCopy">${ic('copy')} انسخ طلب التوليد بالذكاء الاصطناعي</button></div><p class="small muted" style="margin:0">القوالب والطلب يتبعان طريقة البناء المختارة في الخطوة 7 (سلم الاستجابة). المسودة نقطة بداية فقط: عدّلها لتناسب سمتك، ثم حكّمها.</p>` +
+        `<div class="row"><span class="chip">${METHODS[meth(s)].t}</span><button class="btn sm soft" id="tplGo">${ic('bolt')} مسودة من قوالب جاهزة</button><button class="btn sm lime" id="aiGen" hidden>${ic('bolt')} ولّد العبارات بمساعد الذكاء الاصطناعي</button><button class="btn sm ghost" id="aiCopy">${ic('copy')} انسخ طلب التوليد بالذكاء الاصطناعي</button></div><p class="small muted" style="margin:0">القوالب والطلب يتبعان طريقة البناء المختارة في الخطوة 7 (سلم الاستجابة). المسودة نقطة بداية فقط: عدّلها لتناسب سمتك، ثم حكّمها.</p>` +
         `<details class="steps"><summary>إضافة عبارات كثيرة دفعة واحدة</summary><p class="small muted">كل عبارة في سطر. اكتب (−) في بداية العبارة السالبة.</p><select id="bulkDim" aria-label="البعد">${s.dims.map(d => `<option value="${d.id}">${esc(d.name)}</option>`).join('')}</select><textarea id="bulk" style="margin-top:6px"></textarea><button class="btn sm" id="bulkAdd" style="margin-top:6px">إضافة الكل</button></details>`;
       bindItems(b, s, persist, draw);
       $$('[data-add]', b).forEach(x => x.onclick = () => { const inp = $(`[data-new="${x.dataset.add}"]`, b), t = inp.value.trim(); if (!t) return; s.items.push({ id: uid('i'), text: t, dim: x.dataset.add, dir: 1, src: 'استنباطي', ess: null, use: null, keep: true }); quest('items', 1); persist(); draw(); const n = $(`[data-new="${x.dataset.add}"]`, b); n && n.focus(); });
       $$('[data-new]', b).forEach(x => x.onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); $(`[data-add="${x.dataset.new}"]`, b).click(); } });
       $('#tplGo', b).onclick = () => { const k = Math.max(4, Math.round(s.target * s.mult) || 12); const its = tplItems(meth(s), s.construct || s.name || 'السمة', s.dims.map(d => d.id), k); its.forEach(x => s.items.push(Object.assign({ id: uid('i'), src: 'قالب جاهز', ess: null, use: null, keep: true }, x))); quest('items', its.length); persist(); draw(); toast(`أُضيفت ${its.length} عبارة من القوالب`); };
       if (typeof AI !== 'undefined') AI.available().then(ok => { const g = $('#aiGen', b); if (!ok || !g) return; g.hidden = false; g.onclick = async () => {
-        g.disabled = true; const old = g.innerHTML; g.textContent = 'Claude يكتب العبارات…';
+        g.disabled = true; const old = g.innerHTML; g.textContent = 'جارٍ توليد العبارات…';
         try { const k = Math.max(6, Math.round(s.target * s.mult) || 12); const its = await AI.items(s, k); if (!its || !its.length) throw { code: 'invalid_json' };
           its.forEach(x => { const d = s.dims.find(dd => dd.name === String(x.dim || '').trim()) || s.dims[0]; s.items.push({ id: uid('i'), text: String(x.text || '').trim().slice(0, 300), dim: d.id, dir: x.neg ? -1 : 1, src: 'ذكاء اصطناعي', ess: null, use: null, keep: true }); });
-          quest('items', its.length); persist(); draw(); toast(`أضاف Claude ${its.length} عبارة؛ راجعها وعدّلها قبل التحكيم`);
+          quest('items', its.length); persist(); draw(); toast(`أضاف المساعد ${its.length} عبارة؛ راجعها وعدّلها قبل التحكيم`);
         } catch (e) { toast(AI.ERR[e && e.code] || 'تعذر التوليد الآن؛ استخدم القوالب أو انسخ الطلب'); g.disabled = false; g.innerHTML = old; } }; });
-      $('#aiCopy', b).onclick = () => copyText(aiPrompt(s)).then(() => toast('نُسخ الطلب؛ الصقه في Claude ثم انسخ العبارات إلى «إضافة عبارات كثيرة»'));
+      $('#aiCopy', b).onclick = () => copyText(aiPrompt(s)).then(() => toast('نُسخ الطلب؛ الصقه في مساعد الذكاء الاصطناعي ثم انسخ العبارات إلى «إضافة عبارات كثيرة»'));
       $('#bulkAdd', b).onclick = () => { const d = $('#bulkDim', b).value; const lines = $('#bulk', b).value.split(/\n/).map(x => x.trim()).filter(Boolean); lines.forEach(l => { const neg = /^\(?[−-]\)?\s*/.test(l); s.items.push({ id: uid('i'), text: l.replace(/^\(?[−-]\)?\s*/, ''), dim: d, dir: neg ? -1 : 1, src: 'استنباطي', ess: null, use: null, keep: true }); }); quest('items', lines.length); persist(); draw(); };
     };
     draw();
@@ -1945,7 +1945,7 @@ const BUILD = (() => {
         body = `<div class="grid2">${AUD.selectorsHTML({ p: 'teen', r: 'ammiya' }, 'au')}<div id="auTips"></div></div><div class="row"><button class="btn sm" id="auNew">${ic('plus')} أنشئ نسخة لهذه الفئة</button></div>`;
       } else {
         const p = AUD.prof(cur.p), sameN = (cur.labels || []).length === s.scale.labels.length;
-        body = `<div class="row"><b class="grow">${esc(cur.label)}</b><button class="btn sm lime" id="auAI" hidden>${ic('bolt')} حسّن الصياغة بحساب Claude</button><button class="btn sm ghost" id="auCp">${ic('copy')} انسخ طلب التكييف</button><button class="btn sm danger" id="auDel">${ic('trash')} احذف النسخة</button><button class="btn sm ghost" id="auBack">رجوع</button></div>
+        body = `<div class="row"><b class="grow">${esc(cur.label)}</b><button class="btn sm lime" id="auAI" hidden>${ic('bolt')} حسّن الصياغة بالذكاء الاصطناعي</button><button class="btn sm ghost" id="auCp">${ic('copy')} انسخ طلب التكييف</button><button class="btn sm danger" id="auDel">${ic('trash')} احذف النسخة</button><button class="btn sm ghost" id="auBack">رجوع</button></div>
           ${AUD.tipsHTML(cur.p)}
           ${p.neg === false && k.some(i => i.dir < 0) ? '<div class="notice warn small"><b>تنبيه لهذه الفئة</b>في المقياس عبارات سالبة، وهذه الفئة يصعب عليها النفي. الحل الآمن: استبدلها بعبارات مثبتة <b>في كل النسخ</b> (بما فيها الأصلية) مع تعديل اتجاه التصحيح، حتى تبقى النسخ متكافئة.</div>' : ''}
           ${p.pts.indexOf(s.scale.labels.length) < 0 ? `<div class="notice warn small"><b>عدد نقاط التدريج</b>المناسب لهذه الفئة ${p.pts.join(' أو ')} نقاط، والمقياس ${s.scale.labels.length}. لا يمكن تغيير عدد النقاط داخل نسخة (يكسر المقارنة)؛ إن احتجت ذلك فابنِ مقياسًا مستقلًا لهذه الفئة بمعايير خاصة.</div>` : ''}
@@ -1970,9 +1970,9 @@ const BUILD = (() => {
       $('#auBack', el).onclick = () => { cur = null; s._editForm = null; draw(); };
       $('#auDel', el).onclick = () => confirmBox('ستُحذف النسخة (الاستجابات المسجلة بها تبقى موسومة باسمها).', 'حذف النسخة', () => { s.forms = s.forms.filter(f => f !== cur); if (s.activeForm === cur.id) s.activeForm = null; cur = null; s._editForm = null; persist(); draw(); });
       const items = k.map(it => ({ id: it.id, text: it.text }));
-      $('#auCp', el).onclick = () => copyText(AUD.prompt(items, cur.p, cur.r, s.construct || s.name)).then(() => toast('نُسخ الطلب؛ الصقه في Claude ثم انقل الصياغات إلى الجدول'));
+      $('#auCp', el).onclick = () => copyText(AUD.prompt(items, cur.p, cur.r, s.construct || s.name)).then(() => toast('نُسخ الطلب؛ الصقه في مساعد الذكاء الاصطناعي ثم انقل الصياغات إلى الجدول'));
       if (typeof AI !== 'undefined') AI.available().then(ok => { const g = $('#auAI', el); if (!ok || !g) return; g.hidden = false; g.onclick = async () => {
-        g.disabled = true; g.textContent = 'Claude يكيّف الصياغة…';
+        g.disabled = true; g.textContent = 'جارٍ تكييف الصياغة…';
         try { const sm = await window.claude.use('sample'); const r = await sm.json(AUD.prompt(items, cur.p, cur.r, s.construct || s.name)); (r.items || []).forEach(x => { if (cur.texts[x.id] !== undefined && x.text) cur.texts[x.id] = String(x.text).slice(0, 300); }); persist(); draw(); toast('راجع فحص السلامة لكل عبارة'); }
         catch (e) { toast((AI.ERR || {})[e && e.code] || 'تعذر التكييف الآن'); g.disabled = false; }
       }; });
@@ -2193,7 +2193,7 @@ const BUILD = (() => {
   }
   function livePanel(s, el) {
     if (!(window.ACCT && ACCT.forms && ACCT.forms.available())) {
-      el.innerHTML = `<section class="card stack"><h3>${ic('link')} النموذج الأونلاين المباشر</h3>${ENV.claude ? '<p>داخل Claude لا يستطيع زوار الرابط العام حفظ إجاباتهم على الخادم؛ لذلك استخدم «كود المقياس + أكواد الاستجابة» أو «الجمع المباشر على هذا الجهاز». النموذج الأونلاين المباشر متاح في نسخة الموقع المنشورة على GitHub بعد تفعيل الحسابات.</p>' : (window.ACCT && ACCT.available() ? '<p>سجّل الدخول من صفحة «حسابي» لتنشر نموذجًا أونلاين تصل إجاباته إلى حسابك لحظيًا.</p><button class="btn" id="goAcct">تسجيل الدخول</button>' : '<p>هذه الميزة تحتاج ربط الموقع بمشروع Firebase مجاني (مرة واحدة). الخطوات في ملف <b>SETUP-FIREBASE.md</b> في المستودع. حتى ذلك الحين استخدم الكود أو الجمع المباشر.</p>')}</section>`;
+      el.innerHTML = `<section class="card stack"><h3>${ic('link')} النموذج الأونلاين المباشر</h3>${ENV.claude ? '<p>داخل المنصة المستضيفة لا يستطيع زوار الرابط العام حفظ إجاباتهم على الخادم؛ لذلك استخدم «كود المقياس + أكواد الاستجابة» أو «الجمع المباشر على هذا الجهاز». النموذج الأونلاين المباشر متاح في نسخة الموقع المنشورة على GitHub بعد تفعيل الحسابات.</p>' : (window.ACCT && ACCT.available() ? '<p>سجّل الدخول من صفحة «حسابي» لتنشر نموذجًا أونلاين تصل إجاباته إلى حسابك لحظيًا.</p><button class="btn" id="goAcct">تسجيل الدخول</button>' : '<p>هذه الميزة تحتاج ربط الموقع بمشروع Firebase مجاني (مرة واحدة). الخطوات في ملف <b>SETUP-FIREBASE.md</b> في المستودع. حتى ذلك الحين استخدم الكود أو الجمع المباشر.</p>')}</section>`;
       const g = $('#goAcct', el); if (g) g.onclick = () => go('account'); return;
     }
     ACCT.forms.panel(s, el, { formDef, addResponse, save: () => SCALES.save(s) });
@@ -2244,10 +2244,10 @@ const QUICK = (() => {
   const relLbl = a => a >= 0.9 ? ['ممتاز', 'ok'] : a >= 0.8 ? ['جيد', 'ok'] : a >= 0.7 ? ['مقبول', 'mid'] : ['ضعيف', 'no'];
 const AI={p:null};
 function aiGet(){if(!AI.p)AI.p=(async()=>{try{if(window.claude&&typeof window.claude.use==="function")return await window.claude.use("sample")}catch(e){}return null})();return AI.p}
-const AI_ERR={not_granted:"لم يتم السماح للموقع باستخدام Claude من حسابك.",sampling_disabled:"Claude غير متاح لهذا الحساب.",rate_limited:"وصلت للحد المسموح الآن، حاول بعد قليل.",session_expired:"سجّل الدخول في Claude مرة أخرى.",refused:"رفض Claude هذا الطلب؛ عدّل النص وحاول.",invalid_json:"الرد لم يكن بالشكل المتوقع؛ جرّب مرة أخرى."};
+const AI_ERR={not_granted:"لم يتم السماح للموقع باستخدام المساعد الذكي من حسابك.",sampling_disabled:"المساعد الذكي غير متاح لهذا الحساب.",rate_limited:"وصلت للحد المسموح الآن، حاول بعد قليل.",session_expired:"سجّل الدخول في المساعد الذكي مرة أخرى.",refused:"رفض المساعد الذكي هذا الطلب؛ عدّل النص وحاول.",invalid_json:"الرد لم يكن بالشكل المتوقع؛ جرّب مرة أخرى."};
 function aiExternal(prompt,el){
- el.innerHTML=`<p class="muted" style="margin:6px 0">استخدم حسابك في Claude أو ChatGPT: اضغط «انسخ الطلب» ثم افتح الموقع والصق (Ctrl+V).</p><div class="row"><button class="btn sm gold" data-cp>انسخ الطلب</button><a class="btn sm ghost" style="text-decoration:none" href="https://claude.ai/new" target="_blank" rel="noopener">افتح Claude</a><a class="btn sm ghost" style="text-decoration:none" href="https://chatgpt.com/" target="_blank" rel="noopener">افتح ChatGPT</a></div>`;
- el.querySelector("[data-cp]").onclick=()=>{const done=()=>toast("تم نسخ الطلب — الصقه في Claude");(navigator.clipboard?navigator.clipboard.writeText(prompt).then(done,()=>fallbackCopy(prompt,done)):fallbackCopy(prompt,done))};
+ el.innerHTML=`<p class="muted" style="margin:6px 0">استخدم حسابك في أي مساعد ذكاء اصطناعي (ChatGPT أو Gemini أو غيره): اضغط «انسخ الطلب» ثم افتح الموقع والصق (Ctrl+V).</p><div class="row"><button class="btn sm gold" data-cp>انسخ الطلب</button><a class="btn sm ghost" style="text-decoration:none" href="https://chatgpt.com/" target="_blank" rel="noopener">افتح مساعد الذكاء الاصطناعي</a><a class="btn sm ghost" style="text-decoration:none" href="https://chatgpt.com/" target="_blank" rel="noopener">افتح ChatGPT</a></div>`;
+ el.querySelector("[data-cp]").onclick=()=>{const done=()=>toast("تم نسخ الطلب — الصقه في مساعد الذكاء الاصطناعي");(navigator.clipboard?navigator.clipboard.writeText(prompt).then(done,()=>fallbackCopy(prompt,done)):fallbackCopy(prompt,done))};
 }
 function fallbackCopy(t,cb){const ta=document.createElement("textarea");ta.value=t;document.body.appendChild(ta);ta.select();try{document.execCommand("copy");cb()}catch(e){toast("تعذر النسخ")}ta.remove()}
 const METHODS=[
@@ -2298,11 +2298,11 @@ function labBuild(){
 أعد JSON فقط بهذا الشكل:
 {"instructions":"تعليمات للمفحوص","items":[{"text":"...","dim":"...","reverse":false,"value":null,"options":[],"w":[],"key":""}],"notes":"ملاحظات للباحث عن التحكيم والتحليل"}`};
   const rec=()=>{const v=vals();const r=m.n(v.k);$("#bRec").innerHTML=`<div class="verdict ${v.n>=r[0]?"ok":"mid"}">العينة المقترحة لهذه الطريقة: ${r[1]} ← الحد الأدنى المقترح ≈ ${r[0]}. عينتك (${v.n}) ${v.n>=r[0]?"كافية ✔":"أقل من المقترح"}.</div>`;aiExternal(aiPrompt(),$("#bExt"))};
-  ["bC","bP","bK","bN","bD"].forEach(i=>$("#"+i).oninput=rec);const libInfo=()=>{const sel=$("#bLib");if(!sel)return;const LC=sel.value&&typeof CLIB!=="undefined"?CLIB.get(sel.value):null;$("#bC").hidden=!!LC;$("#bD").disabled=!!LC;if(LC)$("#bD").value=LC.facets.map(f=>f[1]).join("، ");const F=LC?CLIB.fit(m.id,LC):null;$("#bLibInfo").innerHTML=LC?`<p class="muted" style="font-size:13.5px;margin:6px 0">${esc(LC.def)}</p>${F?`<div class="verdict ${F.block?"no":"mid"}">${esc(F.msg)}</div>`:""}`:`<p class="muted" style="font-size:13.5px;margin:6px 0">لمفهوم غير موجود في المكتبة استخدم زرار الذكاء الاصطناعي (أو انسخ الطلب لـ Claude)، وهو ملتزم بنفس قواعد البناء.</p>`;B.res=null;const o=$("#bOut");if(o)o.innerHTML="";rec()};if($("#bLib")){$("#bLib").onchange=libInfo;$("#bPath").onchange=()=>{B.res=null;rec()};libInfo()}if($("#qaP")){const au=()=>{B.aud={p:$("#qaP").value,r:$("#qaR").value};$("#qaTips").innerHTML=AUD.tipsHTML(B.aud.p);B.res=null;const o=$("#bOut");if(o)o.innerHTML=""};$("#qaP").onchange=au;$("#qaR").onchange=au;$("#qaTips").innerHTML=AUD.tipsHTML((B.aud||{p:"youth"}).p)}rec();
-  $("#bTpl").onclick=()=>{const v=vals();const au=B.aud;if(!B.lib||typeof CLIB==="undefined"){toast("المفهوم ده مش في المكتبة: استخدم زرار الذكاء الاصطناعي أو انسخ الطلب لـ Claude");return}const L=CLIB.build(m.id,B.lib,B.path,v.k);if(!L.items.length){$("#bOut").innerHTML=`<div class="panel"><div class="verdict no">${esc(L.warn||"لا توجد عبارات لهذه الطريقة")}</div></div>`;return}let its=L.items;if(au&&typeof AUD!=="undefined"&&(au.r!=="fusha"))its=its.map(it=>Object.assign({},it,{text:AUD.adapt(it.text,au.p,au.r).text,options:(it.options||[]).map(o=>AUD.adapt(o,au.p,au.r).text)}));B.res={instructions:(au&&typeof AUD!=="undefined"&&AUD.instructions(au.p,au.r))||L.instructions,items:its,notes:L.notes+(au&&typeof AUD!=="undefined"?" مُكيّف لفئة: "+AUD.prof(au.p).t+"، راجع كل عبارة فالتحويل الآلي مسودة.":""),src:"lib",lib:B.lib};show()};
+  ["bC","bP","bK","bN","bD"].forEach(i=>$("#"+i).oninput=rec);const libInfo=()=>{const sel=$("#bLib");if(!sel)return;const LC=sel.value&&typeof CLIB!=="undefined"?CLIB.get(sel.value):null;$("#bC").hidden=!!LC;$("#bD").disabled=!!LC;if(LC)$("#bD").value=LC.facets.map(f=>f[1]).join("، ");const F=LC?CLIB.fit(m.id,LC):null;$("#bLibInfo").innerHTML=LC?`<p class="muted" style="font-size:13.5px;margin:6px 0">${esc(LC.def)}</p>${F?`<div class="verdict ${F.block?"no":"mid"}">${esc(F.msg)}</div>`:""}`:`<p class="muted" style="font-size:13.5px;margin:6px 0">لمفهوم غير موجود في المكتبة استخدم زرار الذكاء الاصطناعي (أو انسخ الطلب لمساعد الذكاء الاصطناعي)، وهو ملتزم بنفس قواعد البناء.</p>`;B.res=null;const o=$("#bOut");if(o)o.innerHTML="";rec()};if($("#bLib")){$("#bLib").onchange=libInfo;$("#bPath").onchange=()=>{B.res=null;rec()};libInfo()}if($("#qaP")){const au=()=>{B.aud={p:$("#qaP").value,r:$("#qaR").value};$("#qaTips").innerHTML=AUD.tipsHTML(B.aud.p);B.res=null;const o=$("#bOut");if(o)o.innerHTML=""};$("#qaP").onchange=au;$("#qaR").onchange=au;$("#qaTips").innerHTML=AUD.tipsHTML((B.aud||{p:"youth"}).p)}rec();
+  $("#bTpl").onclick=()=>{const v=vals();const au=B.aud;if(!B.lib||typeof CLIB==="undefined"){toast("المفهوم ده مش في المكتبة: استخدم زرار الذكاء الاصطناعي أو انسخ الطلب لمساعد الذكاء الاصطناعي");return}const L=CLIB.build(m.id,B.lib,B.path,v.k);if(!L.items.length){$("#bOut").innerHTML=`<div class="panel"><div class="verdict no">${esc(L.warn||"لا توجد عبارات لهذه الطريقة")}</div></div>`;return}let its=L.items;if(au&&typeof AUD!=="undefined"&&(au.r!=="fusha"))its=its.map(it=>Object.assign({},it,{text:AUD.adapt(it.text,au.p,au.r).text,options:(it.options||[]).map(o=>AUD.adapt(o,au.p,au.r).text)}));B.res={instructions:(au&&typeof AUD!=="undefined"&&AUD.instructions(au.p,au.r))||L.instructions,items:its,notes:L.notes+(au&&typeof AUD!=="undefined"?" مُكيّف لفئة: "+AUD.prof(au.p).t+"، راجع كل عبارة فالتحويل الآلي مسودة.":""),src:"lib",lib:B.lib};show()};
   aiGet().then(s=>{const btn=$("#bAI");if(!s||!btn)return;btn.hidden=false;btn.onclick=async()=>{btn.disabled=true;const old=btn.textContent;btn.textContent="جارٍ البناء… (قد يستغرق دقيقة)";
    try{const r=await s.json(aiPrompt(),{cache:false});if(!r||!Array.isArray(r.items)||!r.items.length)throw{code:"invalid_json"};B.res={instructions:String(r.instructions||""),items:r.items.map(x=>({text:String(x.text||""),dim:String(x.dim||""),reverse:!!x.reverse,value:x.value==null||x.value===""?null:+x.value,options:Array.isArray(x.options)?x.options.map(String):[],w:Array.isArray(x.w)&&x.w.length?x.w.map(Number):null,kind:Array.isArray(x.options)&&x.options.length?"sjt":"d",key:String(x.key||"")})).filter(x=>x.text),notes:String(r.notes||""),src:"ai"};show()}
-   catch(e){toast(AI_ERR[e&&e.code]||"تعذر البناء الآن، استخدم القوالب الجاهزة أو انسخ الطلب لـ Claude.")}
+   catch(e){toast(AI_ERR[e&&e.code]||"تعذر البناء الآن، استخدم القوالب الجاهزة أو انسخ الطلب لمساعد الذكاء الاصطناعي.")}
    btn.disabled=false;btn.textContent=old}});
   if(B.res)show();
  };
@@ -3434,7 +3434,7 @@ var KNOW = (function () {
   };
   V.sci = function () { frame('sci', '<article class="kn-card kn-sci">' + SCI + '</article>'); };
 
-  var SCI = '<h2>مقياسان أصيلان قيد التطوير: الأساس العلمي</h2><p class="muted">إعداد: محمد عثمان، الدبلومة الخاصة في علم النفس، بمساعدة Claude. مسودة بحثية للمناقشة مع المشرفة قبل التقنين.</p>' +
+  var SCI = '<h2>مقياسان أصيلان قيد التطوير: الأساس العلمي</h2><p class="muted">إعداد: محمد عثمان، الدبلومة الخاصة في علم النفس. مسودة بحثية للمناقشة مع المشرفة قبل التقنين.</p>' +
   '<h3>أولًا: الاعتماد المعرفي على الذكاء الاصطناعي</h3>' +
   '<p><b>المشكلة.</b> انتقلت أدوات الذكاء الاصطناعي التوليدي في أقل من ثلاث سنوات من أداة بحث إلى شريك في التفكير والكتابة واتخاذ القرار. السؤال العلمي هنا ليس «هل يستخدم الطلاب هذه الأدوات؟» لأن الإجابة نعم، بل «متى يتحول التفويض المعرفي من امتداد تكيفي للعقل إلى اعتماد يُضعف القدرة المستقلة على التفكير والحكم؟». والقياس الجيد لهذا التحول شرط لأي دراسة سببية لاحقة عن أثره في التعلم.</p>' +
   '<p><b>التعريف الإجرائي.</b> نمط من تفويض العمليات المعرفية (التفكير، والتخطيط، والكتابة، والحكم) إلى أدوات الذكاء الاصطناعي يتجاوز ما تتطلبه المهمة، ويصاحبه ضعف التحقق من المخرجات، وتراجع الثقة في القدرة الذاتية بدون الأداة، وقد يمتد إلى اعتماد انفعالي وفقدان للتحكم.</p>' +
@@ -3864,7 +3864,7 @@ var ADMIN = (function () {
   async function diagnose(el, B, why) {
     var ok = function (v) { return v ? '<span class="ad-chip g">✓</span>' : '<span class="ad-chip r">✗</span>'; }, rows = [], hasA = !!(window.ACCT && ACCT.fs), gh = /github\.io$/.test(location.hostname) || location.hostname === 'localhost';
     var site = document.title.indexOf('الإحصاء') >= 0 ? 'psych-stats-lab' : 'psych-scales-lab', base = 'https://mo-psych-stats-lab.github.io/' + site + '/';
-    rows.push([gh && hasA, 'فاتح نسخة GitHub من الموقع', gh && hasA ? '' : 'اللوحة مش بتشتغل جوه نسخة Claude. افتح: <a href="' + base + '#admin">' + base + '#admin</a>']);
+    rows.push([gh && hasA, 'فاتح نسخة GitHub من الموقع', gh && hasA ? '' : 'اللوحة مش بتشتغل جوه النسخة المستضيفة. افتح: <a href="' + base + '#admin">' + base + '#admin</a>']);
     var signed = fsOK(); rows.push([signed, 'مسجّل دخول', signed ? E(ACCT.fs.email()) : 'افتح <a href="#account">«حسابي»</a> وسجّل دخول بالإيميل اللي هتبقى بيه مسؤول، وبعدين ارجع هنا.']);
     var ver = false, rules = null;
     if (signed) { try { if (ACCT.fs.refresh) await ACCT.fs.refresh(); } catch (e) { } ver = ACCT.fs.verified();
@@ -4064,16 +4064,16 @@ const MOTION = (() => {
 })();
 
 /* ===== AI assistant on the student's own account =====
-   Inside claude.ai the page asks Claude through the viewer's own account (claude.use("sample")): nothing is billed to the site.
+   Inside the hosted preview the page asks the AI assistant through the viewer's own account (claude.use("sample")): nothing is billed to the site.
    On the public GitHub copy there is no in-page AI, so the panel builds the same request for the student to paste
-   into their own Claude or ChatGPT account. */
+   into their own AI assistant account. */
 const AI = (() => {
   let samp, ready = null;
   const get = () => {
     if (!ready) ready = (async () => { try { if (window.claude && typeof window.claude.use === 'function') return await window.claude.use('sample'); } catch (e) { } return null; })();
     return ready.then(s => (samp = s));
   };
-  const ERR = { not_granted: 'لم تسمح للموقع باستخدام Claude من حسابك.', sampling_disabled: 'Claude غير متاح لحسابك الآن.', rate_limited: 'وصلت للحد المسموح؛ حاول بعد قليل.', session_expired: 'سجّل الدخول في Claude مرة أخرى.', refused: 'رفض Claude هذا الطلب؛ عدّل السؤال وحاول.', invalid_json: 'الرد لم يكن بالشكل المتوقع؛ حاول مرة أخرى.' };
+  const ERR = { not_granted: 'لم تسمح للموقع باستخدام المساعد الذكي من حسابك.', sampling_disabled: 'المساعد الذكي غير متاح لحسابك الآن.', rate_limited: 'وصلت للحد المسموح؛ حاول بعد قليل.', session_expired: 'سجّل الدخول في المساعد الذكي مرة أخرى.', refused: 'رفض المساعد الذكي هذا الطلب؛ عدّل السؤال وحاول.', invalid_json: 'الرد لم يكن بالشكل المتوقع؛ حاول مرة أخرى.' };
   const SYS = 'أنت مساعد تعليمي في مادة «بناء المقاييس النفسية» لطالب في الدبلوم الخاص في علم النفس (جامعة المنيا). أجب بالعربية الفصحى المبسطة وباختصار منظم (نقاط قصيرة)، واذكر المعادلة عند الحاجة، واربط الإجابة بما يظهر في صفحة الطالب. لا تخترع مراجع أو أرقامًا غير موجودة. إذا كان السؤال خارج القياس النفسي والإحصاء فاعتذر بلطف.';
   const TASKS = [
     ['explain', 'اشرح لي هذه الصفحة', 'اشرح لي محتوى هذه الصفحة خطوة بخطوة كأنك تشرح لزميل، وركز على المفاهيم الأساسية.'],
@@ -4091,7 +4091,7 @@ const AI = (() => {
   const fmtAns = s => esc(s).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>').replace(/^#{1,4}\s*(.+)$/gm, '<b>$1</b>').replace(/\n/g, '<br>');
 
   function open(preset) {
-    modal(`<div class="ai-head"><span class="ai-orb" aria-hidden="true"></span><div class="grow"><h3 style="margin:0">مساعد Claude</h3><p class="small muted" style="margin:0" id="aiMode">يتحقق من حسابك…</p></div><button class="ibtn" data-close aria-label="إغلاق">✕</button></div>
+    modal(`<div class="ai-head"><span class="ai-orb" aria-hidden="true"></span><div class="grow"><h3 style="margin:0">المساعد الذكي</h3><p class="small muted" style="margin:0" id="aiMode">يتحقق من حسابك…</p></div><button class="ibtn" data-close aria-label="إغلاق">✕</button></div>
       <div class="seg ai-tasks" style="flex-wrap:wrap">${TASKS.map(t => `<button data-t="${t[0]}">${t[1]}</button>`).join('')}</div>
       <label class="fl" for="aiQ">أو اكتب سؤالك</label><textarea id="aiQ" placeholder="مثلًا: متى أستخدم KR‑20 بدل ألفا؟"></textarea>
       <div class="row"><button class="btn" id="aiGo">${ic('bolt')} اسأل</button><span class="small muted grow">الإجابة تعتمد على محتوى الصفحة المفتوحة.</span></div>
@@ -4100,13 +4100,13 @@ const AI = (() => {
       const out = $('#aiOut', bg), q = $('#aiQ', bg), mode = $('#aiMode', bg);
       $$('[data-t]', bg).forEach(b => b.onclick = () => { q.value = TASKS.find(t => t[0] === b.dataset.t)[2]; ask(); });
       if (preset) q.value = preset;
-      get().then(s => { mode.textContent = s ? 'يعمل بحسابك في Claude (أول مرة سيطلب إذنك)' : 'انسخ الطلب وافتحه في حسابك في Claude أو ChatGPT'; $('#aiGo', bg).innerHTML = s ? `${ic('bolt')} اسأل` : `${ic('copy')} انسخ الطلب`; });
+      get().then(s => { mode.textContent = s ? 'يعمل بحسابك (أول مرة سيطلب إذنك)' : 'انسخ الطلب وافتحه في حسابك في أي مساعد ذكاء اصطناعي (ChatGPT أو Gemini أو غيره)'; $('#aiGo', bg).innerHTML = s ? `${ic('bolt')} اسأل` : `${ic('copy')} انسخ الطلب`; });
       let ctl = null;
       async function ask() {
         const text = q.value.trim(); if (!text) { q.focus(); return; }
         const p = prompt(text), s = await get();
         if (!s) {
-          await copyText(p); out.innerHTML = `<div class="notice small"><b>نُسخ الطلب مع محتوى الصفحة</b>الصقه في حسابك الخاص، وسيجيبك مباشرة.</div><div class="row"><a class="btn sm" href="https://claude.ai/new" target="_blank" rel="noopener">افتح Claude</a><a class="btn sm ghost" href="https://chatgpt.com/" target="_blank" rel="noopener">افتح ChatGPT</a></div>`;
+          await copyText(p); out.innerHTML = `<div class="notice small"><b>نُسخ الطلب مع محتوى الصفحة</b>الصقه في حسابك الخاص، وسيجيبك مباشرة.</div><div class="row"><a class="btn sm" href="https://chatgpt.com/" target="_blank" rel="noopener">افتح مساعد الذكاء الاصطناعي</a><a class="btn sm ghost" href="https://chatgpt.com/" target="_blank" rel="noopener">افتح ChatGPT</a></div>`;
           return;
         }
         if (ctl) ctl.abort(); ctl = new AbortController();
@@ -4133,8 +4133,8 @@ const AI = (() => {
 
   function fab() {
     if (document.getElementById('aiFab')) return;
-    const b = document.createElement('button'); b.id = 'aiFab'; b.className = 'ai-fab'; b.setAttribute('aria-label', 'مساعد Claude');
-    b.innerHTML = `<span class="ai-orb" aria-hidden="true"></span><span>اسأل Claude</span>`; b.onclick = () => open();
+    const b = document.createElement('button'); b.id = 'aiFab'; b.className = 'ai-fab'; b.setAttribute('aria-label', 'المساعد الذكي');
+    b.innerHTML = `<span class="ai-orb" aria-hidden="true"></span><span>اسأل المساعد</span>`; b.onclick = () => open();
     document.body.appendChild(b);
   }
   return { open, items, fab, available: () => get().then(Boolean), ERR };
@@ -4144,7 +4144,7 @@ const AI = (() => {
    Web (GitHub Pages): Firebase Authentication (email + password) + Firestore, only when
    window.FIREBASE_CONFIG is set (see SETUP-FIREBASE.md). Passwords never touch this code's
    storage: Firebase Auth stores them hashed (scrypt) on Google's servers.
-   Inside claude.ai: the viewer's Claude account; progress syncs through the artifact db when allowed. */
+   Inside the hosted preview: the viewer's own account; progress syncs through the artifact db when allowed. */
 (function () {
   const APP = window.ACCT_APP || 'scales';             /* 'scales' | 'stats' */
   const cfg = window.FIREBASE_CONFIG || null;
@@ -4228,7 +4228,7 @@ const AI = (() => {
   function hookCloud() { if (typeof Cloud !== 'undefined') Cloud.push = s => pushState(s); if (typeof SCALES !== 'undefined') { SCALES.cloud.push = s => pushScale(s); SCALES.cloud.remove = id => st.user && userRef().collection('scales').doc(id).delete().catch(() => { }); } }
   function unhookCloud() { if (typeof Cloud !== 'undefined') Cloud.push = null; if (typeof SCALES !== 'undefined') { SCALES.cloud.push = null; SCALES.cloud.remove = null; } }
 
-  /* ---------- Claude (artifact) mode ---------- */
+  /* ---------- hosted-preview mode ---------- */
   async function initClaude() {
     try {
       const [db, user] = await Promise.all([window.claude.use('db'), window.claude.use('user')]);
@@ -4334,7 +4334,7 @@ const AI = (() => {
       ${APP === 'scales' ? `<li>${ic('check')} تنشر نموذج مقياسك أونلاين وتصلك الإجابات لحظيًا.</li>` : ''}
       <li>${ic('check')} وسام «عضو مسجل» و15 نقطة.</li></ul>`;
     if (st.mode === 'claude') {
-      el.innerHTML = `<div class="section-title"><h2>حسابي</h2></div><section class="card stack"><div class="row"><span class="avatar${st.claudeName ? '' : ' guest'}">${typeof avatarInner === 'function' ? avatarInner(st.claudeName) : h((st.claudeName || '؟')[0])}</span><div class="grow"><b>${h(st.claudeName || 'حساب Claude')}</b><div class="small muted">${h(rk)}</div></div></div><p class="small" style="margin:0">داخل Claude يُستخدم حسابك في Claude مباشرة؛ لا تحتاج إلى تسجيل منفصل.</p><div class="notice small ${st.claudeDb ? 'good' : ''}">${st.claudeDb ? 'تقدمك ومقاييسك تُحفظ في حسابك وتتزامن بين أجهزتك.' : 'تقدمك يُحفظ في هذا المتصفح. لحفظه على كل أجهزتك استخدم نسخة الموقع المنشورة على GitHub وأنشئ حسابًا هناك.'}</div></section>`;
+      el.innerHTML = `<div class="section-title"><h2>حسابي</h2></div><section class="card stack"><div class="row"><span class="avatar${st.claudeName ? '' : ' guest'}">${typeof avatarInner === 'function' ? avatarInner(st.claudeName) : h((st.claudeName || '؟')[0])}</span><div class="grow"><b>${h(st.claudeName || 'حساب المساعد الذكي')}</b><div class="small muted">${h(rk)}</div></div></div><p class="small" style="margin:0">داخل المنصة المستضيفة يُستخدم حسابك فيها مباشرة؛ لا تحتاج إلى تسجيل منفصل.</p><div class="notice small ${st.claudeDb ? 'good' : ''}">${st.claudeDb ? 'تقدمك ومقاييسك تُحفظ في حسابك وتتزامن بين أجهزتك.' : 'تقدمك يُحفظ في هذا المتصفح. لحفظه على كل أجهزتك استخدم نسخة الموقع المنشورة على GitHub وأنشئ حسابًا هناك.'}</div></section>`;
       return;
     }
     if (st.mode !== 'firebase') {
