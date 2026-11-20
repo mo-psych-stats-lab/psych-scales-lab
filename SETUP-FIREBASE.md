@@ -8,7 +8,7 @@
 1. ادخل إلى https://console.firebase.google.com واضغط **Add project**، وسمّه مثلًا `psych-labs` (Google Analytics غير مطلوب).
 2. من **Build → Authentication → Get started**، فعّل **Email/Password** (اترك Email link معطلًا).
 3. من **Authentication → Settings → Password policy**: فعّل الحد الأدنى 8 أحرف، واشترط حروفًا وأرقامًا.
-4. من **Authentication → Settings → Authorized domains** أضف: `mo-psych-stats-lab.github.io`.
+4. من **Authentication → Settings → Authorized domains** أضف: `mohamedothman17.github.io`.
 
 ## 2) قاعدة البيانات
 1. **Build → Firestore Database → Create database** واختر **Production mode** وأقرب منطقة (مثل `europe-west`).
@@ -28,14 +28,14 @@
 مفتاح Firebase للويب ليس سرًا (يصل لكل متصفح)، لكن قيّده:
 1. افتح https://console.cloud.google.com/apis/credentials في المشروع نفسه.
 2. افتح المفتاح **Browser key** واختر **Application restrictions → Websites**، وأضف:
-   `https://mo-psych-stats-lab.github.io/*`
+   `https://mohamedothman17.github.io/*`
 3. في **API restrictions** اختر **Restrict key** وفعّل فقط: Identity Toolkit API، Token Service API، Cloud Firestore API، Firebase Installations API، Firebase App Check API.
 
 ## 5) قوالب البريد
 من **Authentication → Templates** عدّل لغة الرسائل إلى العربية، واكتب اسم المرسل «مختبرات علم النفس».
 
 ## 6) (موصى به) App Check ضد الطلبات الآلية
-1. أنشئ مفتاح reCAPTCHA v3 من https://www.google.com/recaptcha/admin لنطاق `mo-psych-stats-lab.github.io`.
+1. أنشئ مفتاح reCAPTCHA v3 من https://www.google.com/recaptcha/admin لنطاق `mohamedothman17.github.io`.
 2. في Firebase: **Build → App Check → Apps** سجّل تطبيق الويب بمفتاح reCAPTCHA v3 السري.
 3. ضع مفتاح الموقع (Site key) في `firebase-config.js`: `window.FIREBASE_APPCHECK_SITE_KEY = "…";`
 4. بعد التأكد من عمل الموقع، فعّل **Enforce** لـ Firestore وAuthentication.

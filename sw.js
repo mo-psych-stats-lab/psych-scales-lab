@@ -1,5 +1,5 @@
 /* Offline support: network first, cached copy when offline. Only same-origin GET requests are cached. */
-const CACHE = 'psych-scales-lab-15fe5ee2';
+const CACHE = 'psych-scales-lab-494a4832';
 const CORE = [
  "./",
  "icon-192.png",
@@ -12,7 +12,7 @@ const CORE = [
  "vendor/anim/MotionPathPlugin.min.js",
  "vendor/anim/lenis.min.js",
  "privacy.js?v=2298d6fa",
- "app.js?v=556e57c797",
+ "app.js?v=316410b2e9",
  "style.css?v=907f9377c5",
  "laws.js?v=cca56bd5",
  "img/lesson-1.webp",

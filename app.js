@@ -2324,7 +2324,7 @@ function labBuild(){
  }
  step();
 }
-const PUBLIC_URL="https://mo-psych-stats-lab.github.io/psych-scales-lab/";
+const PUBLIC_URL="https://mohamedothman17.github.io/psych-scales-lab/";
 const QKEY="scaleslab-lastQ";
 const b64e=u8=>{let bin="";for(let i=0;i<u8.length;i+=8192)bin+=String.fromCharCode.apply(null,u8.subarray(i,i+8192));return btoa(bin).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"")};
 const b64d=s=>{s=s.replace(/-/g,"+").replace(/_/g,"/");while(s.length%4)s+="=";const bin=atob(s);return Uint8Array.from(bin,c=>c.charCodeAt(0))};
@@ -3863,7 +3863,7 @@ var ADMIN = (function () {
   /* ---------- setup checklist: tells the owner exactly which step is missing ---------- */
   async function diagnose(el, B, why) {
     var ok = function (v) { return v ? '<span class="ad-chip g">✓</span>' : '<span class="ad-chip r">✗</span>'; }, rows = [], hasA = !!(window.ACCT && ACCT.fs), gh = /github\.io$/.test(location.hostname) || location.hostname === 'localhost';
-    var site = document.title.indexOf('الإحصاء') >= 0 ? 'psych-stats-lab' : 'psych-scales-lab', base = 'https://mo-psych-stats-lab.github.io/' + site + '/';
+    var site = document.title.indexOf('الإحصاء') >= 0 ? 'psych-stats-lab' : 'psych-scales-lab', base = 'https://mohamedothman17.github.io/' + site + '/';
     rows.push([gh && hasA, 'فاتح نسخة GitHub من الموقع', gh && hasA ? '' : 'اللوحة مش بتشتغل جوه النسخة المستضيفة. افتح: <a href="' + base + '#admin">' + base + '#admin</a>']);
     var signed = fsOK(); rows.push([signed, 'مسجّل دخول', signed ? E(ACCT.fs.email()) : 'افتح <a href="#account">«حسابي»</a> وسجّل دخول بالإيميل اللي هتبقى بيه مسؤول، وبعدين ارجع هنا.']);
     var ver = false, rules = null;
