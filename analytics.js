@@ -42,7 +42,7 @@
     return '<div class="an-bars">' + rows.map(function (x) { var p = Math.round(100 * x[1] / R.length); return '<div><span>' + E(x[0]) + '</span><span><i style="width:' + p + '%"></i></span><span>' + p + '%</span></div>'; }).join('') + '</div>';
   }
   async function visitors() {
-    var base = 'https://mo-psych-stats-lab.goatcounter.com', site = app() === 'stats' ? '/psych-stats-lab/' : '/psych-scales-lab/';
+    var base = 'https://mo-psych-stats-lab.goatcounter.com', site = app() === 'stats' ? '/psych-stats-lab/#path' : '/psych-scales-lab/#home';
     async function get(p) { var r = await fetch(base + '/counter/' + encodeURIComponent(p) + '.json'); if (!r.ok) throw 0; return (await r.json()).count; }
     var t = null, s = null;
     try { t = await get('TOTAL'); } catch (e) { }
