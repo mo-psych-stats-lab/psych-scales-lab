@@ -20,10 +20,11 @@ service cloud.firestore {
       allow read: if isUser(uid) || isAdmin();
       allow delete: if isUser(uid);
       allow create, update: if isUser(uid)
-        && request.resource.data.keys().hasOnly(['name', 'email', 'days', 'scales', 'stats', 'prefs', 'updated'])
+        && request.resource.data.keys().hasOnly(['name', 'email', 'phone', 'days', 'scales', 'stats', 'prefs', 'updated'])
         && (!('email' in request.resource.data) || (isStr(request.resource.data.email, 120) && request.resource.data.email == request.auth.token.email))
         && (!('days' in request.resource.data) || (request.resource.data.days is map && request.resource.data.days.size() <= 120))
         && (!('name' in request.resource.data) || isStr(request.resource.data.name, 40))
+        && (!('phone' in request.resource.data) || isStr(request.resource.data.phone, 20))
         && (!('scales' in request.resource.data) || (request.resource.data.scales.keys().hasOnly(['state', 'xp']) && isStr(request.resource.data.scales.state, 400000)))
         && (!('stats' in request.resource.data) || (request.resource.data.stats.keys().hasOnly(['state', 'xp']) && isStr(request.resource.data.stats.state, 400000)))
         && (!('prefs' in request.resource.data) || request.resource.data.prefs.keys().hasOnly(['lb']))
@@ -148,6 +149,22 @@ service cloud.firestore {
         && request.resource.data.hold is bool && request.resource.data.released is bool
         && isStr(request.resource.data.note, 300)
         && request.resource.data.updated == request.time;
+    }
+
+
+    // ---- visit log: one record per visit, created by any signed-in visitor (incl. anonymous guests); only admins can read ----
+    match /visits/{vid} {
+      allow read: if isAdmin();
+      allow delete: if isAdmin();
+      allow update: if false;
+      allow create: if signedIn()
+        && request.resource.data.keys().hasOnly(['t', 'app', 'path', 'ip', 'dev', 'os', 'br', 'model', 'scr', 'lang', 'tz', 'ref', 'ua', 'uid', 'name', 'email'])
+        && request.resource.data.t == request.time
+        && isStr(request.resource.data.app, 10) && isStr(request.resource.data.path, 200) && isStr(request.resource.data.ip, 45)
+        && isStr(request.resource.data.dev, 20) && isStr(request.resource.data.os, 40) && isStr(request.resource.data.br, 40)
+        && isStr(request.resource.data.model, 60) && isStr(request.resource.data.scr, 20) && isStr(request.resource.data.lang, 20)
+        && isStr(request.resource.data.tz, 60) && isStr(request.resource.data.ref, 200) && isStr(request.resource.data.ua, 400)
+        && isStr(request.resource.data.uid, 40) && isStr(request.resource.data.name, 60) && isStr(request.resource.data.email, 120);
     }
 
     // everything else is closed

@@ -21,7 +21,7 @@
   function row(u, A) {
     var s = parse(u[A] && u[A].state) || {}, upd = u.updated && u.updated.toDate ? u.updated.toDate() : null, days = u.days || {}, now = Date.now();
     var act30 = Object.keys(days).filter(function (k) { return now - new Date(k).getTime() <= 30 * DAY; }).length;
-    var r = { id: u.id, name: u.name || '—', email: u.email || '', last: upd, xp: s.xp | 0, streak: s.streak | 0, acc: s.answered ? Math.round(100 * (s.correct || 0) / s.answered) : null, answered: s.answered | 0, labs: Object.keys(s.labs || {}).length, act30: act30, days: days, s: s };
+    var r = { id: u.id, name: u.name || '—', email: u.email || '', phone: u.phone || '', last: upd, xp: s.xp | 0, streak: s.streak | 0, acc: s.answered ? Math.round(100 * (s.correct || 0) / s.answered) : null, answered: s.answered | 0, labs: Object.keys(s.labs || {}).length, act30: act30, days: days, s: s };
     if (A === 'stats') { r.prog = Object.keys(s.done || {}).length; r.exams = (s.exams || []).length; r.best = (s.exams || []).reduce(function (m, e) { return Math.max(m, e.n ? Math.round(100 * e.s / e.n) : 0); }, 0); }
     else { r.prog = Object.keys(s.read || {}).length; var q = s.quiz || {}, ks = Object.keys(q); r.exams = ks.length; r.best = ks.length ? Math.round(100 * ks.reduce(function (m, k) { return m + ((q[k] && q[k].best) || 0); }, 0) / ks.length) : 0; }
     return r;
@@ -50,10 +50,44 @@
     if (t == null && s == null) return '<p class="muted" style="margin:0">العدد غير متاح هنا الآن.</p>';
     return '<div class="an-k">' + (t != null ? '<div><small>زيارات الموقعين</small><b>' + E(t) + '</b></div>' : '') + (s != null ? '<div><small>الصفحة الرئيسية لهذا الموقع</small><b>' + E(s) + '</b></div>' : '') + '</div>';
   }
+  async function visitLog(box) {
+    var all = [], scope = 'mine', A = app();
+    try { var q = await firebase.firestore().collection('visits').orderBy('t', 'desc').limit(500).get(); all = q.docs.map(function (d) { var x = d.data(); x.id = d.id; x.t = x.t && x.t.toDate ? x.t.toDate() : null; return x; }); }
+    catch (e) { box.innerHTML = '<p style="color:#b3261e;margin:0">تعذر قراءة سجل الزيارات. انشر قواعد Firebase الجديدة (قسم visits)، ثم حدّث الصفحة.</p>'; return; }
+    var SITE = { stats: 'الإحصاء', scales: 'المقاييس' };
+    function draw() {
+      var R = scope === 'mine' ? all.filter(function (v) { return v.app === A; }) : all, now = Date.now();
+      var cnt = function (f) { return R.filter(f).length; };
+      var ips = {}; R.forEach(function (v) { if (v.ip) ips[v.ip] = 1; });
+      var dev = function (k) { return R.length ? Math.round(100 * cnt(function (v) { return v.dev === k; }) / R.length) + '%' : '—'; };
+      var K = function (l, v) { return '<div><small>' + l + '</small><b>' + v + '</b></div>'; };
+      box.innerHTML = '<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:8px"><label><input type="radio" name="anS" value="mine"' + (scope === 'mine' ? ' checked' : '') + '> هذا الموقع</label><label><input type="radio" name="anS" value="all"' + (scope === 'all' ? ' checked' : '') + '> الموقعين</label><button type="button" class="ad-btn" id="anLCsv">تنزيل Excel (CSV)</button><button type="button" class="ad-btn" id="anLDel">حذف الأقدم من 30 يومًا</button></div>' +
+        '<div class="an-k">' + K('زيارات (آخر 500)', R.length) + K('اليوم', cnt(function (v) { return v.t && now - v.t.getTime() <= DAY; })) + K('عناوين IP مختلفة', Object.keys(ips).length) + K('موبايل', dev('موبايل')) + K('كمبيوتر', dev('كمبيوتر')) + K('تابلت', dev('تابلت')) + K('مسجلين دخول', cnt(function (v) { return v.uid; })) + '</div>' +
+        '<div class="an-tw" style="max-height:480px;overflow:auto;margin-top:8px">' + (R.length ? '<table><thead><tr><th>الوقت</th>' + (scope === 'all' ? '<th>الموقع</th>' : '') + '<th>الصفحة</th><th>الجهاز</th><th>الموديل</th><th>النظام</th><th>المتصفح</th><th>الشاشة</th><th>IP</th><th>الزائر</th><th>جاي من</th></tr></thead><tbody>' +
+          R.map(function (v) { return '<tr title="' + E(v.ua) + '"><td>' + (v.t ? v.t.toLocaleString('ar-EG', { dateStyle: 'short', timeStyle: 'medium' }) : '—') + '</td>' + (scope === 'all' ? '<td>' + E(SITE[v.app] || v.app) + '</td>' : '') + '<td dir="ltr">' + E((v.path || '').replace(/^\/psych-(stats|scales)-lab\//, '/')) + '</td><td>' + E(v.dev) + '</td><td dir="ltr">' + E(v.model || '—') + '</td><td dir="ltr">' + E(v.os) + '</td><td dir="ltr">' + E(v.br) + '</td><td dir="ltr">' + E(v.scr) + '</td><td dir="ltr">' + (v.ip ? '<a href="https://ipinfo.io/' + encodeURIComponent(v.ip) + '" target="_blank" rel="noopener">' + E(v.ip) + '</a>' : '—') + '</td><td>' + (v.uid ? '<b>' + E(v.name || 'ضيف') + '</b>' + (v.email ? '<br><small dir="ltr">' + E(v.email) + '</small>' : '') : '<span class="muted">زائر</span>') + '</td><td dir="ltr" style="max-width:220px;overflow:hidden;text-overflow:ellipsis">' + (v.ref ? E(v.ref.replace(/^https?:\/\//, '')) : '—') + '</td></tr>'; }).join('') + '</tbody></table>' : '<p class="muted">لا توجد زيارات مسجلة بعد.</p>') + '</div>';
+      box.querySelectorAll('input[name=anS]').forEach(function (r) { r.onchange = function () { scope = r.value; draw(); }; });
+      box.querySelector('#anLCsv').onclick = function () {
+        var q = function (x) { x = String(x == null ? '' : x); return /[",\n]/.test(x) ? '"' + x.replace(/"/g, '""') + '"' : x; };
+        var head = ['الوقت', 'الموقع', 'الصفحة', 'الجهاز', 'الموديل', 'النظام', 'المتصفح', 'الشاشة', 'IP', 'الاسم', 'الإيميل', 'اللغة', 'المنطقة الزمنية', 'جاي من', 'User-Agent'];
+        var lines = [head].concat(R.map(function (v) { return [v.t ? v.t.toISOString().replace('T', ' ').slice(0, 19) : '', SITE[v.app] || v.app, v.path, v.dev, v.model, v.os, v.br, v.scr, v.ip, v.uid ? (v.name || 'ضيف') : '', v.email, v.lang, v.tz, v.ref, v.ua]; }));
+        var blob = new Blob(['﻿' + lines.map(function (l) { return l.map(q).join(','); }).join('\n')], { type: 'text/csv;charset=utf-8' });
+        var a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'visits-' + dkey(Date.now()) + '.csv'; a.click(); setTimeout(function () { URL.revokeObjectURL(a.href); }, 2000);
+      };
+      box.querySelector('#anLDel').onclick = async function () {
+        var btn = this; btn.disabled = true; btn.textContent = 'جارٍ الحذف…';
+        try {
+          var old = await firebase.firestore().collection('visits').where('t', '<', new Date(Date.now() - 30 * DAY)).limit(400).get();
+          var b = firebase.firestore().batch(); old.docs.forEach(function (d) { b.delete(d.ref); }); if (old.size) await b.commit();
+          btn.textContent = 'اتحذف ' + old.size;
+        } catch (e) { btn.textContent = 'تعذر الحذف'; }
+      };
+    }
+    draw();
+  }
   function csv(R, A) {
-    var head = ['الاسم', 'الإيميل', 'آخر نشاط', A === 'stats' ? 'الدروس المكتملة' : 'الأقسام المقروءة', 'الدقة %', 'الأسئلة المجابة', 'النقاط', A === 'stats' ? 'الامتحانات' : 'اختبارات الوحدات', 'أفضل نتيجة %', 'المعامل المستخدمة', 'أيام النشاط (30 يومًا)'];
+    var head = ['الاسم', 'الإيميل', 'التليفون', 'آخر نشاط', A === 'stats' ? 'الدروس المكتملة' : 'الأقسام المقروءة', 'الدقة %', 'الأسئلة المجابة', 'النقاط', A === 'stats' ? 'الامتحانات' : 'اختبارات الوحدات', 'أفضل نتيجة %', 'المعامل المستخدمة', 'أيام النشاط (30 يومًا)'];
     var q = function (v) { v = String(v == null ? '' : v); return /[",\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; };
-    var lines = [head].concat(R.map(function (r) { return [r.name, r.email, r.last ? r.last.toISOString().slice(0, 16).replace('T', ' ') : '', r.prog, r.acc == null ? '' : r.acc, r.answered, r.xp, r.exams, r.best, r.labs, r.act30]; }));
+    var lines = [head].concat(R.map(function (r) { return [r.name, r.email, r.phone, r.last ? r.last.toISOString().slice(0, 16).replace('T', ' ') : '', r.prog, r.acc == null ? '' : r.acc, r.answered, r.xp, r.exams, r.best, r.labs, r.act30]; }));
     var blob = new Blob(['﻿' + lines.map(function (l) { return l.map(q).join(','); }).join('\n')], { type: 'text/csv;charset=utf-8' });
     var a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'students-' + A + '-' + dkey(Date.now()) + '.csv'; a.click(); setTimeout(function () { URL.revokeObjectURL(a.href); }, 2000);
   }
@@ -75,16 +109,18 @@
       '<h4 style="margin:6px 0 0">الطلاب النشطون يوميًا (آخر 30 يومًا)</h4>' + barsDaily(R) +
       '<h4 style="margin:6px 0 0">' + (A === 'stats' ? 'نسبة من أكملوا كل درس' : 'نسبة من بدأوا كل وحدة') + '</h4>' + lessonBars(R, A) +
       '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap"><h4 style="margin:6px 0 0">كل الطلاب</h4><button type="button" class="ad-btn" id="anCsv">تنزيل Excel (CSV)</button></div><div class="an-tw" id="anT"></div>' +
-      '<div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap"><h4 style="margin:6px 0 0">الزوار</h4><a href="https://mo-psych-stats-lab.goatcounter.com" target="_blank" rel="noopener">التفاصيل ↗</a></div><div id="anV"><p class="muted" style="margin:0">…</p></div>';
-    var COLS = [['name', 'الاسم'], ['email', 'الإيميل'], ['last', 'آخر نشاط'], ['prog', A === 'stats' ? 'دروس' : 'أقسام'], ['acc', 'الدقة'], ['answered', 'أسئلة'], ['xp', 'نقاط'], ['exams', A === 'stats' ? 'امتحانات' : 'اختبارات'], ['best', 'أفضل %'], ['labs', 'معامل'], ['act30', 'أيام نشاط']];
+      '<div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap"><h4 style="margin:6px 0 0">الزوار</h4><a href="https://mo-psych-stats-lab.goatcounter.com" target="_blank" rel="noopener">التفاصيل ↗</a></div><div id="anV"><p class="muted" style="margin:0">…</p></div>' +
+      '<h4 style="margin:6px 0 0">سجل الزيارات (الوقت والجهاز وIP)</h4><div id="anL"><p class="muted" style="margin:0">…</p></div>';
+    var COLS = [['name', 'الاسم'], ['email', 'الإيميل'], ['phone', 'التليفون'], ['last', 'آخر نشاط'], ['prog', A === 'stats' ? 'دروس' : 'أقسام'], ['acc', 'الدقة'], ['answered', 'أسئلة'], ['xp', 'نقاط'], ['exams', A === 'stats' ? 'امتحانات' : 'اختبارات'], ['best', 'أفضل %'], ['labs', 'معامل'], ['act30', 'أيام نشاط']];
     function table() {
       var S = R.slice().sort(function (a, b) { var x = a[sortK], y = b[sortK]; if (x instanceof Date) x = x.getTime(); if (y instanceof Date) y = y.getTime(); if (x == null) x = -1; if (y == null) y = -1; return (x > y ? 1 : x < y ? -1 : 0) * dir; });
-      sec.querySelector('#anT').innerHTML = R.length ? '<table><thead><tr>' + COLS.map(function (c) { return '<th data-k="' + c[0] + '">' + c[1] + (sortK === c[0] ? (dir < 0 ? ' ▼' : ' ▲') : '') + '</th>'; }).join('') + '</tr></thead><tbody>' + S.map(function (r) { return '<tr><td><b>' + E(r.name) + '</b></td><td dir="ltr">' + (r.email ? E(r.email) : '<span dir="rtl" class="muted">ضيف</span>') + '</td><td>' + (r.last ? r.last.toLocaleString('ar-EG', { dateStyle: 'short', timeStyle: 'short' }) : '—') + '</td><td>' + r.prog + '</td><td>' + (r.acc == null ? '—' : r.acc + '%') + '</td><td>' + r.answered + '</td><td>' + r.xp + '</td><td>' + r.exams + '</td><td>' + (r.exams ? r.best + '%' : '—') + '</td><td>' + r.labs + '</td><td>' + r.act30 + '</td></tr>'; }).join('') + '</tbody></table>' : '<p class="muted">لا يوجد طلاب مسجلون بعد.</p>';
+      sec.querySelector('#anT').innerHTML = R.length ? '<table><thead><tr>' + COLS.map(function (c) { return '<th data-k="' + c[0] + '">' + c[1] + (sortK === c[0] ? (dir < 0 ? ' ▼' : ' ▲') : '') + '</th>'; }).join('') + '</tr></thead><tbody>' + S.map(function (r) { return '<tr><td><b>' + E(r.name) + '</b></td><td dir="ltr">' + (r.email ? E(r.email) : '<span dir="rtl" class="muted">ضيف</span>') + '</td><td dir="ltr">' + (r.phone ? '<a href="tel:' + E(r.phone.replace(/[^\d+]/g, '')) + '">' + E(r.phone) + '</a>' : '<span dir="rtl" class="muted">—</span>') + '</td><td>' + (r.last ? r.last.toLocaleString('ar-EG', { dateStyle: 'short', timeStyle: 'short' }) : '—') + '</td><td>' + r.prog + '</td><td>' + (r.acc == null ? '—' : r.acc + '%') + '</td><td>' + r.answered + '</td><td>' + r.xp + '</td><td>' + r.exams + '</td><td>' + (r.exams ? r.best + '%' : '—') + '</td><td>' + r.labs + '</td><td>' + r.act30 + '</td></tr>'; }).join('') + '</tbody></table>' : '<p class="muted">لا يوجد طلاب مسجلون بعد.</p>';
       sec.querySelectorAll('#anT th').forEach(function (th) { th.onclick = function () { if (sortK === th.dataset.k) dir = -dir; else { sortK = th.dataset.k; dir = -1; } table(); }; });
     }
     table();
     sec.querySelector('#anCsv').onclick = function () { csv(R, A); };
     sec.querySelector('#anV').innerHTML = await visitors();
+    visitLog(sec.querySelector('#anL'));
   }
   window.ADMIN_AN = { render: render };
 })();
