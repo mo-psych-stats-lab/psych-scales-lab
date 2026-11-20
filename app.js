@@ -4181,6 +4181,7 @@ const AI = (() => {
     st.fb = firebase; st.db = firebase.firestore();
     firebase.auth().useDeviceLanguage();
     handleAction(firebase.auth());
+    firebase.auth().getRedirectResult().then(r => { if (r && r.user && typeof toast === 'function') toast('أهلًا بيك'); }).catch(e => { const c = (e && e.code) || ''; const m = /unauthorized-domain/.test(c) ? 'الدخول بـ Google لسه مش متفعّل على عنوان الموقع ده في Firebase.' : 'الدخول بـ Google مارجعش من صفحة Google. استخدم الإيميل وكلمة السر (أو «نسيت كلمة السر» لو حسابك اتعمل بـ Google).'; try { sessionStorage.setItem('g-err', m + (c ? ' (' + c + ')' : '')); } catch (x) { } if (typeof toast === 'function') toast(m + (c ? ' (' + c + ')' : '')); });
     firebase.auth().onAuthStateChanged(async u => {
       st.user = u; st.verified = !!(u && u.emailVerified); st.name = u ? (u.displayName || '') : '';
       st.ready = true;
